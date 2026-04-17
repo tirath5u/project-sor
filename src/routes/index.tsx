@@ -104,10 +104,10 @@ function SORCalculatorPage() {
     inputs.includeIntersession2,
   ]);
 
-  // Auto-populate limits from grade/dependency unless overridden
+  // Auto-populate limits from grade/dependency/PLUS-denial unless overridden
   React.useEffect(() => {
     if (inputs.overrideLimits) return;
-    const lim = lookupLimits(inputs.gradeLevel, inputs.dependency);
+    const lim = lookupLimits(inputs.gradeLevel, inputs.dependency, inputs.parentPlusDenied);
     setInputs((p) => {
       if (
         p.subStatutory === lim.sub &&
@@ -125,7 +125,7 @@ function SORCalculatorPage() {
         unsubNeed: lim.unsub,
       };
     });
-  }, [inputs.gradeLevel, inputs.dependency, inputs.overrideLimits]);
+  }, [inputs.gradeLevel, inputs.dependency, inputs.parentPlusDenied, inputs.overrideLimits]);
 
   const activeTermKeys: TermKey[] = [
     ...STANDARD_KEYS.slice(0, inputs.numStandardTerms),
@@ -487,7 +487,27 @@ function SORCalculatorPage() {
                   </RadioGroup>
                 </div>
               </div>
-              <Label className="mt-4 flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+              <Label
+                className={`mt-3 flex items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5 ${
+                  gradLocked || inputs.dependency !== "dependent"
+                    ? "cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                }`}
+              >
+                <div>
+                  <div className="text-sm font-medium">Parent PLUS denied</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Dependent undergrad whose parents were denied PLUS gets the Independent
+                    Unsub cap. The Additional Unsub uplift is itself subject to SOR.
+                  </div>
+                </div>
+                <Switch
+                  checked={inputs.parentPlusDenied}
+                  disabled={gradLocked || inputs.dependency !== "dependent"}
+                  onCheckedChange={(v) => update({ parentPlusDenied: v })}
+                />
+              </Label>
+              <Label className="mt-3 flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
                 <div>
                   <div className="text-sm font-medium">Override statutory limits manually</div>
                   <div className="text-[11px] text-muted-foreground">
@@ -557,6 +577,21 @@ function SORCalculatorPage() {
                   </div>
                 ))}
               </div>
+              {results.additionalUnsubBase > 0 ? (
+                <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-xs">
+                  <div className="font-semibold text-primary">
+                    Additional Unsubsidized (PLUS denial)
+                  </div>
+                  <div className="mt-1 text-muted-foreground">
+                    +${results.additionalUnsubBase.toLocaleString()} added to the Unsub
+                    statutory ceiling. After SOR % reduction it contributes{" "}
+                    <span className="font-semibold text-foreground">
+                      ${results.additionalUnsubReduced.toLocaleString()}
+                    </span>{" "}
+                    to the annual Unsub limit.
+                  </div>
+                </div>
+              ) : null}
               <Label className="mt-4 flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
                 <div>
                   <div className="text-sm font-medium">Apply Sub → Unsub shift</div>
@@ -568,6 +603,59 @@ function SORCalculatorPage() {
                 <Switch
                   checked={inputs.applySubUnsubShift}
                   onCheckedChange={(v) => update({ applySubUnsubShift: v })}
+                />
+              </Label>
+              <Label className="mt-3 flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+                <div>
+                  <div className="text-sm font-medium">Apply Double-Reduction (4/15 VFG)</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    When Need &lt; Statutory: reduce Need to (Need × SOR %) FIRST, then
+                    re-apply SOR % on Step 2. Confirmed in the April 15 vendor focus group.
+                  </div>
+                </div>
+                <Switch
+                  checked={inputs.applyDoubleReduction}
+                  onCheckedChange={(v) => update({ applyDoubleReduction: v })}
+                />
+              </Label>
+              {results.doubleReductionApplied ? (
+                <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-xs">
+                  <div className="font-semibold text-primary">
+                    Adjusted Need (post first reduction)
+                  </div>
+                  <div className="mt-1 grid grid-cols-2 gap-2 text-muted-foreground">
+                    <div>
+                      Sub Need:{" "}
+                      <span className="font-semibold text-foreground">
+                        ${results.subNeedAdjusted.toLocaleString()}
+                      </span>{" "}
+                      <span className="text-[10px]">(was ${inputs.subNeed.toLocaleString()})</span>
+                    </div>
+                    <div>
+                      Unsub Need:{" "}
+                      <span className="font-semibold text-foreground">
+                        ${results.unsubNeedAdjusted.toLocaleString()}
+                      </span>{" "}
+                      <span className="text-[10px]">
+                        (was ${inputs.unsubNeed.toLocaleString()})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              <Label className="mt-3 flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+                <div>
+                  <div className="text-sm font-medium">
+                    Count LTHT credits in AY % numerator
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Below-half-time term credits count toward the AY enrollment %, but the
+                    LTHT term itself still pays $0 (per 4/15 VFG).
+                  </div>
+                </div>
+                <Switch
+                  checked={inputs.countLthtInAyPct}
+                  onCheckedChange={(v) => update({ countLthtInAyPct: v })}
                 />
               </Label>
             </Section>
