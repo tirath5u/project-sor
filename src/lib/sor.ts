@@ -637,6 +637,7 @@ function assemble(args: {
   ayFtUsed: number;
   subBaseline: number;
   unsubBaseline: number;
+  additionalUnsubBase: number;
   finalSubByKey: Record<string, number>;
   finalUnsubByKey: Record<string, number>;
   adjustmentSubByKey: Record<string, number>;
