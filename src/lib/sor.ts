@@ -15,11 +15,14 @@
  * Reminders enforced:
  *  • Borrowers below half-time are ineligible.
  *  • Borrower may not receive more than the SOR annual loan limit, period.
- *  • Revised SOR after enrollment change: subtract amounts already disbursed; remaining
- *    is distributed across the remaining terms (equal or proportional).
+ *  • Revised SOR after enrollment change: subtract Net Paid (Paid − Refunds) from
+ *    the recalculated annual limit; remaining is distributed across the remaining
+ *    terms (equal or proportional).
+ *  • Sub→Unsub shifting: any Sub SOR ceiling not used by need shifts to Unsub,
+ *    capped at the Unsub SOR ceiling (combined cap behavior).
  */
 
-export type CalType = 1 | 2 | 3 | 4 | 5;
+export type CalType = 1 | 2 | 3 | 4;
 export type ProgramLevel = "undergraduate" | "graduate";
 export type SummerPosition = "none" | "trailer" | "header";
 export type AYType = "SAY" | "BBAY1" | "BBAY2";
@@ -43,6 +46,8 @@ export interface TermInput {
   enrolledCredits: number;
   paidSub: number; // already disbursed to date
   paidUnsub: number;
+  refundSub: number; // refunds returned this term (reduces net paid)
+  refundUnsub: number;
   coaCapSub: number; // optional COA safety cap (0 = no cap)
   coaCapUnsub: number;
 }
@@ -64,6 +69,8 @@ export interface SORInputs {
   unsubStatutory: number;
   unsubNeed: number;
   distribution: DistributionModel;
+  /** Apply Sub→Unsub shift after Step 2 (combined cap behavior per OBBBA). */
+  applySubUnsubShift: boolean;
   terms: Record<TermKey, TermInput>;
 }
 
@@ -78,6 +85,10 @@ export interface TermResult {
   status: "eligible" | "below_half_time" | "off";
   paidSub: number;
   paidUnsub: number;
+  refundSub: number;
+  refundUnsub: number;
+  netPaidSub: number;
+  netPaidUnsub: number;
   /** proportional share (decimal) used for proportional distribution, undefined if equal */
   proportion?: number;
   calcSub: number; // raw distribution per Step 3 (already rounded to $)
@@ -97,11 +108,18 @@ export interface SORResults {
   noReduction: boolean; // sorPctRounded ≥ 1
   subBaseline: number; // initial max sub
   unsubBaseline: number; // initial max unsub
-  reducedSub: number; // SOR annual loan limit (Sub)
-  reducedUnsub: number; // SOR annual loan limit (Unsub)
-  paidSubTotal: number;
+  reducedSubRaw: number; // SOR Sub limit before any Sub→Unsub shift
+  reducedUnsubRaw: number; // SOR Unsub limit before any shift
+  reducedSub: number; // SOR annual loan limit (Sub) after shift
+  reducedUnsub: number; // SOR annual loan limit (Unsub) after shift
+  shiftedToUnsub: number; // amount moved from Sub→Unsub (0 if not applied)
+  paidSubTotal: number; // gross paid
   paidUnsubTotal: number;
-  remainingSub: number; // SOR limit − already disbursed
+  refundSubTotal: number;
+  refundUnsubTotal: number;
+  netPaidSubTotal: number; // paid − refunds
+  netPaidUnsubTotal: number;
+  remainingSub: number; // SOR limit − net paid
   remainingUnsub: number;
   eligibleTermsCount: number;
   remainingTermsCount: number; // terms with no prior disbursement (where remaining is split)
@@ -144,6 +162,8 @@ export function defaultTerm(key: TermKey): TermInput {
     enrolledCredits: 0,
     paidSub: 0,
     paidUnsub: 0,
+    refundSub: 0,
+    refundUnsub: 0,
     coaCapSub: 0,
     coaCapUnsub: 0,
   };
@@ -173,6 +193,7 @@ export function defaultInputs(): SORInputs {
     unsubStatutory: 2000,
     unsubNeed: 2000,
     distribution: "proportional",
+    applySubUnsubShift: true,
     terms,
   };
 }
@@ -205,10 +226,9 @@ function distributeWithRemainder(target: number, shares: number[]): number[] {
 
   const exact = shares.map((s) => (target * s) / total);
   const floors = exact.map((x) => Math.floor(x));
-  let allocated = floors.reduce((s, x) => s + x, 0);
+  const allocated = floors.reduce((s, x) => s + x, 0);
   let leftover = round(target) - allocated;
 
-  // Distribute leftover (positive or negative) by largest fractional remainder
   const order = exact
     .map((x, i) => ({ i, frac: x - Math.floor(x) }))
     .sort((a, b) => (leftover >= 0 ? b.frac - a.frac : a.frac - b.frac));
@@ -233,11 +253,8 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const warnings: string[] = [];
   if (inp.calType === 3 || inp.calType === 4) {
     warnings.push(
-      `Cal Type ${inp.calType} (non-standard) — confirm SOR applicability with FSA Handbook.`,
+      `Academic Calendar ${inp.calType} (non-standard) — confirm SOR applicability with FSA Handbook.`,
     );
-  }
-  if (inp.calType === 5) {
-    warnings.push("Cal Type 5 (clock-hour) is out of scope for the SOR formula — verify manually.");
   }
 
   const keys = activeKeys(inp);
@@ -258,7 +275,6 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const ayFtUsed = inp.ayFtCredits > 0 ? inp.ayFtCredits : sumOfTermFT;
   const ftSumAll = ayFtUsed;
   const enrollmentFractionRaw = ftSumAll > 0 ? enrolledSumAll / ftSumAll : 0;
-  // Round to nearest WHOLE percentage point per FSA rule
   const sorPctRounded = Math.min(1, Math.round(enrollmentFractionRaw * 100) / 100);
   const noReduction = sorPctRounded >= 1;
 
@@ -266,20 +282,41 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const subBaseline = Math.min(inp.subStatutory, inp.subNeed);
   const unsubBaseline = Math.min(inp.unsubStatutory, inp.unsubNeed);
 
-  // SOR annual loan limit (round to whole $)
-  const reducedSub = round(subBaseline * sorPctRounded);
-  const reducedUnsub = round(unsubBaseline * sorPctRounded);
+  // SOR-reduced ceilings (raw, before Sub→Unsub shift)
+  const reducedSubRaw = round(subBaseline * sorPctRounded);
+  const reducedUnsubRaw = round(unsubBaseline * sorPctRounded);
 
-  // Already disbursed
+  // Sub→Unsub shifting — if Sub need is below the Sub statutory, the unused Sub
+  // SOR ceiling shifts to Unsub, capped at the Unsub SOR ceiling computed against
+  // the Unsub statutory cap. This mirrors the OBBBA combined-cap packaging rule.
+  let reducedSub = reducedSubRaw;
+  let reducedUnsub = reducedUnsubRaw;
+  let shiftedToUnsub = 0;
+  if (inp.applySubUnsubShift) {
+    const subStatCeiling = round(inp.subStatutory * sorPctRounded);
+    const unsubStatCeiling = round(inp.unsubStatutory * sorPctRounded);
+    const subUnused = Math.max(0, subStatCeiling - reducedSubRaw);
+    const unsubHeadroom = Math.max(0, unsubStatCeiling - reducedUnsubRaw);
+    shiftedToUnsub = Math.min(subUnused, unsubHeadroom);
+    reducedUnsub = reducedUnsubRaw + shiftedToUnsub;
+  }
+
+  // Net paid = paid − refunds (per Jennifer's email & deep-dive Section E)
   const paidSubTotal = enriched.reduce((s, t) => s + (t.paidSub || 0), 0);
   const paidUnsubTotal = enriched.reduce((s, t) => s + (t.paidUnsub || 0), 0);
-  const remainingSub = Math.max(0, reducedSub - paidSubTotal);
-  const remainingUnsub = Math.max(0, reducedUnsub - paidUnsubTotal);
+  const refundSubTotal = enriched.reduce((s, t) => s + (t.refundSub || 0), 0);
+  const refundUnsubTotal = enriched.reduce((s, t) => s + (t.refundUnsub || 0), 0);
+  const netPaidSubTotal = Math.max(0, paidSubTotal - refundSubTotal);
+  const netPaidUnsubTotal = Math.max(0, paidUnsubTotal - refundUnsubTotal);
+  const remainingSub = Math.max(0, reducedSub - netPaidSubTotal);
+  const remainingUnsub = Math.max(0, reducedUnsub - netPaidUnsubTotal);
 
-  // STEP 3 — Distribute remaining to eligible terms WITHOUT prior payment
-  const remainingTerms = eligibleTerms.filter(
-    (t) => (t.paidSub || 0) === 0 && (t.paidUnsub || 0) === 0,
-  );
+  // STEP 3 — Distribute remaining to eligible terms with no prior NET payment
+  const remainingTerms = eligibleTerms.filter((t) => {
+    const netSub = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
+    const netUnsub = Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0));
+    return netSub === 0 && netUnsub === 0;
+  });
 
   const calcMap: Record<string, { sub: number; unsub: number; proportion?: number }> = {};
   enriched.forEach((t) => (calcMap[t.key] = { sub: 0, unsub: 0 }));
@@ -296,7 +333,8 @@ export function calculateSOR(inp: SORInputs): SORResults {
     remainingTerms.forEach((t, i) => {
       calcMap[t.key].sub = subAlloc[i];
       calcMap[t.key].unsub = unsubAlloc[i];
-      calcMap[t.key].proportion = inp.distribution === "proportional" ? shares[i] / totalShare : undefined;
+      calcMap[t.key].proportion =
+        inp.distribution === "proportional" ? shares[i] / totalShare : undefined;
     });
   }
 
@@ -305,6 +343,8 @@ export function calculateSOR(inp: SORInputs): SORResults {
     const calcUnsub = calcMap[t.key]?.unsub ?? 0;
     const capSub = t.coaCapSub > 0 ? Math.min(calcSub, t.coaCapSub) : calcSub;
     const capUnsub = t.coaCapUnsub > 0 ? Math.min(calcUnsub, t.coaCapUnsub) : calcUnsub;
+    const netPaidSub = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
+    const netPaidUnsub = Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0));
     return {
       key: t.key,
       label: t.label,
@@ -316,6 +356,10 @@ export function calculateSOR(inp: SORInputs): SORResults {
       status: !t.enabled ? "off" : t.eligible ? "eligible" : "below_half_time",
       paidSub: t.paidSub,
       paidUnsub: t.paidUnsub,
+      refundSub: t.refundSub,
+      refundUnsub: t.refundUnsub,
+      netPaidSub,
+      netPaidUnsub,
       proportion: calcMap[t.key]?.proportion,
       calcSub,
       calcUnsub,
@@ -326,8 +370,8 @@ export function calculateSOR(inp: SORInputs): SORResults {
     };
   });
 
-  const totalFinalSub = termResults.reduce((s, t) => s + t.finalSub + t.paidSub, 0);
-  const totalFinalUnsub = termResults.reduce((s, t) => s + t.finalUnsub + t.paidUnsub, 0);
+  const totalFinalSub = termResults.reduce((s, t) => s + t.finalSub + t.netPaidSub, 0);
+  const totalFinalUnsub = termResults.reduce((s, t) => s + t.finalUnsub + t.netPaidUnsub, 0);
   const verifySub = reducedSub - totalFinalSub;
   const verifyUnsub = reducedUnsub - totalFinalUnsub;
 
@@ -340,10 +384,17 @@ export function calculateSOR(inp: SORInputs): SORResults {
     noReduction,
     subBaseline,
     unsubBaseline,
+    reducedSubRaw,
+    reducedUnsubRaw,
     reducedSub,
     reducedUnsub,
+    shiftedToUnsub,
     paidSubTotal,
     paidUnsubTotal,
+    refundSubTotal,
+    refundUnsubTotal,
+    netPaidSubTotal,
+    netPaidUnsubTotal,
     remainingSub,
     remainingUnsub,
     eligibleTermsCount: eligibleTerms.length,
@@ -364,8 +415,7 @@ export const fmtCurrency = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
-export const fmtPct = (n: number) =>
-  `${Math.round(n * 100)}%`;
+export const fmtPct = (n: number) => `${Math.round(n * 100)}%`;
 
 export const fmtPctPrecise = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 2 }).format(n);

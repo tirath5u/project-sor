@@ -122,7 +122,7 @@ function SORCalculatorPage() {
                 Schedule of Reductions Calculator
               </h1>
               <p className="text-[11px] text-muted-foreground sm:text-xs">
-                Title IV LTFT logic · Pub. L. 119-21 · Apr 2026 guidance
+                Live walkthrough of the FSA three-step calculation for product, engineering, and QA.
               </p>
             </div>
           </div>
@@ -257,7 +257,7 @@ function SORCalculatorPage() {
             >
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Cal Type</Label>
+                  <Label className="text-xs font-medium">Academic Calendar</Label>
                   <Select
                     value={String(inputs.calType)}
                     onValueChange={(v) => update({ calType: Number(v) as CalType })}
@@ -266,11 +266,10 @@ function SORCalculatorPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Type 1 — Standard term, SAY</SelectItem>
-                      <SelectItem value="2">Type 2 — Standard term, BBAY</SelectItem>
-                      <SelectItem value="3">Type 3 — Non-standard, terms</SelectItem>
-                      <SelectItem value="4">Type 4 — Non-standard, non-terms</SelectItem>
-                      <SelectItem value="5">Type 5 — Clock-hour</SelectItem>
+                      <SelectItem value="1">Academic Calendar 1 — Standard term, SAY</SelectItem>
+                      <SelectItem value="2">Academic Calendar 2 — Standard term, BBAY</SelectItem>
+                      <SelectItem value="3">Academic Calendar 3 — Non-standard, terms</SelectItem>
+                      <SelectItem value="4">Academic Calendar 4 — Non-standard, non-terms</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
