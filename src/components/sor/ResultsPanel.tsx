@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, History } from "lucide-react";
 import { fmtCurrency, type SORResults } from "@/lib/sor";
 import { cn } from "@/lib/utils";
 
@@ -20,12 +20,12 @@ function VerifyBadge({ label, diff }: { label: string; diff: number }) {
         "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm",
         ok
           ? "border-success/30 bg-success/10 text-success"
-          : "border-destructive/30 bg-destructive/10 text-destructive",
+          : "border-warning/40 bg-warning/10 text-warning-foreground",
       )}
     >
       {ok ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
       <span className="font-medium">{label}:</span>
-      <span>{ok ? "Balanced" : `Off by ${fmtCurrency(Math.abs(diff))}`}</span>
+      <span>{ok ? "Balanced" : `${diff > 0 ? "Under by" : "Over by"} ${fmtCurrency(Math.abs(diff))}`}</span>
     </div>
   );
 }
@@ -48,7 +48,7 @@ export function ResultsPanel({ results }: { results: SORResults }) {
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-white/10 p-3">
-            <div className="text-[11px] uppercase tracking-wide opacity-80">SOR %</div>
+            <div className="text-[11px] uppercase tracking-wide opacity-80">AY %</div>
             <div className="mt-1 text-2xl font-bold tabular-nums">
               {Math.round(results.sorPctRounded * 100)}%
             </div>
@@ -64,7 +64,7 @@ export function ResultsPanel({ results }: { results: SORResults }) {
             <div className="text-[11px] opacity-80">Pre-rounding</div>
           </div>
           <div className="rounded-lg bg-white/10 p-3">
-            <div className="text-[11px] uppercase tracking-wide opacity-80">SOR Sub limit</div>
+            <div className="text-[11px] uppercase tracking-wide opacity-80">Annual Sub limit</div>
             <div className="mt-1 text-xl font-semibold tabular-nums">
               {fmtCurrency(results.reducedSub)}
             </div>
@@ -73,7 +73,7 @@ export function ResultsPanel({ results }: { results: SORResults }) {
             </div>
           </div>
           <div className="rounded-lg bg-white/10 p-3">
-            <div className="text-[11px] uppercase tracking-wide opacity-80">SOR Unsub limit</div>
+            <div className="text-[11px] uppercase tracking-wide opacity-80">Annual Unsub limit</div>
             <div className="mt-1 text-xl font-semibold tabular-nums">
               {fmtCurrency(results.reducedUnsub)}
             </div>
@@ -87,20 +87,19 @@ export function ResultsPanel({ results }: { results: SORResults }) {
       <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
         <h3 className="mb-3 text-sm font-semibold text-foreground">Per-term Disbursements</h3>
         <div className="-mx-2 overflow-x-auto">
-          <table className="w-full min-w-[420px] text-xs">
+          <table className="w-full min-w-[480px] text-xs">
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="px-2 py-2 font-medium">Term</th>
-                <th className="px-2 py-2 text-right font-medium">Calc Sub</th>
+                <th className="px-2 py-2 text-right font-medium">Term %</th>
                 <th className="px-2 py-2 text-right font-medium">Final Sub</th>
-                <th className="px-2 py-2 text-right font-medium">Calc Unsub</th>
                 <th className="px-2 py-2 text-right font-medium">Final Unsub</th>
               </tr>
             </thead>
             <tbody className="tabular-nums">
               {visibleTerms.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-2 py-6 text-center text-muted-foreground">
+                  <td colSpan={4} className="px-2 py-6 text-center text-muted-foreground">
                     Enable terms to see disbursements.
                   </td>
                 </tr>
@@ -108,10 +107,25 @@ export function ResultsPanel({ results }: { results: SORResults }) {
                 visibleTerms.map((t) => {
                   const subCapped = t.coaCapSub > 0 && t.calcSub > t.coaCapSub;
                   const unsubCapped = t.coaCapUnsub > 0 && t.calcUnsub > t.coaCapUnsub;
+                  const hasAdj = t.adjustmentSub !== 0 || t.adjustmentUnsub !== 0;
                   return (
                     <tr key={t.key} className="border-b border-border/50">
-                      <td className="px-2 py-2 font-medium text-foreground">{t.label}</td>
-                      <td className="px-2 py-2 text-right">{fmtCurrency(t.calcSub)}</td>
+                      <td className="px-2 py-2 font-medium text-foreground">
+                        {t.label}
+                        {t.disbursed ? (
+                          <span className="ml-1 rounded bg-primary/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-primary">
+                            paid
+                          </span>
+                        ) : null}
+                        {hasAdj ? (
+                          <span className="ml-1 rounded bg-warning/30 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-warning-foreground">
+                            adj
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="px-2 py-2 text-right">
+                        {(t.termPct * 100).toFixed(0)}%
+                      </td>
                       <td
                         className={cn(
                           "px-2 py-2 text-right font-medium",
@@ -120,7 +134,6 @@ export function ResultsPanel({ results }: { results: SORResults }) {
                       >
                         {fmtCurrency(t.finalSub)}
                       </td>
-                      <td className="px-2 py-2 text-right">{fmtCurrency(t.calcUnsub)}</td>
                       <td
                         className={cn(
                           "px-2 py-2 text-right font-medium",
@@ -134,15 +147,11 @@ export function ResultsPanel({ results }: { results: SORResults }) {
                 })
               )}
               <tr className="bg-muted/40 font-semibold text-foreground">
-                <td className="px-2 py-2">AY Total</td>
-                <td className="px-2 py-2 text-right">
-                  {fmtCurrency(visibleTerms.reduce((s, t) => s + t.calcSub, 0))}
+                <td className="px-2 py-2" colSpan={2}>
+                  AY Total
                 </td>
                 <td className="px-2 py-2 text-right">
                   {fmtCurrency(visibleTerms.reduce((s, t) => s + t.finalSub, 0))}
-                </td>
-                <td className="px-2 py-2 text-right">
-                  {fmtCurrency(visibleTerms.reduce((s, t) => s + t.calcUnsub, 0))}
                 </td>
                 <td className="px-2 py-2 text-right">
                   {fmtCurrency(visibleTerms.reduce((s, t) => s + t.finalUnsub, 0))}
@@ -152,6 +161,42 @@ export function ResultsPanel({ results }: { results: SORResults }) {
           </table>
         </div>
       </div>
+
+      {results.recalcHistory.length > 0 ? (
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+            <History className="h-4 w-4 text-primary" /> Recalculation History
+          </h3>
+          <ol className="space-y-2 text-[11px]">
+            {results.recalcHistory.map((e, i) => (
+              <li
+                key={i}
+                className="rounded-lg border border-border/60 bg-background/60 p-3"
+              >
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="font-semibold text-foreground">
+                    #{i + 1} · {e.triggerLabel} disbursed
+                  </span>
+                  <span className="rounded bg-primary/10 px-2 py-0.5 font-mono text-[10px] text-primary">
+                    {Math.round(e.beforeAyPct * 100)}% → {Math.round(e.afterAyPct * 100)}%
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-1 font-mono text-[10px] text-muted-foreground">
+                  <span>
+                    Annual Sub: {fmtCurrency(e.beforeAnnualSub)} →{" "}
+                    {fmtCurrency(e.afterAnnualSub)}
+                  </span>
+                  <span>
+                    Annual Unsub: {fmtCurrency(e.beforeAnnualUnsub)} →{" "}
+                    {fmtCurrency(e.afterAnnualUnsub)}
+                  </span>
+                </div>
+                <p className="mt-1 text-foreground">{e.note}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
 
       <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
         <h3 className="mb-3 text-sm font-semibold text-foreground">Verification</h3>
