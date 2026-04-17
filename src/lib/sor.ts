@@ -620,6 +620,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     ayFtUsed,
     subBaseline,
     unsubBaseline,
+    additionalUnsubBase,
     finalSubByKey,
     finalUnsubByKey,
     adjustmentSubByKey,
