@@ -487,7 +487,27 @@ function SORCalculatorPage() {
                   </RadioGroup>
                 </div>
               </div>
-              <Label className="mt-4 flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+              <Label
+                className={`mt-3 flex items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5 ${
+                  gradLocked || inputs.dependency !== "dependent"
+                    ? "cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                }`}
+              >
+                <div>
+                  <div className="text-sm font-medium">Parent PLUS denied</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Dependent undergrad whose parents were denied PLUS gets the Independent
+                    Unsub cap. The Additional Unsub uplift is itself subject to SOR.
+                  </div>
+                </div>
+                <Switch
+                  checked={inputs.parentPlusDenied}
+                  disabled={gradLocked || inputs.dependency !== "dependent"}
+                  onCheckedChange={(v) => update({ parentPlusDenied: v })}
+                />
+              </Label>
+              <Label className="mt-3 flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
                 <div>
                   <div className="text-sm font-medium">Override statutory limits manually</div>
                   <div className="text-[11px] text-muted-foreground">
