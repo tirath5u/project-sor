@@ -155,6 +155,17 @@ export interface SORResults {
   noReduction: boolean;
   subBaseline: number;
   unsubBaseline: number;
+  /** Step 1 baseline before Need-cap reduction (for double-reduction display). */
+  subStatBaseline: number;
+  unsubStatBaseline: number;
+  /** Reduced (adjusted) Need cap after first SOR pass — only differs when
+   *  applyDoubleReduction is on AND Need < Statutory. */
+  subNeedAdjusted: number;
+  unsubNeedAdjusted: number;
+  doubleReductionApplied: boolean;
+  /** Additional Unsub headroom (PLUS-denial uplift), subject to SOR. */
+  additionalUnsubBase: number;
+  additionalUnsubReduced: number;
   reducedSubRaw: number;
   reducedUnsubRaw: number;
   reducedSub: number; // annual loan limit (Sub) post-shift
