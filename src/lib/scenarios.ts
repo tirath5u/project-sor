@@ -175,7 +175,7 @@ export const SCENARIOS: Scenario[] = [
     build: () =>
       mk(
         {
-          numStandardTerms: 1,
+          numStandardTerms: 2,
           includeSummer1: true,
           ayType: "BBAY1",
           summerPosition: "header",
@@ -189,6 +189,7 @@ export const SCENARIOS: Scenario[] = [
         {
           summer1: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 12 },
+          term2: { enabled: false, ftCredits: 12, enrolledCredits: 0 },
         },
       ),
   },
