@@ -254,12 +254,15 @@ export function defaultInputs(): SORInputs {
     ayFtCredits: 24,
     gradeLevel: "g0_1",
     dependency: "dependent",
+    parentPlusDenied: false,
     overrideLimits: false,
     subStatutory: lim.sub,
     subNeed: lim.sub,
     unsubStatutory: lim.unsub,
     unsubNeed: lim.unsub,
     applySubUnsubShift: true,
+    applyDoubleReduction: false,
+    countLthtInAyPct: true,
     terms,
   };
 }
