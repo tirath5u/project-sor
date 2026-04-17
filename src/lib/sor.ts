@@ -81,6 +81,8 @@ export interface SORInputs {
   /** Grade Level + Dependency drive Step 1 lookup. */
   gradeLevel: GradeLevel;
   dependency: Dependency;
+  /** Dependent undergrad whose parents were denied PLUS — unlocks Independent Unsub cap. */
+  parentPlusDenied: boolean;
   /** Override the lookup with manual statutory caps. */
   overrideLimits: boolean;
   subStatutory: number;
@@ -89,6 +91,11 @@ export interface SORInputs {
   unsubNeed: number;
   /** Apply Sub→Unsub shift after Step 2 (combined cap behavior per OBBBA). */
   applySubUnsubShift: boolean;
+  /** Per the 4/15 VFG: when Need < statutory, reduce Need to the SOR cap FIRST,
+   *  then re-apply SOR % to that reduced Need. ("Double-reduction".) */
+  applyDoubleReduction: boolean;
+  /** Count LTHT (below-half-time) credits in the AY-pct numerator (term still pays $0). */
+  countLthtInAyPct: boolean;
   terms: Record<TermKey, TermInput>;
 }
 
