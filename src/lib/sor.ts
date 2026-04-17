@@ -1,8 +1,22 @@
 /**
  * Schedule of Reductions (SOR) — Calculation engine
  *
- * Mirrors the logic of the v8 SOR spreadsheet. All math runs in pure TS so the
- * UI can remain a thin presentation layer.
+ * Implements the official FSA SOR process per the April 10, 2026 guidance
+ * (Working Families Tax Cuts Act / Pub. L. 119-21):
+ *
+ *   STEP 1 — Initial Maximum Annual Loan Limit
+ *   STEP 2 — SOR % = (enrolled credits AY ÷ FT credits AY) × 100,
+ *            rounded to nearest WHOLE percentage point. If ≥ 100 → no reduction.
+ *   STEP 3 — Disbursement method:
+ *             • Equal — annual ÷ number of terms (round to whole $; sum must equal annual)
+ *             • Proportional — (term enrolled ÷ total enrolled) × annual (proportions NOT rounded;
+ *               final dollar values rounded so they sum exactly)
+ *
+ * Reminders enforced:
+ *  • Borrowers below half-time are ineligible.
+ *  • Borrower may not receive more than the SOR annual loan limit, period.
+ *  • Revised SOR after enrollment change: subtract amounts already disbursed; remaining
+ *    is distributed across the remaining terms (equal or proportional).
  */
 
 export type CalType = 1 | 2 | 3 | 4 | 5;
@@ -25,12 +39,12 @@ export interface TermInput {
   key: TermKey;
   label: string;
   enabled: boolean;
-  ftCredits: number; // full-time credit threshold
+  ftCredits: number; // full-time credit threshold for THIS term
   enrolledCredits: number;
-  paidSub: number;
+  paidSub: number; // already disbursed to date
   paidUnsub: number;
-  coaCapSub: number; // per-term Max Allowed (Sub)
-  coaCapUnsub: number; // per-term Max Allowed (Unsub)
+  coaCapSub: number; // optional COA safety cap (0 = no cap)
+  coaCapUnsub: number;
 }
 
 export interface SORInputs {
@@ -43,6 +57,8 @@ export interface SORInputs {
   includeSummer2: boolean;
   includeIntersession1: boolean;
   includeIntersession2: boolean;
+  /** AY full-time credit hours (denominator of Step 2). If 0 → auto-sum of term FT. */
+  ayFtCredits: number;
   subStatutory: number;
   subNeed: number;
   unsubStatutory: number;
@@ -62,32 +78,37 @@ export interface TermResult {
   status: "eligible" | "below_half_time" | "off";
   paidSub: number;
   paidUnsub: number;
-  calcSub: number;
+  /** proportional share (decimal) used for proportional distribution, undefined if equal */
+  proportion?: number;
+  calcSub: number; // raw distribution per Step 3 (already rounded to $)
   calcUnsub: number;
-  finalSub: number;
+  finalSub: number; // after COA safety cap
   finalUnsub: number;
   coaCapSub: number;
   coaCapUnsub: number;
 }
 
 export interface SORResults {
-  enrolledSum: number;
-  ftSum: number;
-  enrollmentFraction: number;
-  sorPct: number;
-  subBaseline: number;
-  unsubBaseline: number;
-  reducedSub: number;
-  reducedUnsub: number;
+  enrolledSumAll: number; // across all enabled, half-time-or-above terms (Step 2 numerator)
+  ftSumAll: number; // Step 2 denominator
+  ayFtUsed: number;
+  enrollmentFractionRaw: number; // pre-rounding
+  sorPctRounded: number; // whole percentage point as decimal (e.g. 0.63)
+  noReduction: boolean; // sorPctRounded ≥ 1
+  subBaseline: number; // initial max sub
+  unsubBaseline: number; // initial max unsub
+  reducedSub: number; // SOR annual loan limit (Sub)
+  reducedUnsub: number; // SOR annual loan limit (Unsub)
   paidSubTotal: number;
   paidUnsubTotal: number;
-  remainingSub: number;
+  remainingSub: number; // SOR limit − already disbursed
   remainingUnsub: number;
   eligibleTermsCount: number;
+  remainingTermsCount: number; // terms with no prior disbursement (where remaining is split)
   termResults: TermResult[];
-  totalFinalSub: number;
+  totalFinalSub: number; // sum across terms (paid + new) of finalSub for verification
   totalFinalUnsub: number;
-  verifySub: number; // reducedSub - sum(finalSub + paidSub)  → 0 = balanced
+  verifySub: number; // reducedSub − totalFinalSub  → 0 = balanced
   verifyUnsub: number;
   warnings: string[];
 }
@@ -114,12 +135,12 @@ export const TERM_LABELS: Record<TermKey, string> = {
   intersession2: "Intersession 2",
 };
 
-export function defaultTerm(key: TermKey, isSummer = false): TermInput {
+export function defaultTerm(key: TermKey): TermInput {
   return {
     key,
     label: TERM_LABELS[key],
     enabled: false,
-    ftCredits: isSummer ? 12 : 12,
+    ftCredits: 12,
     enrolledCredits: 0,
     paidSub: 0,
     paidUnsub: 0,
@@ -130,10 +151,7 @@ export function defaultTerm(key: TermKey, isSummer = false): TermInput {
 
 export function defaultInputs(): SORInputs {
   const terms = {} as Record<TermKey, TermInput>;
-  TERM_ORDER.forEach((k) => {
-    terms[k] = defaultTerm(k, k.startsWith("summer") || k.startsWith("intersession"));
-  });
-  // SAY / 2 terms by default, both standard terms enabled
+  TERM_ORDER.forEach((k) => (terms[k] = defaultTerm(k)));
   terms.term1.enabled = true;
   terms.term1.ftCredits = 12;
   terms.term2.enabled = true;
@@ -149,30 +167,14 @@ export function defaultInputs(): SORInputs {
     includeSummer2: false,
     includeIntersession1: false,
     includeIntersession2: false,
-    subStatutory: 5500,
-    subNeed: 5500,
-    unsubStatutory: 7000,
-    unsubNeed: 7000,
-    distribution: "equal",
+    ayFtCredits: 24,
+    subStatutory: 3500,
+    subNeed: 3500,
+    unsubStatutory: 2000,
+    unsubNeed: 2000,
+    distribution: "proportional",
     terms,
   };
-}
-
-export function exampleInputs(): SORInputs {
-  const i = defaultInputs();
-  i.numStandardTerms = 3;
-  i.terms.term3.enabled = true;
-  i.terms.term3.ftCredits = 12;
-  i.terms.term1.enrolledCredits = 12;
-  i.terms.term2.enrolledCredits = 9;
-  i.terms.term3.enrolledCredits = 9;
-  i.terms.term1.coaCapSub = 3000;
-  i.terms.term2.coaCapSub = 3000;
-  i.terms.term3.coaCapSub = 3000;
-  i.terms.term1.coaCapUnsub = 3500;
-  i.terms.term2.coaCapUnsub = 3500;
-  i.terms.term3.coaCapUnsub = 3500;
-  return i;
 }
 
 const round = (n: number) => Math.round(n);
@@ -190,96 +192,115 @@ function activeKeys(inp: SORInputs): TermKey[] {
   return [...standard, ...opts].filter((k) => inp.terms[k]?.enabled);
 }
 
+/**
+ * Distribute a target amount across N "shares" (1 each = equal, custom = proportional)
+ * such that each piece is rounded to the nearest dollar AND the pieces sum exactly to target.
+ * Largest-remainder method.
+ */
+function distributeWithRemainder(target: number, shares: number[]): number[] {
+  const n = shares.length;
+  if (n === 0) return [];
+  const total = shares.reduce((s, x) => s + x, 0);
+  if (total <= 0 || target === 0) return shares.map(() => 0);
+
+  const exact = shares.map((s) => (target * s) / total);
+  const floors = exact.map((x) => Math.floor(x));
+  let allocated = floors.reduce((s, x) => s + x, 0);
+  let leftover = round(target) - allocated;
+
+  // Distribute leftover (positive or negative) by largest fractional remainder
+  const order = exact
+    .map((x, i) => ({ i, frac: x - Math.floor(x) }))
+    .sort((a, b) => (leftover >= 0 ? b.frac - a.frac : a.frac - b.frac));
+
+  const result = floors.slice();
+  let idx = 0;
+  while (leftover !== 0 && idx < order.length * 4) {
+    const k = order[idx % order.length].i;
+    if (leftover > 0) {
+      result[k] += 1;
+      leftover -= 1;
+    } else {
+      result[k] -= 1;
+      leftover += 1;
+    }
+    idx += 1;
+  }
+  return result;
+}
+
 export function calculateSOR(inp: SORInputs): SORResults {
   const warnings: string[] = [];
   if (inp.calType === 3 || inp.calType === 4) {
     warnings.push(
-      `Cal Type ${inp.calType} (clock-hour / non-standard) — verify FSA handbook rules manually.`,
+      `Cal Type ${inp.calType} (non-standard) — confirm SOR applicability with FSA Handbook.`,
     );
   }
-  if (inp.ayType === "BBAY1" || inp.ayType === "BBAY2") {
-    warnings.push(`${inp.ayType} selected — confirm AY boundaries align with the loan period.`);
+  if (inp.calType === 5) {
+    warnings.push("Cal Type 5 (clock-hour) is out of scope for the SOR formula — verify manually.");
   }
 
   const keys = activeKeys(inp);
   const termsActive = keys.map((k) => inp.terms[k]);
 
-  // Half-time + eligibility
-  const enrichedActive = termsActive.map((t) => {
+  // Eligibility (at least half-time)
+  const enriched = termsActive.map((t) => {
     const halfTime = t.ftCredits / 2;
-    const eligible = t.enabled && t.enrolledCredits >= halfTime && halfTime > 0;
-    if (
-      inp.programLevel === "undergraduate" &&
-      (t.key.startsWith("summer") || t.key.startsWith("intersession")) &&
-      t.ftCredits !== 12 &&
-      t.enabled
-    ) {
-      warnings.push(`${t.label}: UG full-time is typically 12 credits.`);
-    }
+    const eligible = t.enabled && halfTime > 0 && t.enrolledCredits >= halfTime;
     return { ...t, halfTime, eligible };
   });
 
-  const eligibleTerms = enrichedActive.filter((t) => t.eligible);
-  const enrolledSum = eligibleTerms.reduce((s, t) => s + t.enrolledCredits, 0);
-  const ftSum = eligibleTerms.reduce((s, t) => s + t.ftCredits, 0);
-  const enrollmentFraction = ftSum > 0 ? enrolledSum / ftSum : 0;
-  const sorPct = Math.min(1, enrollmentFraction);
+  const eligibleTerms = enriched.filter((t) => t.eligible);
 
+  // STEP 2 — SOR %
+  const enrolledSumAll = eligibleTerms.reduce((s, t) => s + t.enrolledCredits, 0);
+  const sumOfTermFT = eligibleTerms.reduce((s, t) => s + t.ftCredits, 0);
+  const ayFtUsed = inp.ayFtCredits > 0 ? inp.ayFtCredits : sumOfTermFT;
+  const ftSumAll = ayFtUsed;
+  const enrollmentFractionRaw = ftSumAll > 0 ? enrolledSumAll / ftSumAll : 0;
+  // Round to nearest WHOLE percentage point per FSA rule
+  const sorPctRounded = Math.min(1, Math.round(enrollmentFractionRaw * 100) / 100);
+  const noReduction = sorPctRounded >= 1;
+
+  // STEP 1 — Initial maximum annual limit (lower of statutory/need)
   const subBaseline = Math.min(inp.subStatutory, inp.subNeed);
   const unsubBaseline = Math.min(inp.unsubStatutory, inp.unsubNeed);
-  const reducedSub = round(subBaseline * sorPct);
-  const reducedUnsub = round(unsubBaseline * sorPct);
 
-  const paidSubTotal = enrichedActive.reduce((s, t) => s + (t.paidSub || 0), 0);
-  const paidUnsubTotal = enrichedActive.reduce((s, t) => s + (t.paidUnsub || 0), 0);
+  // SOR annual loan limit (round to whole $)
+  const reducedSub = round(subBaseline * sorPctRounded);
+  const reducedUnsub = round(unsubBaseline * sorPctRounded);
+
+  // Already disbursed
+  const paidSubTotal = enriched.reduce((s, t) => s + (t.paidSub || 0), 0);
+  const paidUnsubTotal = enriched.reduce((s, t) => s + (t.paidUnsub || 0), 0);
   const remainingSub = Math.max(0, reducedSub - paidSubTotal);
   const remainingUnsub = Math.max(0, reducedUnsub - paidUnsubTotal);
 
-  // Distribution: split remaining capacity across eligible terms with no prior payment.
-  // Remainder applied to LAST eligible term (matches v8 1166/1166/1168 fix).
-  const distributableTerms = eligibleTerms.filter(
+  // STEP 3 — Distribute remaining to eligible terms WITHOUT prior payment
+  const remainingTerms = eligibleTerms.filter(
     (t) => (t.paidSub || 0) === 0 && (t.paidUnsub || 0) === 0,
   );
-  const distCount = distributableTerms.length;
 
-  const calcMap: Record<string, { sub: number; unsub: number }> = {};
-  enrichedActive.forEach((t) => (calcMap[t.key] = { sub: 0, unsub: 0 }));
+  const calcMap: Record<string, { sub: number; unsub: number; proportion?: number }> = {};
+  enriched.forEach((t) => (calcMap[t.key] = { sub: 0, unsub: 0 }));
 
-  if (distCount > 0) {
-    if (inp.distribution === "equal") {
-      const baseSub = Math.floor(remainingSub / distCount);
-      const baseUnsub = Math.floor(remainingUnsub / distCount);
-      const remSub = remainingSub - baseSub * distCount;
-      const remUnsub = remainingUnsub - baseUnsub * distCount;
-      distributableTerms.forEach((t, idx) => {
-        const isLast = idx === distCount - 1;
-        calcMap[t.key].sub = baseSub + (isLast ? remSub : 0);
-        calcMap[t.key].unsub = baseUnsub + (isLast ? remUnsub : 0);
-      });
-    } else {
-      // Proportional to enrolled credits among distributable terms
-      const totalCred = distributableTerms.reduce((s, t) => s + t.enrolledCredits, 0) || 1;
-      let allocSub = 0;
-      let allocUnsub = 0;
-      distributableTerms.forEach((t, idx) => {
-        const isLast = idx === distCount - 1;
-        if (isLast) {
-          calcMap[t.key].sub = remainingSub - allocSub;
-          calcMap[t.key].unsub = remainingUnsub - allocUnsub;
-        } else {
-          const share = t.enrolledCredits / totalCred;
-          const s = round(remainingSub * share);
-          const u = round(remainingUnsub * share);
-          calcMap[t.key].sub = s;
-          calcMap[t.key].unsub = u;
-          allocSub += s;
-          allocUnsub += u;
-        }
-      });
-    }
+  if (remainingTerms.length > 0) {
+    const shares =
+      inp.distribution === "equal"
+        ? remainingTerms.map(() => 1)
+        : remainingTerms.map((t) => t.enrolledCredits || 0);
+
+    const subAlloc = distributeWithRemainder(remainingSub, shares);
+    const unsubAlloc = distributeWithRemainder(remainingUnsub, shares);
+    const totalShare = shares.reduce((s, x) => s + x, 0) || 1;
+    remainingTerms.forEach((t, i) => {
+      calcMap[t.key].sub = subAlloc[i];
+      calcMap[t.key].unsub = unsubAlloc[i];
+      calcMap[t.key].proportion = inp.distribution === "proportional" ? shares[i] / totalShare : undefined;
+    });
   }
 
-  const termResults: TermResult[] = enrichedActive.map((t) => {
+  const termResults: TermResult[] = enriched.map((t) => {
     const calcSub = calcMap[t.key]?.sub ?? 0;
     const calcUnsub = calcMap[t.key]?.unsub ?? 0;
     const capSub = t.coaCapSub > 0 ? Math.min(calcSub, t.coaCapSub) : calcSub;
@@ -295,6 +316,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
       status: !t.enabled ? "off" : t.eligible ? "eligible" : "below_half_time",
       paidSub: t.paidSub,
       paidUnsub: t.paidUnsub,
+      proportion: calcMap[t.key]?.proportion,
       calcSub,
       calcUnsub,
       finalSub: capSub,
@@ -310,10 +332,12 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const verifyUnsub = reducedUnsub - totalFinalUnsub;
 
   return {
-    enrolledSum,
-    ftSum,
-    enrollmentFraction,
-    sorPct,
+    enrolledSumAll,
+    ftSumAll,
+    ayFtUsed,
+    enrollmentFractionRaw,
+    sorPctRounded,
+    noReduction,
     subBaseline,
     unsubBaseline,
     reducedSub,
@@ -323,6 +347,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     remainingSub,
     remainingUnsub,
     eligibleTermsCount: eligibleTerms.length,
+    remainingTermsCount: remainingTerms.length,
     termResults,
     totalFinalSub,
     totalFinalUnsub,
@@ -340,4 +365,7 @@ export const fmtCurrency = (n: number) =>
   }).format(n);
 
 export const fmtPct = (n: number) =>
+  `${Math.round(n * 100)}%`;
+
+export const fmtPctPrecise = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 2 }).format(n);
