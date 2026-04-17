@@ -465,15 +465,40 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const effectiveCreditsBy = (t: TermInput) =>
     isDisbursementMode && t.disbursed ? t.actualCredits : t.enrolledCredits;
 
-  if (!isDisbursementMode) {
-    // Single snapshot
-    const snap = computeSnapshot(
+  // Helper: run a snapshot, optionally re-running for double-reduction.
+  const runSnapshot = (creditsFn: (t: TermInput) => number) => {
+    const first = computeSnapshot(
       ordered,
-      (t) => t.enrolledCredits,
+      creditsFn,
       ayFtUsed,
       subBaseline,
-      unsubBaseline,
+      unsubBaselineEff,
+      inp.countLthtInAyPct,
     );
+    if (!inp.applyDoubleReduction) return { snap: first, reduced: false };
+    // Reduce Need to (Need × pct), capped at Statutory, then re-apply pct.
+    const pct = first.ayPctRounded;
+    const subNeedReduced = Math.min(inp.subNeed, Math.round(inp.subNeed * pct));
+    const unsubNeedReduced = Math.min(inp.unsubNeed, Math.round(inp.unsubNeed * pct));
+    const subBaseline2 = Math.min(inp.subStatutory, subNeedReduced);
+    const unsubBaseline2 =
+      Math.min(inp.unsubStatutory, unsubNeedReduced) + additionalUnsubBase;
+    if (subBaseline2 === subBaseline && unsubBaseline2 === unsubBaselineEff) {
+      return { snap: first, reduced: false };
+    }
+    const second = computeSnapshot(
+      ordered,
+      creditsFn,
+      ayFtUsed,
+      subBaseline2,
+      unsubBaseline2,
+      inp.countLthtInAyPct,
+    );
+    return { snap: second, reduced: true };
+  };
+
+  if (!isDisbursementMode) {
+    const { snap } = runSnapshot((t) => t.enrolledCredits);
     ordered.forEach((t, i) => {
       finalSubByKey[t.key] = snap.termSub[i];
       finalUnsubByKey[t.key] = snap.termUnsub[i];
@@ -485,6 +510,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
       ayFtUsed,
       subBaseline,
       unsubBaseline,
+      additionalUnsubBase,
       finalSubByKey,
       finalUnsubByKey,
       adjustmentSubByKey,
@@ -497,23 +523,12 @@ export function calculateSOR(inp: SORInputs): SORResults {
   }
 
   // ----- Disbursement mode walker -----
-  // Walk terms in order. Maintain a "current plan" snapshot.
-  // For each disbursed term: replace its planned credits with actualCredits,
-  // recompute the snapshot, lock its paid amount as the final, compute the
-  // delta vs. its planned share (= over/under-award), and apply that delta as
-  // an adjustment to the NEXT undisbursed term's final amount.
   let workingPlannedCredits: number[] = ordered.map((t) => t.enrolledCredits);
-
-  const baseSnap = computeSnapshot(
-    ordered,
-    (t) => {
-      const idx = ordered.findIndex((x) => x.key === t.key);
-      return workingPlannedCredits[idx];
-    },
-    ayFtUsed,
-    subBaseline,
-    unsubBaseline,
-  );
+  const baseSnapResult = runSnapshot((t) => {
+    const idx = ordered.findIndex((x) => x.key === t.key);
+    return workingPlannedCredits[idx];
+  });
+  const baseSnap = baseSnapResult.snap;
   // Initialize finals from the base plan
   ordered.forEach((t, i) => {
     finalSubByKey[t.key] = baseSnap.termSub[i];
