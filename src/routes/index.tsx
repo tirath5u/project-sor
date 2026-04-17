@@ -104,10 +104,10 @@ function SORCalculatorPage() {
     inputs.includeIntersession2,
   ]);
 
-  // Auto-populate limits from grade/dependency unless overridden
+  // Auto-populate limits from grade/dependency/PLUS-denial unless overridden
   React.useEffect(() => {
     if (inputs.overrideLimits) return;
-    const lim = lookupLimits(inputs.gradeLevel, inputs.dependency);
+    const lim = lookupLimits(inputs.gradeLevel, inputs.dependency, inputs.parentPlusDenied);
     setInputs((p) => {
       if (
         p.subStatutory === lim.sub &&
@@ -125,7 +125,7 @@ function SORCalculatorPage() {
         unsubNeed: lim.unsub,
       };
     });
-  }, [inputs.gradeLevel, inputs.dependency, inputs.overrideLimits]);
+  }, [inputs.gradeLevel, inputs.dependency, inputs.parentPlusDenied, inputs.overrideLimits]);
 
   const activeTermKeys: TermKey[] = [
     ...STANDARD_KEYS.slice(0, inputs.numStandardTerms),
