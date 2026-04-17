@@ -188,10 +188,10 @@ function SORCalculatorPage() {
               SOR % rounded to nearest whole point
             </span>
             <span className="rounded-full bg-white/15 px-2.5 py-1 font-medium">
-              Disbursements rounded to whole $
+              Net Paid = Paid − Refunds
             </span>
             <span className="rounded-full bg-white/15 px-2.5 py-1 font-medium">
-              Sum-must-equal-annual enforced
+              Sub → Unsub shift (combined cap)
             </span>
             <span className="rounded-full bg-white/15 px-2.5 py-1 font-medium">
               Half-time gate
@@ -480,6 +480,7 @@ function SORCalculatorPage() {
                             step={0.5}
                             onChange={(v) => updateTerm(key, { enrolledCredits: v })}
                           />
+                          <div className="hidden sm:block" />
                           <NumberField
                             label="Already paid (Sub)"
                             prefix="$"
@@ -487,11 +488,41 @@ function SORCalculatorPage() {
                             onChange={(v) => updateTerm(key, { paidSub: v })}
                           />
                           <NumberField
+                            label="Refund (Sub)"
+                            prefix="$"
+                            value={t.refundSub}
+                            onChange={(v) => updateTerm(key, { refundSub: v })}
+                            hint="Reduces net paid"
+                          />
+                          <div className="rounded-lg border border-border bg-muted/40 px-3 py-2">
+                            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              Net Paid (Sub)
+                            </div>
+                            <div className="mt-1 text-sm font-semibold tabular-nums text-foreground">
+                              ${Math.max(0, (t.paidSub || 0) - (t.refundSub || 0)).toLocaleString()}
+                            </div>
+                          </div>
+                          <NumberField
                             label="Already paid (Unsub)"
                             prefix="$"
                             value={t.paidUnsub}
                             onChange={(v) => updateTerm(key, { paidUnsub: v })}
                           />
+                          <NumberField
+                            label="Refund (Unsub)"
+                            prefix="$"
+                            value={t.refundUnsub}
+                            onChange={(v) => updateTerm(key, { refundUnsub: v })}
+                            hint="Reduces net paid"
+                          />
+                          <div className="rounded-lg border border-border bg-muted/40 px-3 py-2">
+                            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              Net Paid (Unsub)
+                            </div>
+                            <div className="mt-1 text-sm font-semibold tabular-nums text-foreground">
+                              ${Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0)).toLocaleString()}
+                            </div>
+                          </div>
                           <NumberField
                             label="COA cap (Sub)"
                             prefix="$"
