@@ -543,16 +543,11 @@ export function calculateSOR(inp: SORInputs): SORResults {
     workingPlannedCredits = workingPlannedCredits.map((c, j) =>
       j === i ? t.actualCredits : c,
     );
-    const newSnap = computeSnapshot(
-      ordered,
-      (_t) => {
-        const idx = ordered.findIndex((x) => x.key === _t.key);
-        return workingPlannedCredits[idx];
-      },
-      ayFtUsed,
-      subBaseline,
-      unsubBaseline,
-    );
+    const newSnapResult = runSnapshot((_t) => {
+      const idx = ordered.findIndex((x) => x.key === _t.key);
+      return workingPlannedCredits[idx];
+    });
+    const newSnap = newSnapResult.snap;
     // Lock the paid amount as this term's final
     const paidSubLocked = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
     const paidUnsubLocked = Math.max(
