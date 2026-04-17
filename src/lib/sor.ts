@@ -327,13 +327,17 @@ function step5Distribute(
   return out;
 }
 
-/** Compute Steps 2-5 for a snapshot (used by both plan + disbursement-walker). */
+/** Compute Steps 2-5 for a snapshot (used by both plan + disbursement-walker).
+ *  When `countLthtInAyPct` is true, below-half-time terms still contribute their
+ *  credits to the AY% numerator (per 4/15 VFG) but remain ineligible for any
+ *  disbursement. */
 function computeSnapshot(
   termsInOrder: TermInput[],
   effectiveCreditsBy: (t: TermInput) => number,
   ayFtUsed: number,
   initialSub: number,
   initialUnsub: number,
+  countLthtInAyPct: boolean,
 ): {
   ayPctRaw: number;
   ayPctRounded: number;
@@ -350,10 +354,14 @@ function computeSnapshot(
     const half = t.ftCredits / 2;
     return t.enabled && half > 0 && effectiveCreditsBy(t) >= half;
   });
-  const enrolledSum = termsInOrder.reduce(
-    (s, t, i) => s + (eligible[i] ? effectiveCreditsBy(t) : 0),
-    0,
-  );
+  // Numerator = eligible-term credits + (optional) LTHT credits from enabled
+  // terms running below half-time (>0 credits). LTHT terms still pay $0.
+  const enrolledSum = termsInOrder.reduce((s, t, i) => {
+    const c = effectiveCreditsBy(t);
+    if (eligible[i]) return s + c;
+    if (countLthtInAyPct && t.enabled && c > 0) return s + c;
+    return s;
+  }, 0);
   const ayPctRaw = ayFtUsed > 0 ? enrolledSum / ayFtUsed : 0;
   const ayPctRounded = Math.min(1, Math.round(ayPctRaw * 100) / 100);
   const annualSub = round(initialSub * ayPctRounded);
