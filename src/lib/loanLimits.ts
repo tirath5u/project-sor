@@ -57,12 +57,29 @@ export const GRADE_LABELS: Record<GradeLevel, string> = {
   professional: "Professional",
 };
 
-export function lookupLimits(grade: GradeLevel, dependency: Dependency): {
+export function lookupLimits(
+  grade: GradeLevel,
+  dependency: Dependency,
+  parentPlusDenied: boolean = false,
+): {
   sub: number;
   unsub: number;
+  /** Portion of unsub that comes from the PLUS-denial uplift (Independent − Dependent). */
+  additionalUnsub: number;
 } {
-  const row = LIMITS[grade][dependency];
-  return { sub: row.sub, unsub: Math.max(0, row.combined - row.sub) };
+  const isGP = isGradOrProf(grade);
+  // Grad/Prof are independent by definition; PLUS denial doesn't apply.
+  const effectiveDep: Dependency =
+    isGP || dependency === "independent" || parentPlusDenied ? "independent" : "dependent";
+  const row = LIMITS[grade][effectiveDep];
+  const baseRow = LIMITS[grade]["dependent"];
+  const baseUnsub = Math.max(0, baseRow.combined - baseRow.sub);
+  const totalUnsub = Math.max(0, row.combined - row.sub);
+  const additionalUnsub =
+    !isGP && dependency === "dependent" && parentPlusDenied
+      ? Math.max(0, totalUnsub - baseUnsub)
+      : 0;
+  return { sub: row.sub, unsub: totalUnsub, additionalUnsub };
 }
 
 export function isGradOrProf(grade: GradeLevel): boolean {
