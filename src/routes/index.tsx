@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as React from "react";
-import { RotateCcw, Calculator, BookOpen, FileSpreadsheet } from "lucide-react";
+import { RotateCcw, Calculator, BookOpen, FileSpreadsheet, ListChecks } from "lucide-react";
 import {
   calculateSOR,
   defaultInputs,
@@ -8,7 +8,15 @@ import {
   type SORInputs,
   type TermKey,
   type CalType,
+  type ViewMode,
 } from "@/lib/sor";
+import {
+  GRADE_LABELS,
+  lookupLimits,
+  isGradOrProf,
+  type GradeLevel,
+  type Dependency,
+} from "@/lib/loanLimits";
 import { SCENARIOS, type Scenario } from "@/lib/scenarios";
 import { Section } from "@/components/sor/Section";
 import { NumberField } from "@/components/sor/NumberField";
@@ -28,6 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/")({
   component: SORCalculatorPage,
@@ -54,7 +63,6 @@ function SORCalculatorPage() {
     setActiveScenario("");
     setInputs((p) => ({ ...p, terms: { ...p.terms, [key]: { ...p.terms[key], ...patch } } }));
   };
-
   const loadScenario = (s: Scenario) => {
     setInputs(s.build());
     setActiveScenario(s.id);
@@ -76,7 +84,6 @@ function SORCalculatorPage() {
     });
   }, [inputs.numStandardTerms]);
 
-  // Sync optional toggles → term.enabled
   React.useEffect(() => {
     setInputs((p) => {
       const next = { ...p, terms: { ...p.terms } };
@@ -97,6 +104,29 @@ function SORCalculatorPage() {
     inputs.includeIntersession2,
   ]);
 
+  // Auto-populate limits from grade/dependency unless overridden
+  React.useEffect(() => {
+    if (inputs.overrideLimits) return;
+    const lim = lookupLimits(inputs.gradeLevel, inputs.dependency);
+    setInputs((p) => {
+      if (
+        p.subStatutory === lim.sub &&
+        p.subNeed === lim.sub &&
+        p.unsubStatutory === lim.unsub &&
+        p.unsubNeed === lim.unsub
+      ) {
+        return p;
+      }
+      return {
+        ...p,
+        subStatutory: lim.sub,
+        subNeed: lim.sub,
+        unsubStatutory: lim.unsub,
+        unsubNeed: lim.unsub,
+      };
+    });
+  }, [inputs.gradeLevel, inputs.dependency, inputs.overrideLimits]);
+
   const activeTermKeys: TermKey[] = [
     ...STANDARD_KEYS.slice(0, inputs.numStandardTerms),
     ...OPTIONAL_KEYS.filter(({ toggle }) => Boolean(inputs[toggle])).map((o) => o.key),
@@ -104,6 +134,8 @@ function SORCalculatorPage() {
 
   const scenarioGroups = Array.from(new Set(SCENARIOS.map((s) => s.group)));
   const currentScenario = SCENARIOS.find((s) => s.id === activeScenario);
+  const isDisbursementMode = inputs.viewMode === "disbursement";
+  const gradLocked = isGradOrProf(inputs.gradeLevel);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--gradient-subtle)" }}>
@@ -122,7 +154,7 @@ function SORCalculatorPage() {
                 Schedule of Reductions Calculator
               </h1>
               <p className="text-[11px] text-muted-foreground sm:text-xs">
-                Live walkthrough of the FSA three-step calculation for product, engineering, and QA.
+                ED 5-step model · per-term recalculation · for product, engineering, QA.
               </p>
             </div>
           </div>
@@ -135,7 +167,7 @@ function SORCalculatorPage() {
                   if (s) loadScenario(s);
                 }}
               >
-                <SelectTrigger className="h-9 w-[280px] rounded-lg">
+                <SelectTrigger className="h-9 w-[300px] rounded-lg">
                   <FileSpreadsheet className="h-4 w-4" />
                   <SelectValue placeholder="Load a scenario…" />
                 </SelectTrigger>
@@ -179,23 +211,44 @@ function SORCalculatorPage() {
             Less-than-full-time loan-limit reductions, calculated live.
           </h2>
           <p className="mt-1.5 max-w-2xl text-xs opacity-90 sm:text-sm">
-            A walk-through of the Department of Education's three-step Schedule of Reductions
-            (SOR) process: initial maximum → SOR % → per-term disbursement. Built so product,
-            engineering, and QA can see every input, formula, and result in one place.
+            The Department of Education's 5-step Schedule of Reductions process — initial max,
+            AY %, per-term share, term %, and per-term disbursement — with full per-term
+            recalculation when actual enrollment differs from plan.
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
             <span className="rounded-full bg-white/15 px-2.5 py-1 font-medium">
-              SOR % rounded to nearest whole point
+              5-step ED process
             </span>
             <span className="rounded-full bg-white/15 px-2.5 py-1 font-medium">
-              Net Paid = Paid − Refunds
+              Plan vs. Disbursement view
             </span>
             <span className="rounded-full bg-white/15 px-2.5 py-1 font-medium">
-              Sub → Unsub shift (combined cap)
+              Balloon · clawback · overflow
             </span>
             <span className="rounded-full bg-white/15 px-2.5 py-1 font-medium">
               Half-time gate
             </span>
+          </div>
+
+          {/* Mode toggle */}
+          <div className="mt-4 inline-flex rounded-xl border border-white/30 bg-white/10 p-1 text-xs">
+            {([
+              { v: "plan", label: "Plan view", desc: "intent-to-enroll" },
+              { v: "disbursement", label: "Disbursement view", desc: "recalc per term" },
+            ] as { v: ViewMode; label: string; desc: string }[]).map((m) => (
+              <button
+                key={m.v}
+                onClick={() => update({ viewMode: m.v })}
+                className={`rounded-lg px-3 py-1.5 font-medium transition ${
+                  inputs.viewMode === m.v
+                    ? "bg-white text-primary"
+                    : "text-white/85 hover:bg-white/10"
+                }`}
+              >
+                {m.label}
+                <span className="ml-1.5 text-[10px] opacity-70">· {m.desc}</span>
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -381,7 +434,75 @@ function SORCalculatorPage() {
               </div>
             </Section>
 
-            {/* Section B */}
+            {/* Section A1 — Grade Level & Dependency */}
+            <Section
+              letter="A1"
+              title="Grade Level & Dependency"
+              description="Auto-populates the OBBBA 2026-27 Sub/Unsub annual statutory caps."
+            >
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Grade Level</Label>
+                  <Select
+                    value={inputs.gradeLevel}
+                    onValueChange={(v) => update({ gradeLevel: v as GradeLevel })}
+                  >
+                    <SelectTrigger className="h-10 rounded-lg">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(GRADE_LABELS) as GradeLevel[]).map((g) => (
+                        <SelectItem key={g} value={g}>
+                          {GRADE_LABELS[g]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">
+                    Dependency {gradLocked ? "(Independent — grad/prof)" : ""}
+                  </Label>
+                  <RadioGroup
+                    value={gradLocked ? "independent" : inputs.dependency}
+                    onValueChange={(v) => update({ dependency: v as Dependency })}
+                    className="grid grid-cols-2 gap-2"
+                  >
+                    {(["dependent", "independent"] as Dependency[]).map((d) => (
+                      <Label
+                        key={d}
+                        htmlFor={`dep-${d}`}
+                        className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-background p-2.5 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5 ${
+                          gradLocked && d === "dependent" ? "pointer-events-none opacity-40" : ""
+                        }`}
+                      >
+                        <RadioGroupItem
+                          id={`dep-${d}`}
+                          value={d}
+                          disabled={gradLocked}
+                        />
+                        <span className="text-sm font-medium capitalize">{d}</span>
+                      </Label>
+                    ))}
+                  </RadioGroup>
+                </div>
+              </div>
+              <Label className="mt-4 flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+                <div>
+                  <div className="text-sm font-medium">Override statutory limits manually</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Off: Sub/Unsub caps come from the OBBBA lookup. On: edit caps directly in
+                    Section B.
+                  </div>
+                </div>
+                <Switch
+                  checked={inputs.overrideLimits}
+                  onCheckedChange={(v) => update({ overrideLimits: v })}
+                />
+              </Label>
+            </Section>
+
+            {/* Section B — Initial Max */}
             <Section
               letter="B"
               title="Initial Maximum Annual Loan Limit"
@@ -451,11 +572,15 @@ function SORCalculatorPage() {
               </Label>
             </Section>
 
-            {/* Section C */}
+            {/* Section C — Term-by-Term */}
             <Section
               letter="C"
               title="Term-by-Term Enrollment"
-              description="Half-time cliff = FT ÷ 2. Below half-time → ineligible (no disbursement)."
+              description={
+                isDisbursementMode
+                  ? "Disbursement view: tick Disbursed when funds release; enter Actual credits for that point in time."
+                  : "Half-time cliff = FT ÷ 2. Below half-time → ineligible (no disbursement)."
+              }
             >
               {activeTermKeys.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No terms enabled yet.</p>
@@ -469,17 +594,37 @@ function SORCalculatorPage() {
                         key={key}
                         className="rounded-xl border border-border bg-background/60 p-4"
                       >
-                        <div className="mb-3 flex items-center justify-between">
+                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold text-foreground">
                               {TERM_LABELS[key]}
                             </span>
                             {tr ? <StatusChip status={tr.status} /> : null}
+                            {isDisbursementMode && t.disbursed ? (
+                              <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                                Disbursed
+                              </span>
+                            ) : null}
                           </div>
                           <span className="text-[11px] text-muted-foreground">
                             Half-time @ {(t.ftCredits / 2).toFixed(1)} cr
                           </span>
                         </div>
+
+                        {isDisbursementMode ? (
+                          <Label className="mb-3 flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
+                            <Checkbox
+                              checked={t.disbursed}
+                              onCheckedChange={(v) =>
+                                updateTerm(key, { disbursed: Boolean(v) })
+                              }
+                            />
+                            <span className="text-xs font-medium">
+                              Disbursed (lock paid amount, recalc plan)
+                            </span>
+                          </Label>
+                        ) : null}
+
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                           <NumberField
                             label="FT credits (term)"
@@ -488,12 +633,23 @@ function SORCalculatorPage() {
                             onChange={(v) => updateTerm(key, { ftCredits: v })}
                           />
                           <NumberField
-                            label="Enrolled"
+                            label={isDisbursementMode ? "Planned credits" : "Enrolled"}
                             value={t.enrolledCredits}
                             step={0.5}
                             onChange={(v) => updateTerm(key, { enrolledCredits: v })}
                           />
-                          <div className="hidden sm:block" />
+                          {isDisbursementMode ? (
+                            <NumberField
+                              label="Actual credits at disbursement"
+                              value={t.actualCredits}
+                              step={0.5}
+                              onChange={(v) => updateTerm(key, { actualCredits: v })}
+                              hint={t.disbursed ? "Used for recalc" : "(not yet disbursed)"}
+                            />
+                          ) : (
+                            <div className="hidden sm:block" />
+                          )}
+
                           <NumberField
                             label="Already paid (Sub)"
                             prefix="$"
@@ -558,48 +714,23 @@ function SORCalculatorPage() {
               )}
             </Section>
 
-            {/* Section D — distribution method */}
+            {/* Section D — Per-term Shares (Step 3) */}
             <Section
               letter="D"
-              title="Disbursement Method"
-              description="Equal: annual ÷ N terms · Proportional: term enrolled ÷ total enrolled × annual."
+              title="Per-term Shares (Step 3)"
+              description="Annual loan limit ÷ N eligible terms. Whole dollars; last term absorbs the rounding remainder. The model is fixed by regulation."
             >
-              <RadioGroup
-                value={inputs.distribution}
-                onValueChange={(v) =>
-                  update({ distribution: v as SORInputs["distribution"] })
-                }
-                className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-              >
-                <Label
-                  htmlFor="dist-equal"
-                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-background p-3 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
-                >
-                  <RadioGroupItem id="dist-equal" value="equal" className="mt-0.5" />
-                  <div>
-                    <div className="text-sm font-medium">Equal disbursements</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      Even split; rounding remainder applied so total equals annual exactly.
-                    </div>
-                  </div>
-                </Label>
-                <Label
-                  htmlFor="dist-prop"
-                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-background p-3 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
-                >
-                  <RadioGroupItem id="dist-prop" value="proportional" className="mt-0.5" />
-                  <div>
-                    <div className="text-sm font-medium">Proportional distribution</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      Each term's share = enrolled credits ÷ total enrolled (proportions not
-                      rounded; dollars rounded to sum exactly).
-                    </div>
-                  </div>
-                </Label>
-              </RadioGroup>
+              <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 text-xs text-foreground">
+                <ListChecks className="h-4 w-4 text-primary" />
+                <span>
+                  Each eligible term receives an equal share of the annual SOR limit; in
+                  Step 4 each share is multiplied by that term's enrollment %, with overflow
+                  forwarded to remaining terms.
+                </span>
+              </div>
             </Section>
 
-            {/* Logic walkthrough — placed under inputs on desktop too for completeness */}
+            {/* Logic walkthrough */}
             <StepWalkthrough inputs={inputs} results={results} />
           </div>
 
@@ -611,7 +742,7 @@ function SORCalculatorPage() {
 
         <footer className="mt-10 border-t border-border/60 pt-6 text-center text-[11px] text-muted-foreground">
           Modeling tool only · Verify against the FSA Handbook & 34 CFR 685.203 before
-          disbursement.
+          disbursement. R2T4 (Scenarios 6 & 7) and aggregate lifetime caps are out of scope.
         </footer>
       </main>
     </div>
