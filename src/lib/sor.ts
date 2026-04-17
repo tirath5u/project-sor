@@ -652,6 +652,7 @@ function assemble(args: {
     ayFtUsed,
     subBaseline,
     unsubBaseline,
+    additionalUnsubBase,
     finalSubByKey,
     finalUnsubByKey,
     adjustmentSubByKey,
@@ -662,15 +663,33 @@ function assemble(args: {
     finalSnap,
   } = args;
 
-  // Apply Sub→Unsub shift on the FINAL annual limits (combined cap)
-  const reducedSubRaw = round(subBaseline * finalSnap.ayPctRounded);
-  const reducedUnsubRaw = round(unsubBaseline * finalSnap.ayPctRounded);
+  const pct = finalSnap.ayPctRounded;
+
+  // Step 1 reference values for display.
+  const subStatBaseline = inp.subStatutory;
+  const unsubStatBaseline = inp.unsubStatutory;
+  // Adjusted Need under double-reduction (only different when Need < Statutory).
+  const subNeedAdjusted = inp.applyDoubleReduction
+    ? Math.min(inp.subNeed, Math.round(inp.subNeed * pct))
+    : inp.subNeed;
+  const unsubNeedAdjusted = inp.applyDoubleReduction
+    ? Math.min(inp.unsubNeed, Math.round(inp.unsubNeed * pct))
+    : inp.unsubNeed;
+  const doubleReductionApplied =
+    inp.applyDoubleReduction &&
+    (subNeedAdjusted !== inp.subNeed || unsubNeedAdjusted !== inp.unsubNeed);
+
+  // Apply Sub→Unsub shift on the FINAL annual limits (combined cap).
+  // Includes PLUS-denial Additional Unsub headroom in the Unsub statutory ceiling.
+  const reducedSubRaw = round(subBaseline * pct);
+  const reducedUnsubRaw = round((unsubBaseline + additionalUnsubBase) * pct);
+  const additionalUnsubReduced = round(additionalUnsubBase * pct);
   let reducedSub = reducedSubRaw;
   let reducedUnsub = reducedUnsubRaw;
   let shiftedToUnsub = 0;
   if (inp.applySubUnsubShift) {
-    const subStatCeiling = round(inp.subStatutory * finalSnap.ayPctRounded);
-    const unsubStatCeiling = round(inp.unsubStatutory * finalSnap.ayPctRounded);
+    const subStatCeiling = round(inp.subStatutory * pct);
+    const unsubStatCeiling = round((inp.unsubStatutory + additionalUnsubBase) * pct);
     const subUnused = Math.max(0, subStatCeiling - reducedSubRaw);
     const unsubHeadroom = Math.max(0, unsubStatCeiling - reducedUnsubRaw);
     shiftedToUnsub = Math.min(subUnused, unsubHeadroom);
@@ -748,10 +767,17 @@ function assemble(args: {
     ftSumAll: ayFtUsed,
     ayFtUsed,
     enrollmentFractionRaw: finalSnap.ayPctRaw,
-    sorPctRounded: finalSnap.ayPctRounded,
-    noReduction: finalSnap.ayPctRounded >= 1,
+    sorPctRounded: pct,
+    noReduction: pct >= 1,
     subBaseline,
     unsubBaseline,
+    subStatBaseline,
+    unsubStatBaseline,
+    subNeedAdjusted,
+    unsubNeedAdjusted,
+    doubleReductionApplied,
+    additionalUnsubBase,
+    additionalUnsubReduced,
     reducedSubRaw,
     reducedUnsubRaw,
     reducedSub,
