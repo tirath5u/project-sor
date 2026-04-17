@@ -619,8 +619,8 @@ function SORCalculatorPage() {
                 />
               </Label>
               {results.doubleReductionApplied ? (
-                <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-xs">
-                  <div className="font-semibold text-amber-700 dark:text-amber-400">
+                <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-xs">
+                  <div className="font-semibold text-primary">
                     Adjusted Need (post first reduction)
                   </div>
                   <div className="mt-1 grid grid-cols-2 gap-2 text-muted-foreground">
