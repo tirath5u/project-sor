@@ -419,9 +419,24 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const keys = activeKeys(inp);
   const ordered = keys.map((k) => inp.terms[k]);
 
-  // STEP 1 — initial max (lookup unless overridden)
+  // STEP 1 — initial max (statutory baseline + Need cap, by loan type).
+  // Adds:
+  //  • PLUS-denial Additional Unsub: dependent undergrad whose parent was
+  //    denied PLUS gets the Independent Unsub cap. The PLUS-denial uplift
+  //    is itself subject to SOR (per 4/15 VFG).
+  //  • Double-reduction (toggle): if Need < Statutory, the Need cap is first
+  //    reduced by SOR%, then SOR% is applied to that reduced Need on Step 2.
+  //    When Need ≥ Statutory, this collapses to the standard single reduction.
   const subBaseline = Math.min(inp.subStatutory, inp.subNeed);
   const unsubBaseline = Math.min(inp.unsubStatutory, inp.unsubNeed);
+  // Additional Unsub headroom from PLUS denial — only meaningful for dep undergrad.
+  const lookup = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied);
+  const additionalUnsubBase =
+    !inp.overrideLimits && inp.parentPlusDenied && inp.dependency === "dependent"
+      ? lookup.additionalUnsub
+      : 0;
+  // Effective Unsub cap used in math = Need-bounded baseline + Addl Unsub headroom.
+  const unsubBaselineEff = unsubBaseline + additionalUnsubBase;
 
   const sumOfTermFT = ordered.reduce((s, t) => s + t.ftCredits, 0);
   const ayFtUsed = inp.ayFtCredits > 0 ? inp.ayFtCredits : sumOfTermFT;
