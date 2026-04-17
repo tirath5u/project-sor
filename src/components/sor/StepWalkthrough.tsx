@@ -50,17 +50,39 @@ export function StepWalkthrough({
         <StepHeader n={1} title="Initial Maximum Annual Loan Limit" />
         <p className="mb-2 text-xs text-muted-foreground">
           Lower of statutory limit and student need, by loan type.
+          {results.additionalUnsubBase > 0
+            ? " Additional Unsub headroom (PLUS denial) is added to the Unsub ceiling."
+            : ""}
+          {results.doubleReductionApplied
+            ? " Double-reduction: Need is reduced by SOR % FIRST (per 4/15 VFG)."
+            : ""}
         </p>
         <div className="grid grid-cols-2 gap-2">
           <Eq>
             <div className="text-muted-foreground">Sub:</div>
-            min({fmtCurrency(inputs.subStatutory)}, {fmtCurrency(inputs.subNeed)}) ={" "}
+            min({fmtCurrency(inputs.subStatutory)},{" "}
+            {fmtCurrency(
+              results.doubleReductionApplied ? results.subNeedAdjusted : inputs.subNeed,
+            )}
+            ) ={" "}
             <span className="font-semibold text-primary">{fmtCurrency(results.subBaseline)}</span>
           </Eq>
           <Eq>
-            <div className="text-muted-foreground">Unsub:</div>
-            min({fmtCurrency(inputs.unsubStatutory)}, {fmtCurrency(inputs.unsubNeed)}) ={" "}
-            <span className="font-semibold text-primary">{fmtCurrency(results.unsubBaseline)}</span>
+            <div className="text-muted-foreground">
+              Unsub{results.additionalUnsubBase > 0 ? " (+ Addl Unsub)" : ""}:
+            </div>
+            min({fmtCurrency(inputs.unsubStatutory)},{" "}
+            {fmtCurrency(
+              results.doubleReductionApplied ? results.unsubNeedAdjusted : inputs.unsubNeed,
+            )}
+            )
+            {results.additionalUnsubBase > 0
+              ? ` + ${fmtCurrency(results.additionalUnsubBase)}`
+              : ""}{" "}
+            ={" "}
+            <span className="font-semibold text-primary">
+              {fmtCurrency(results.unsubBaseline + results.additionalUnsubBase)}
+            </span>
           </Eq>
         </div>
       </section>
