@@ -163,14 +163,20 @@ export function ResultsPanel({ results }: { results: SORResults }) {
           <Stat
             label="Remaining Sub"
             value={fmtCurrency(results.remainingSub)}
-            sub={`paid ${fmtCurrency(results.paidSubTotal)}`}
+            sub={`net paid ${fmtCurrency(results.netPaidSubTotal)}`}
           />
           <Stat
             label="Remaining Unsub"
             value={fmtCurrency(results.remainingUnsub)}
-            sub={`paid ${fmtCurrency(results.paidUnsubTotal)}`}
+            sub={`net paid ${fmtCurrency(results.netPaidUnsubTotal)}`}
           />
         </div>
+        {results.shiftedToUnsub > 0 ? (
+          <div className="mt-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-[11px] text-foreground">
+            <span className="font-semibold">Sub → Unsub shift:</span>{" "}
+            {fmtCurrency(results.shiftedToUnsub)} moved from Sub to Unsub (combined cap).
+          </div>
+        ) : null}
       </div>
 
       {results.warnings.length > 0 ? (

@@ -436,6 +436,19 @@ function SORCalculatorPage() {
                   </div>
                 ))}
               </div>
+              <Label className="mt-4 flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+                <div>
+                  <div className="text-sm font-medium">Apply Sub → Unsub shift</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Unused Sub SOR ceiling shifts to Unsub up to the Unsub SOR ceiling
+                    (OBBBA combined-cap behavior).
+                  </div>
+                </div>
+                <Switch
+                  checked={inputs.applySubUnsubShift}
+                  onCheckedChange={(v) => update({ applySubUnsubShift: v })}
+                />
+              </Label>
             </Section>
 
             {/* Section C */}
