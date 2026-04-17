@@ -122,7 +122,7 @@ function SORCalculatorPage() {
                 Schedule of Reductions Calculator
               </h1>
               <p className="text-[11px] text-muted-foreground sm:text-xs">
-                Title IV LTFT logic · Pub. L. 119-21 · Apr 2026 guidance
+                Live walkthrough of the FSA three-step calculation for product, engineering, and QA.
               </p>
             </div>
           </div>
@@ -188,10 +188,10 @@ function SORCalculatorPage() {
               SOR % rounded to nearest whole point
             </span>
             <span className="rounded-full bg-white/15 px-2.5 py-1 font-medium">
-              Disbursements rounded to whole $
+              Net Paid = Paid − Refunds
             </span>
             <span className="rounded-full bg-white/15 px-2.5 py-1 font-medium">
-              Sum-must-equal-annual enforced
+              Sub → Unsub shift (combined cap)
             </span>
             <span className="rounded-full bg-white/15 px-2.5 py-1 font-medium">
               Half-time gate
@@ -257,7 +257,7 @@ function SORCalculatorPage() {
             >
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Cal Type</Label>
+                  <Label className="text-xs font-medium">Academic Calendar</Label>
                   <Select
                     value={String(inputs.calType)}
                     onValueChange={(v) => update({ calType: Number(v) as CalType })}
@@ -266,11 +266,10 @@ function SORCalculatorPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Type 1 — Standard term, SAY</SelectItem>
-                      <SelectItem value="2">Type 2 — Standard term, BBAY</SelectItem>
-                      <SelectItem value="3">Type 3 — Non-standard, terms</SelectItem>
-                      <SelectItem value="4">Type 4 — Non-standard, non-terms</SelectItem>
-                      <SelectItem value="5">Type 5 — Clock-hour</SelectItem>
+                      <SelectItem value="1">Academic Calendar 1 — Standard term, SAY</SelectItem>
+                      <SelectItem value="2">Academic Calendar 2 — Standard term, BBAY</SelectItem>
+                      <SelectItem value="3">Academic Calendar 3 — Non-standard, terms</SelectItem>
+                      <SelectItem value="4">Academic Calendar 4 — Non-standard, non-terms</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -437,6 +436,19 @@ function SORCalculatorPage() {
                   </div>
                 ))}
               </div>
+              <Label className="mt-4 flex cursor-pointer items-start justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+                <div>
+                  <div className="text-sm font-medium">Apply Sub → Unsub shift</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Unused Sub SOR ceiling shifts to Unsub up to the Unsub SOR ceiling
+                    (OBBBA combined-cap behavior).
+                  </div>
+                </div>
+                <Switch
+                  checked={inputs.applySubUnsubShift}
+                  onCheckedChange={(v) => update({ applySubUnsubShift: v })}
+                />
+              </Label>
             </Section>
 
             {/* Section C */}
@@ -481,6 +493,7 @@ function SORCalculatorPage() {
                             step={0.5}
                             onChange={(v) => updateTerm(key, { enrolledCredits: v })}
                           />
+                          <div className="hidden sm:block" />
                           <NumberField
                             label="Already paid (Sub)"
                             prefix="$"
@@ -488,11 +501,41 @@ function SORCalculatorPage() {
                             onChange={(v) => updateTerm(key, { paidSub: v })}
                           />
                           <NumberField
+                            label="Refund (Sub)"
+                            prefix="$"
+                            value={t.refundSub}
+                            onChange={(v) => updateTerm(key, { refundSub: v })}
+                            hint="Reduces net paid"
+                          />
+                          <div className="rounded-lg border border-border bg-muted/40 px-3 py-2">
+                            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              Net Paid (Sub)
+                            </div>
+                            <div className="mt-1 text-sm font-semibold tabular-nums text-foreground">
+                              ${Math.max(0, (t.paidSub || 0) - (t.refundSub || 0)).toLocaleString()}
+                            </div>
+                          </div>
+                          <NumberField
                             label="Already paid (Unsub)"
                             prefix="$"
                             value={t.paidUnsub}
                             onChange={(v) => updateTerm(key, { paidUnsub: v })}
                           />
+                          <NumberField
+                            label="Refund (Unsub)"
+                            prefix="$"
+                            value={t.refundUnsub}
+                            onChange={(v) => updateTerm(key, { refundUnsub: v })}
+                            hint="Reduces net paid"
+                          />
+                          <div className="rounded-lg border border-border bg-muted/40 px-3 py-2">
+                            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              Net Paid (Unsub)
+                            </div>
+                            <div className="mt-1 text-sm font-semibold tabular-nums text-foreground">
+                              ${Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0)).toLocaleString()}
+                            </div>
+                          </div>
                           <NumberField
                             label="COA cap (Sub)"
                             prefix="$"

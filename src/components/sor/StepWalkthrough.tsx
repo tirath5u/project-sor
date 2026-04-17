@@ -88,10 +88,20 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
           </Eq>
           <Eq>
             <div className="text-muted-foreground">SOR Unsub limit:</div>
-            {fmtCurrency(results.unsubBaseline)} × {Math.round(results.sorPctRounded * 100)}% ={" "}
+            {fmtCurrency(results.unsubBaseline)} × {Math.round(results.sorPctRounded * 100)}%
+            {results.shiftedToUnsub > 0
+              ? ` + ${fmtCurrency(results.shiftedToUnsub)} shifted from Sub`
+              : ""}{" "}
+            ={" "}
             <span className="font-semibold text-primary">{fmtCurrency(results.reducedUnsub)}</span>
           </Eq>
         </div>
+        {results.shiftedToUnsub > 0 ? (
+          <p className="mt-2 rounded-md bg-primary/5 px-3 py-2 text-xs text-foreground">
+            ↪ Sub→Unsub shift applied: {fmtCurrency(results.shiftedToUnsub)} of unused Sub
+            ceiling moved to Unsub (combined cap behavior).
+          </p>
+        ) : null}
         {results.noReduction ? (
           <p className="mt-2 rounded-md bg-success/10 px-3 py-2 text-xs text-success">
             ✓ Student is enrolled full-time for the AY — no SOR reduction is required.
@@ -111,15 +121,17 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
           </span>
           . Round to nearest whole dollar; sum must equal annual exactly.
         </p>
-        {results.paidSubTotal + results.paidUnsubTotal > 0 ? (
+        {results.netPaidSubTotal + results.netPaidUnsubTotal > 0 ? (
           <Eq>
-            <div className="text-muted-foreground">After already-disbursed subtraction:</div>
+            <div className="text-muted-foreground">
+              Net Paid (Paid − Refunds) subtracted from SOR limit:
+            </div>
             Remaining Sub = {fmtCurrency(results.reducedSub)} −{" "}
-            {fmtCurrency(results.paidSubTotal)} ={" "}
+            {fmtCurrency(results.netPaidSubTotal)} ={" "}
             <span className="font-semibold text-primary">{fmtCurrency(results.remainingSub)}</span>
             <br />
             Remaining Unsub = {fmtCurrency(results.reducedUnsub)} −{" "}
-            {fmtCurrency(results.paidUnsubTotal)} ={" "}
+            {fmtCurrency(results.netPaidUnsubTotal)} ={" "}
             <span className="font-semibold text-primary">
               {fmtCurrency(results.remainingUnsub)}
             </span>
@@ -139,7 +151,8 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
               {results.termResults
                 .filter((t) => t.enabled)
                 .map((t) => {
-                  const isRemaining = t.eligible && t.paidSub === 0 && t.paidUnsub === 0;
+                  const isRemaining =
+                    t.eligible && t.netPaidSub === 0 && t.netPaidUnsub === 0;
                   const share =
                     inputs.distribution === "equal"
                       ? isRemaining
@@ -149,7 +162,7 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
                       ? `${t.enrolledCredits} / ${results.termResults
                           .filter(
                             (r) =>
-                              r.eligible && r.paidSub === 0 && r.paidUnsub === 0,
+                              r.eligible && r.netPaidSub === 0 && r.netPaidUnsub === 0,
                           )
                           .reduce((s, r) => s + r.enrolledCredits, 0)}`
                       : "—";
@@ -158,18 +171,18 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
                       <td className="px-2 py-1.5 font-medium text-foreground">{t.label}</td>
                       <td className="px-2 py-1.5 text-muted-foreground">{share}</td>
                       <td className="px-2 py-1.5 text-right">
-                        {t.paidSub > 0 ? (
+                        {t.netPaidSub > 0 ? (
                           <span className="text-muted-foreground">
-                            {fmtCurrency(t.paidSub)} paid
+                            {fmtCurrency(t.netPaidSub)} net paid
                           </span>
                         ) : (
                           fmtCurrency(t.calcSub)
                         )}
                       </td>
                       <td className="px-2 py-1.5 text-right">
-                        {t.paidUnsub > 0 ? (
+                        {t.netPaidUnsub > 0 ? (
                           <span className="text-muted-foreground">
-                            {fmtCurrency(t.paidUnsub)} paid
+                            {fmtCurrency(t.netPaidUnsub)} net paid
                           </span>
                         ) : (
                           fmtCurrency(t.calcUnsub)
