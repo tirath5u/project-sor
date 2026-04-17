@@ -1,5 +1,5 @@
 import { CheckCircle2, AlertTriangle } from "lucide-react";
-import { fmtCurrency, fmtPct, type SORResults } from "@/lib/sor";
+import { fmtCurrency, type SORResults } from "@/lib/sor";
 import { cn } from "@/lib/utils";
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -34,14 +34,13 @@ export function ResultsPanel({ results }: { results: SORResults }) {
   const visibleTerms = results.termResults.filter((t) => t.enabled);
   return (
     <div className="space-y-5">
-      {/* Section D summary */}
       <div
         className="rounded-2xl border border-primary/20 p-5 text-primary-foreground shadow-[var(--shadow-elegant)]"
         style={{ background: "var(--gradient-primary)" }}
       >
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold uppercase tracking-wide opacity-90">
-            D · Schedule of Reductions
+            Schedule of Reductions
           </h3>
           <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">
             {results.eligibleTermsCount} eligible term{results.eligibleTermsCount === 1 ? "" : "s"}
@@ -50,44 +49,43 @@ export function ResultsPanel({ results }: { results: SORResults }) {
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-white/10 p-3">
             <div className="text-[11px] uppercase tracking-wide opacity-80">SOR %</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums">{fmtPct(results.sorPct)}</div>
-            <div className="text-[11px] opacity-80">
-              {results.enrolledSum} / {results.ftSum} credits
-            </div>
-          </div>
-          <div className="rounded-lg bg-white/10 p-3">
-            <div className="text-[11px] uppercase tracking-wide opacity-80">Enrollment fr.</div>
             <div className="mt-1 text-2xl font-bold tabular-nums">
-              {fmtPct(results.enrollmentFraction)}
+              {Math.round(results.sorPctRounded * 100)}%
             </div>
-            <div className="text-[11px] opacity-80">Pre-cap ratio</div>
+            <div className="text-[11px] opacity-80">
+              {results.enrolledSumAll} / {results.ftSumAll} credits
+            </div>
           </div>
           <div className="rounded-lg bg-white/10 p-3">
-            <div className="text-[11px] uppercase tracking-wide opacity-80">Reduced Sub</div>
+            <div className="text-[11px] uppercase tracking-wide opacity-80">Raw fraction</div>
+            <div className="mt-1 text-2xl font-bold tabular-nums">
+              {(results.enrollmentFractionRaw * 100).toFixed(2)}%
+            </div>
+            <div className="text-[11px] opacity-80">Pre-rounding</div>
+          </div>
+          <div className="rounded-lg bg-white/10 p-3">
+            <div className="text-[11px] uppercase tracking-wide opacity-80">SOR Sub limit</div>
             <div className="mt-1 text-xl font-semibold tabular-nums">
               {fmtCurrency(results.reducedSub)}
             </div>
             <div className="text-[11px] opacity-80">
-              of {fmtCurrency(results.subBaseline)} baseline
+              of {fmtCurrency(results.subBaseline)} initial
             </div>
           </div>
           <div className="rounded-lg bg-white/10 p-3">
-            <div className="text-[11px] uppercase tracking-wide opacity-80">Reduced Unsub</div>
+            <div className="text-[11px] uppercase tracking-wide opacity-80">SOR Unsub limit</div>
             <div className="mt-1 text-xl font-semibold tabular-nums">
               {fmtCurrency(results.reducedUnsub)}
             </div>
             <div className="text-[11px] opacity-80">
-              of {fmtCurrency(results.unsubBaseline)} baseline
+              of {fmtCurrency(results.unsubBaseline)} initial
             </div>
           </div>
         </div>
       </div>
 
-      {/* Section F + G tables */}
       <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-        <h3 className="mb-3 text-sm font-semibold text-foreground">
-          F · Calculated Disbursements & G · Final Approved Payout
-        </h3>
+        <h3 className="mb-3 text-sm font-semibold text-foreground">Per-term Disbursements</h3>
         <div className="-mx-2 overflow-x-auto">
           <table className="w-full min-w-[420px] text-xs">
             <thead>
@@ -103,7 +101,7 @@ export function ResultsPanel({ results }: { results: SORResults }) {
               {visibleTerms.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-2 py-6 text-center text-muted-foreground">
-                    Enable terms in Section A to see disbursements.
+                    Enable terms to see disbursements.
                   </td>
                 </tr>
               ) : (
@@ -155,9 +153,8 @@ export function ResultsPanel({ results }: { results: SORResults }) {
         </div>
       </div>
 
-      {/* Section H verification + remaining capacity */}
       <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-        <h3 className="mb-3 text-sm font-semibold text-foreground">H · Verification</h3>
+        <h3 className="mb-3 text-sm font-semibold text-foreground">Verification</h3>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <VerifyBadge label="Sub" diff={results.verifySub} />
           <VerifyBadge label="Unsub" diff={results.verifyUnsub} />
