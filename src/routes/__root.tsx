@@ -29,11 +29,18 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "SOR Calculator — Schedule of Reductions" },
+      {
+        name: "description",
+        content:
+          "Dynamic Schedule of Reductions calculator for Title IV loan disbursements. Compute SOR %, reduced annual limits, and per-term payouts instantly.",
+      },
+      { name: "author", content: "Ellucian" },
+      { property: "og:title", content: "SOR Calculator — Schedule of Reductions" },
+      {
+        property: "og:description",
+        content: "Calculate Title IV Schedule of Reductions per-term disbursements live in your browser.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
