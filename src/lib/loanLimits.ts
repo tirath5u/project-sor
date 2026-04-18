@@ -1,17 +1,34 @@
 /**
  * OBBBA / Working Families Tax Cuts Act — Annual Loan Limits, AY 2026-27.
  *
- * Source: SOR Regulatory Deep Dive (uploaded 2026-04). Statutory caps per
- * Pub. L. 119-21, applied to Direct Subsidized + Direct Unsubsidized.
+ * v18 master spreadsheet uses 14 numeric grade codes (0..13) covering every
+ * undergraduate, graduate, professional, and teacher-cert tier. Each row
+ * exposes the Direct Subsidized statutory cap and the combined Sub+Unsub cap
+ * at both Dependent and Independent levels (Independent applies if dependency
+ * is Independent OR a dependent's parent was denied PLUS).
  *
- * For SOR purposes the engine uses:
- *   • subStatutory       — Direct Subsidized annual cap
- *   • unsubStatutory     — Direct Unsubsidized annual cap (combined cap minus Sub),
- *                          PLUS additional Unsub headroom available to independents
- *                          and dependents whose parents were denied PLUS.
+ * Source: Pub. L. 119-21 + ED Dear Colleague Apr-2026.
  */
 
-export type GradeLevel = "g0_1" | "g2" | "g3plus" | "graduate" | "professional";
+export type GradeLevel =
+  | "g0"
+  | "g1"
+  | "g2"
+  | "g3"
+  | "g4"
+  | "g5"
+  | "g6"
+  | "g7"
+  | "graduate"
+  | "professional"
+  | "g10_teacher_cert"
+  | "g11_prep_undergrad"
+  | "g12_prep_teacher"
+  | "g13_prep_grad";
+
+// Backwards-compat aliases (used by older callers).
+export type LegacyGradeLevel = "g0_1" | "g3plus";
+
 export type Dependency = "dependent" | "independent";
 
 export interface LoanLimitRow {
@@ -25,9 +42,17 @@ export interface LoanLimitRow {
  * 2026-27 limits per OBBBA. Combined column = Sub + Unsub maximum.
  * Independent (and PLUS-denied dependent) undergrads get the higher
  * combined cap; grad/professional borrowers are independent by definition.
+ *
+ * Codes 10-13 are the Title-IV "preparatory coursework" rows from v18 — they
+ * use the same caps as the corresponding regular tier (1st-yr undergrad for
+ * 10/11, graduate for 13, etc.) per ED guidance.
  */
 export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
-  g0_1: {
+  g0: {
+    dependent: { sub: 3500, combined: 5500 },
+    independent: { sub: 3500, combined: 9500 },
+  },
+  g1: {
     dependent: { sub: 3500, combined: 5500 },
     independent: { sub: 3500, combined: 9500 },
   },
@@ -35,7 +60,23 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
     dependent: { sub: 4500, combined: 6500 },
     independent: { sub: 4500, combined: 10500 },
   },
-  g3plus: {
+  g3: {
+    dependent: { sub: 5500, combined: 7500 },
+    independent: { sub: 5500, combined: 12500 },
+  },
+  g4: {
+    dependent: { sub: 5500, combined: 7500 },
+    independent: { sub: 5500, combined: 12500 },
+  },
+  g5: {
+    dependent: { sub: 5500, combined: 7500 },
+    independent: { sub: 5500, combined: 12500 },
+  },
+  g6: {
+    dependent: { sub: 5500, combined: 7500 },
+    independent: { sub: 5500, combined: 12500 },
+  },
+  g7: {
     dependent: { sub: 5500, combined: 7500 },
     independent: { sub: 5500, combined: 12500 },
   },
@@ -47,15 +88,52 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
     dependent: { sub: 0, combined: 50000 },
     independent: { sub: 0, combined: 50000 },
   },
+  g10_teacher_cert: {
+    dependent: { sub: 5500, combined: 7500 },
+    independent: { sub: 5500, combined: 12500 },
+  },
+  g11_prep_undergrad: {
+    dependent: { sub: 2625, combined: 6625 },
+    independent: { sub: 2625, combined: 10625 },
+  },
+  g12_prep_teacher: {
+    dependent: { sub: 5500, combined: 7500 },
+    independent: { sub: 5500, combined: 12500 },
+  },
+  g13_prep_grad: {
+    dependent: { sub: 5500, combined: 7500 },
+    independent: { sub: 5500, combined: 12500 },
+  },
 };
 
 export const GRADE_LABELS: Record<GradeLevel, string> = {
-  g0_1: "Grade 0/1 — 1st-year undergraduate",
-  g2: "Grade 2 — 2nd-year undergraduate",
-  g3plus: "Grade 3+ — 3rd/4th-year undergraduate",
-  graduate: "Graduate",
-  professional: "Professional",
+  g0: "0 — 1st-year undergrad (≤ 1 AY remaining)",
+  g1: "1 — 1st-year undergrad",
+  g2: "2 — 2nd-year undergrad",
+  g3: "3 — 3rd-year undergrad",
+  g4: "4 — 4th-year undergrad",
+  g5: "5 — 5th-year undergrad",
+  g6: "6 — Continuing undergrad",
+  g7: "7 — Senior / 4+ year",
+  graduate: "G — Graduate",
+  professional: "P — Professional",
+  g10_teacher_cert: "10 — Post-bacc teacher certification",
+  g11_prep_undergrad: "11 — Preparatory coursework, undergrad",
+  g12_prep_teacher: "12 — Preparatory coursework, teacher cert",
+  g13_prep_grad: "13 — Preparatory coursework, graduate",
 };
+
+export const GRADE_GROUPS: { label: string; codes: GradeLevel[] }[] = [
+  {
+    label: "Undergraduate",
+    codes: ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7"],
+  },
+  { label: "Graduate / Professional", codes: ["graduate", "professional"] },
+  {
+    label: "Teacher cert / Preparatory",
+    codes: ["g10_teacher_cert", "g11_prep_undergrad", "g12_prep_teacher", "g13_prep_grad"],
+  },
+];
 
 export function lookupLimits(
   grade: GradeLevel,
@@ -84,4 +162,23 @@ export function lookupLimits(
 
 export function isGradOrProf(grade: GradeLevel): boolean {
   return grade === "graduate" || grade === "professional";
+}
+
+/** Aggregate lifetime caps used by the Lifecycle tracker. */
+export interface AggregateCap {
+  sub: number;
+  total: number;
+}
+
+export function aggregateCap(
+  level: "undergrad_dependent" | "undergrad_independent" | "graduate",
+): AggregateCap {
+  switch (level) {
+    case "undergrad_dependent":
+      return { sub: 23000, total: 31000 };
+    case "undergrad_independent":
+      return { sub: 23000, total: 57500 };
+    case "graduate":
+      return { sub: 65500, total: 138500 };
+  }
 }
