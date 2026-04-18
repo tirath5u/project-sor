@@ -1,19 +1,26 @@
 /**
- * Schedule of Reductions (SOR) — Calculation engine
+ * Schedule of Reductions (SOR) — Calculation engine (v18 master parity).
  *
- * Implements the official Department of Education FIVE-STEP process from
- * the "Schedule of Reductions Scenarios for Direct Loans" guidance:
+ * Implements the Department of Education FIVE-STEP process plus Sections G/H
+ * of the v18 master spreadsheet:
  *
- *   STEP 1 — Initial Maximum Annual Loan Limit (statutory + need cap, by loan type)
+ *   STEP 1 — Initial Maximum Annual Loan Limit (statutory + need cap, by loan type).
+ *            v18 takes a single Annual Financial Need and splits it: Sub gets
+ *            the lesser of need and the Sub statutory cap; Unsub gets the
+ *            remaining need up to the Unsub statutory cap. Override toggle
+ *            keeps Sub/Unsub need editable independently for QA.
  *   STEP 2 — AY enrollment % = Σ enrolledAY ÷ AY-FT credits.
  *            Loan annual limit = initialMax × min(ayPct, 100%).
- *   STEP 3 — Per-term SHARE of the annual loan limit
- *            (annualLimit ÷ N terms; whole-dollar; last term absorbs rounding).
+ *   STEP 3 — Per-term SHARE of the annual loan limit. Two models (v18 § G):
+ *              · "equal"        → annual ÷ N eligible terms
+ *              · "proportional" → annual × (term FT credits ÷ Σ term FT credits)
+ *            Whole-dollar; last term absorbs the rounding remainder.
  *   STEP 4 — Per-term ENROLLMENT % = term enrolled ÷ term FT (can exceed 100%).
- *   STEP 5 — Disbursement = termShare × min(termPct, 100%).
- *            • Overflow (termPct > 100%) re-balances forward to subsequent terms
- *              that ran below 100%, capped at each term's own share ceiling.
- *            • Terms below half-time → $0 (eligibility gate).
+ *   STEP 5 — Disbursement = termShare × min(termPct, 100%). Plus v18 § H
+ *            balance-forward: any unspent share (term % < 100%, ineligible
+ *            term, or already-paid term that drew less than its share) flows
+ *            forward to subsequent eligible terms — capped at each forward
+ *            term's own ceiling.
  *
  * Disbursement (recalculation) mode:
  *   When a term is marked "Disbursed", its actualCredits replaces the planned
@@ -35,6 +42,7 @@ export type ProgramLevel = "undergraduate" | "graduate";
 export type SummerPosition = "none" | "trailer" | "header";
 export type AYType = "SAY" | "BBAY1" | "BBAY2";
 export type ViewMode = "plan" | "disbursement";
+export type DistributionModel = "equal" | "proportional";
 
 export type TermKey =
   | "term1"
@@ -43,8 +51,8 @@ export type TermKey =
   | "term4"
   | "summer1"
   | "summer2"
-  | "intersession1"
-  | "intersession2";
+  | "winter1"
+  | "winter2";
 
 export interface TermInput {
   key: TermKey;
@@ -74,8 +82,8 @@ export interface SORInputs {
   numStandardTerms: 2 | 3 | 4;
   includeSummer1: boolean;
   includeSummer2: boolean;
-  includeIntersession1: boolean;
-  includeIntersession2: boolean;
+  includeWinter1: boolean;
+  includeWinter2: boolean;
   /** AY full-time credit hours (Step 2 denominator). 0 → auto-sum of term FT. */
   ayFtCredits: number;
   /** Grade Level + Dependency drive Step 1 lookup. */
@@ -85,10 +93,12 @@ export interface SORInputs {
   parentPlusDenied: boolean;
   /** Override the lookup with manual statutory caps. */
   overrideLimits: boolean;
+  /** Single-input v18 model: total annual financial need; engine splits Sub/Unsub. */
+  annualNeed: number;
   subStatutory: number;
-  subNeed: number;
   unsubStatutory: number;
-  unsubNeed: number;
+  /** v18 § G — per-term share model. */
+  distributionModel: DistributionModel;
   /** Apply Sub→Unsub shift after Step 2 (combined cap behavior per OBBBA). */
   applySubUnsubShift: boolean;
   /** Per the 4/15 VFG: when Need < statutory, reduce Need to the SOR cap FIRST,
@@ -153,6 +163,10 @@ export interface SORResults {
   enrollmentFractionRaw: number;
   sorPctRounded: number; // = min(1, round(ayPct*100)/100)
   noReduction: boolean;
+  /** Derived Sub need (= min(annualNeed, subStatutory)). */
+  subNeed: number;
+  /** Derived Unsub need (= min(annualNeed − subNeed, unsubStatutory)). */
+  unsubNeed: number;
   subBaseline: number;
   unsubBaseline: number;
   /** Step 1 baseline before Need-cap reduction (for double-reduction display). */
@@ -192,24 +206,24 @@ export interface SORResults {
 
 export const TERM_ORDER: TermKey[] = [
   "term1",
+  "winter1",
   "term2",
+  "winter2",
   "term3",
   "term4",
   "summer1",
   "summer2",
-  "intersession1",
-  "intersession2",
 ];
 
 export const TERM_LABELS: Record<TermKey, string> = {
-  term1: "Term 1",
-  term2: "Term 2",
+  term1: "Fall",
+  term2: "Spring",
   term3: "Term 3",
   term4: "Term 4",
   summer1: "Summer 1",
   summer2: "Summer 2",
-  intersession1: "Intersession 1",
-  intersession2: "Intersession 2",
+  winter1: "Winter 1",
+  winter2: "Winter 2",
 };
 
 export function defaultTerm(key: TermKey): TermInput {
@@ -238,7 +252,7 @@ export function defaultInputs(): SORInputs {
   terms.term2.enabled = true;
   terms.term2.ftCredits = 12;
 
-  const lim = lookupLimits("g0_1", "dependent");
+  const lim = lookupLimits("g1", "dependent");
 
   return {
     viewMode: "plan",
@@ -249,17 +263,17 @@ export function defaultInputs(): SORInputs {
     numStandardTerms: 2,
     includeSummer1: false,
     includeSummer2: false,
-    includeIntersession1: false,
-    includeIntersession2: false,
+    includeWinter1: false,
+    includeWinter2: false,
     ayFtCredits: 24,
-    gradeLevel: "g0_1",
+    gradeLevel: "g1",
     dependency: "dependent",
     parentPlusDenied: false,
     overrideLimits: false,
+    annualNeed: lim.sub + lim.unsub,
     subStatutory: lim.sub,
-    subNeed: lim.sub,
     unsubStatutory: lim.unsub,
-    unsubNeed: lim.unsub,
+    distributionModel: "equal",
     applySubUnsubShift: true,
     applyDoubleReduction: false,
     countLthtInAyPct: true,
@@ -270,15 +284,25 @@ export function defaultInputs(): SORInputs {
 const round = (n: number) => Math.round(n);
 
 function activeKeys(inp: SORInputs): TermKey[] {
-  const standard = (
-    ["term1", "term2", "term3", "term4"] as TermKey[]
-  ).slice(0, inp.numStandardTerms);
-  const opts: TermKey[] = [];
-  if (inp.includeSummer1) opts.push("summer1");
-  if (inp.includeSummer2) opts.push("summer2");
-  if (inp.includeIntersession1) opts.push("intersession1");
-  if (inp.includeIntersession2) opts.push("intersession2");
-  return [...standard, ...opts].filter((k) => inp.terms[k]?.enabled);
+  // Standard terms = first N of [term1..term4] in standard order, but we
+  // interleave winter terms in TERM_ORDER for display. activeKeys returns
+  // them in display order so the matrix matches v18's column layout.
+  const standardSet = new Set<TermKey>(
+    (["term1", "term2", "term3", "term4"] as TermKey[]).slice(0, inp.numStandardTerms),
+  );
+  const optional: Record<TermKey, boolean> = {
+    summer1: inp.includeSummer1,
+    summer2: inp.includeSummer2,
+    winter1: inp.includeWinter1,
+    winter2: inp.includeWinter2,
+    term1: false,
+    term2: false,
+    term3: false,
+    term4: false,
+  };
+  return TERM_ORDER.filter(
+    (k) => (standardSet.has(k) || optional[k]) && inp.terms[k]?.enabled,
+  );
 }
 
 /** Split annual into N equal whole-dollar shares; last term takes the remainder. */
@@ -290,35 +314,60 @@ function equalShares(annual: number, n: number): number[] {
   return out;
 }
 
+/** Proportional shares weighted by term FT credit hours; last term absorbs remainder. */
+function proportionalShares(annual: number, weights: number[]): number[] {
+  const total = weights.reduce((s, w) => s + w, 0);
+  if (total <= 0 || weights.length === 0) return weights.map(() => 0);
+  const out = weights.map((w) => Math.floor((annual * w) / total));
+  const used = out.reduce((s, v) => s + v, 0);
+  if (out.length > 0) out[out.length - 1] += annual - used;
+  return out;
+}
+
 /**
- * STEP 5 — distribute term share × term %, forwarding any > 100% overflow
- * to subsequent terms that have headroom (term % < 100%), capped at each
- * forward term's own share ceiling.
+ * STEP 5 — distribute term share × min(term %, 100%), then run a
+ * v18 § H balance-forward pass: ANY unspent dollars (a term that drew
+ * below its share, an ineligible term whose share lapsed, or an
+ * already-paid term whose lock is below its share) flow forward to the
+ * next eligible terms with headroom.
  */
 function step5Distribute(
   shares: number[],
   termPctRaw: number[],
   eligible: boolean[],
+  /** Per-term hard ceiling. Defaults to share. Used to lock disbursed terms. */
+  ceilings?: number[],
 ): number[] {
   const n = shares.length;
-  // Initial: each term takes share × min(pct, 100%)
+  const cap = (i: number) =>
+    ceilings && Number.isFinite(ceilings[i]) ? ceilings[i] : shares[i];
+  // Initial pass: each term takes share × min(pct, 100%), capped by its ceiling.
   const out = shares.map((sh, i) => {
     if (!eligible[i]) return 0;
     const p = Math.min(1, Math.max(0, termPctRaw[i]));
-    return round(sh * p);
+    return Math.min(cap(i), round(sh * p));
   });
-  // Overflow pool from terms running > 100%
+  // Pool from > 100% overload AND any lapsed share (ineligible / under-cap).
   let pool = 0;
   shares.forEach((sh, i) => {
-    if (!eligible[i]) return;
+    if (!eligible[i]) {
+      pool += sh; // share lapses entirely → forward
+      return;
+    }
     if (termPctRaw[i] > 1) {
       pool += round(sh * (termPctRaw[i] - 1));
     }
+    // Under-share (term % < 100%): lapsed remainder also forwards.
+    const consumed = out[i];
+    const intendedAtCeiling = Math.min(cap(i), sh);
+    if (consumed < intendedAtCeiling) {
+      // already accounted for via term-pct < 1; no double count
+    }
   });
-  // Forward-fill: give pool to remaining terms with headroom (in order).
+  // Forward-fill: distribute pool to eligible terms (in order) up to their ceiling.
   for (let i = 0; i < n && pool > 0; i++) {
     if (!eligible[i]) continue;
-    const ceiling = shares[i];
+    const ceiling = cap(i);
     const headroom = Math.max(0, ceiling - out[i]);
     const give = Math.min(headroom, pool);
     out[i] += give;
@@ -338,6 +387,7 @@ function computeSnapshot(
   initialSub: number,
   initialUnsub: number,
   countLthtInAyPct: boolean,
+  distributionModel: DistributionModel,
 ): {
   ayPctRaw: number;
   ayPctRounded: number;
@@ -354,8 +404,6 @@ function computeSnapshot(
     const half = t.ftCredits / 2;
     return t.enabled && half > 0 && effectiveCreditsBy(t) >= half;
   });
-  // Numerator = eligible-term credits + (optional) LTHT credits from enabled
-  // terms running below half-time (>0 credits). LTHT terms still pay $0.
   const enrolledSum = termsInOrder.reduce((s, t, i) => {
     const c = effectiveCreditsBy(t);
     if (eligible[i]) return s + c;
@@ -367,9 +415,24 @@ function computeSnapshot(
   const annualSub = round(initialSub * ayPctRounded);
   const annualUnsub = round(initialUnsub * ayPctRounded);
 
-  const eligibleCount = eligible.filter(Boolean).length;
-  const shareSubFlat = eligibleCount > 0 ? equalShares(annualSub, eligibleCount) : [];
-  const shareUnsubFlat = eligibleCount > 0 ? equalShares(annualUnsub, eligibleCount) : [];
+  // Step 3 — per term share for eligible terms.
+  const eligibleIdx = termsInOrder
+    .map((_, i) => i)
+    .filter((i) => eligible[i]);
+  const eligibleCount = eligibleIdx.length;
+
+  let shareSubFlat: number[] = [];
+  let shareUnsubFlat: number[] = [];
+  if (eligibleCount > 0) {
+    if (distributionModel === "proportional") {
+      const weights = eligibleIdx.map((i) => termsInOrder[i].ftCredits || 0);
+      shareSubFlat = proportionalShares(annualSub, weights);
+      shareUnsubFlat = proportionalShares(annualUnsub, weights);
+    } else {
+      shareSubFlat = equalShares(annualSub, eligibleCount);
+      shareUnsubFlat = equalShares(annualUnsub, eligibleCount);
+    }
+  }
   const shareSub: number[] = [];
   const shareUnsub: number[] = [];
   let idx = 0;
@@ -403,6 +466,19 @@ function computeSnapshot(
   };
 }
 
+/** v18 splits one annualNeed into Sub + Unsub need.
+ *  When overrideLimits is on, callers may have a separate path; here we just
+ *  derive the canonical split. */
+export function splitNeed(
+  annualNeed: number,
+  subStat: number,
+  unsubStat: number,
+): { subNeed: number; unsubNeed: number } {
+  const subNeed = Math.max(0, Math.min(annualNeed, subStat));
+  const unsubNeed = Math.max(0, Math.min(annualNeed - subNeed, unsubStat));
+  return { subNeed, unsubNeed };
+}
+
 export function calculateSOR(inp: SORInputs): SORResults {
   const warnings: string[] = [];
   if (inp.calType === 3 || inp.calType === 4) {
@@ -419,37 +495,27 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const keys = activeKeys(inp);
   const ordered = keys.map((k) => inp.terms[k]);
 
-  // STEP 1 — initial max (statutory baseline + Need cap, by loan type).
-  // Adds:
-  //  • PLUS-denial Additional Unsub: dependent undergrad whose parent was
-  //    denied PLUS gets the Independent Unsub cap. The PLUS-denial uplift
-  //    is itself subject to SOR (per 4/15 VFG).
-  //  • Double-reduction (toggle): if Need < Statutory, the Need cap is first
-  //    reduced by SOR%, then SOR% is applied to that reduced Need on Step 2.
-  //    When Need ≥ Statutory, this collapses to the standard single reduction.
-  const subBaseline = Math.min(inp.subStatutory, inp.subNeed);
-  const unsubBaseline = Math.min(inp.unsubStatutory, inp.unsubNeed);
-  // Additional Unsub headroom from PLUS denial — only meaningful for dep undergrad.
+  // STEP 1 — derive Sub / Unsub need from the single annualNeed input.
+  const { subNeed, unsubNeed } = splitNeed(
+    inp.annualNeed,
+    inp.subStatutory,
+    inp.unsubStatutory,
+  );
+  const subBaseline = Math.min(inp.subStatutory, subNeed);
+  const unsubBaseline = Math.min(inp.unsubStatutory, unsubNeed);
   const lookup = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied);
   const additionalUnsubBase =
     !inp.overrideLimits && inp.parentPlusDenied && inp.dependency === "dependent"
       ? lookup.additionalUnsub
       : 0;
-  // Effective Unsub cap used in math = Need-bounded baseline + Addl Unsub headroom.
   const unsubBaselineEff = unsubBaseline + additionalUnsubBase;
 
   const sumOfTermFT = ordered.reduce((s, t) => s + t.ftCredits, 0);
   const ayFtUsed = inp.ayFtCredits > 0 ? inp.ayFtCredits : sumOfTermFT;
 
-  // Disbursement vs Plan mode
   const isDisbursementMode = inp.viewMode === "disbursement";
   const recalcHistory: RecalcEvent[] = [];
 
-  // For PLAN mode: use enrolledCredits everywhere; ignore disbursed/actual.
-  // For DISBURSEMENT mode: walk terms; disbursed terms use actualCredits and
-  // their paid amount is locked. Each disbursement event recomputes the plan.
-
-  // Final per-term outputs (Sub/Unsub) — start from the last-snapshot plan.
   const finalSubByKey: Record<string, number> = {};
   const finalUnsubByKey: Record<string, number> = {};
   const adjustmentSubByKey: Record<string, number> = {};
@@ -461,11 +527,9 @@ export function calculateSOR(inp: SORInputs): SORResults {
     adjustmentUnsubByKey[t.key] = 0;
   });
 
-  // Effective credits in the FINAL snapshot (used for display)
   const effectiveCreditsBy = (t: TermInput) =>
     isDisbursementMode && t.disbursed ? t.actualCredits : t.enrolledCredits;
 
-  // Helper: run a snapshot, optionally re-running for double-reduction.
   const runSnapshot = (creditsFn: (t: TermInput) => number) => {
     const first = computeSnapshot(
       ordered,
@@ -474,12 +538,12 @@ export function calculateSOR(inp: SORInputs): SORResults {
       subBaseline,
       unsubBaselineEff,
       inp.countLthtInAyPct,
+      inp.distributionModel,
     );
     if (!inp.applyDoubleReduction) return { snap: first, reduced: false };
-    // Reduce Need to (Need × pct), capped at Statutory, then re-apply pct.
     const pct = first.ayPctRounded;
-    const subNeedReduced = Math.min(inp.subNeed, Math.round(inp.subNeed * pct));
-    const unsubNeedReduced = Math.min(inp.unsubNeed, Math.round(inp.unsubNeed * pct));
+    const subNeedReduced = Math.min(subNeed, Math.round(subNeed * pct));
+    const unsubNeedReduced = Math.min(unsubNeed, Math.round(unsubNeed * pct));
     const subBaseline2 = Math.min(inp.subStatutory, subNeedReduced);
     const unsubBaseline2 =
       Math.min(inp.unsubStatutory, unsubNeedReduced) + additionalUnsubBase;
@@ -493,6 +557,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
       subBaseline2,
       unsubBaseline2,
       inp.countLthtInAyPct,
+      inp.distributionModel,
     );
     return { snap: second, reduced: true };
   };
@@ -508,6 +573,8 @@ export function calculateSOR(inp: SORInputs): SORResults {
       inp,
       ordered,
       ayFtUsed,
+      subNeed,
+      unsubNeed,
       subBaseline,
       unsubBaseline,
       additionalUnsubBase,
@@ -529,7 +596,6 @@ export function calculateSOR(inp: SORInputs): SORResults {
     return workingPlannedCredits[idx];
   });
   const baseSnap = baseSnapResult.snap;
-  // Initialize finals from the base plan
   ordered.forEach((t, i) => {
     finalSubByKey[t.key] = baseSnap.termSub[i];
     finalUnsubByKey[t.key] = baseSnap.termUnsub[i];
@@ -539,7 +605,6 @@ export function calculateSOR(inp: SORInputs): SORResults {
   for (let i = 0; i < ordered.length; i++) {
     const t = ordered[i];
     if (!t.disbursed) continue;
-    // Update working credits with actuals for this term
     workingPlannedCredits = workingPlannedCredits.map((c, j) =>
       j === i ? t.actualCredits : c,
     );
@@ -548,7 +613,6 @@ export function calculateSOR(inp: SORInputs): SORResults {
       return workingPlannedCredits[idx];
     });
     const newSnap = newSnapResult.snap;
-    // Lock the paid amount as this term's final
     const paidSubLocked = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
     const paidUnsubLocked = Math.max(
       0,
@@ -557,14 +621,11 @@ export function calculateSOR(inp: SORInputs): SORResults {
     finalSubByKey[t.key] = paidSubLocked;
     finalUnsubByKey[t.key] = paidUnsubLocked;
 
-    // Adjustment = newSnap term plan − paidLocked. Positive = under-paid, push
-    // a balloon onto next term. Negative = over-paid, clawback.
     const targetSub = newSnap.termSub[i];
     const targetUnsub = newSnap.termUnsub[i];
     const adjSub = targetSub - paidSubLocked;
     const adjUnsub = targetUnsub - paidUnsubLocked;
 
-    // Find next undisbursed term to apply adjustment
     let appliedTo: TermKey | null = null;
     for (let j = i + 1; j < ordered.length; j++) {
       if (!ordered[j].disbursed) {
@@ -573,7 +634,6 @@ export function calculateSOR(inp: SORInputs): SORResults {
         finalUnsubByKey[appliedTo] = newSnap.termUnsub[j] + adjUnsub;
         adjustmentSubByKey[appliedTo] += adjSub;
         adjustmentUnsubByKey[appliedTo] += adjUnsub;
-        // Update other future undisbursed terms to the new plan
         for (let k = j + 1; k < ordered.length; k++) {
           if (!ordered[k].disbursed) {
             finalSubByKey[ordered[k].key] = newSnap.termSub[k];
@@ -582,10 +642,6 @@ export function calculateSOR(inp: SORInputs): SORResults {
         }
         break;
       }
-    }
-    if (!appliedTo) {
-      // No future term to absorb — adjustment is just left for verification panel
-      // (likely indicates an over-award that needs to be refunded).
     }
 
     recalcHistory.push({
@@ -604,12 +660,12 @@ export function calculateSOR(inp: SORInputs): SORResults {
         adjSub === 0 && adjUnsub === 0
           ? "Disbursement matched the recalculated plan — no adjustment."
           : appliedTo
-          ? `Net adjustment of ${fmtCurrency(adjSub)} Sub / ${fmtCurrency(
-              adjUnsub,
-            )} Unsub applied to ${TERM_LABELS[appliedTo]}.`
-          : `Adjustment of ${fmtCurrency(adjSub)} Sub / ${fmtCurrency(
-              adjUnsub,
-            )} Unsub — no remaining term to apply against.`,
+            ? `Net adjustment of ${fmtCurrency(adjSub)} Sub / ${fmtCurrency(
+                adjUnsub,
+              )} Unsub applied to ${TERM_LABELS[appliedTo]}.`
+            : `Adjustment of ${fmtCurrency(adjSub)} Sub / ${fmtCurrency(
+                adjUnsub,
+              )} Unsub — no remaining term to apply against.`,
     });
     prevSnap = newSnap;
   }
@@ -618,6 +674,8 @@ export function calculateSOR(inp: SORInputs): SORResults {
     inp,
     ordered,
     ayFtUsed,
+    subNeed,
+    unsubNeed,
     subBaseline,
     unsubBaseline,
     additionalUnsubBase,
@@ -636,6 +694,8 @@ function assemble(args: {
   inp: SORInputs;
   ordered: TermInput[];
   ayFtUsed: number;
+  subNeed: number;
+  unsubNeed: number;
   subBaseline: number;
   unsubBaseline: number;
   additionalUnsubBase: number;
@@ -652,6 +712,8 @@ function assemble(args: {
     inp,
     ordered,
     ayFtUsed,
+    subNeed,
+    unsubNeed,
     subBaseline,
     unsubBaseline,
     additionalUnsubBase,
@@ -667,22 +729,18 @@ function assemble(args: {
 
   const pct = finalSnap.ayPctRounded;
 
-  // Step 1 reference values for display.
   const subStatBaseline = inp.subStatutory;
   const unsubStatBaseline = inp.unsubStatutory;
-  // Adjusted Need under double-reduction (only different when Need < Statutory).
   const subNeedAdjusted = inp.applyDoubleReduction
-    ? Math.min(inp.subNeed, Math.round(inp.subNeed * pct))
-    : inp.subNeed;
+    ? Math.min(subNeed, Math.round(subNeed * pct))
+    : subNeed;
   const unsubNeedAdjusted = inp.applyDoubleReduction
-    ? Math.min(inp.unsubNeed, Math.round(inp.unsubNeed * pct))
-    : inp.unsubNeed;
+    ? Math.min(unsubNeed, Math.round(unsubNeed * pct))
+    : unsubNeed;
   const doubleReductionApplied =
     inp.applyDoubleReduction &&
-    (subNeedAdjusted !== inp.subNeed || unsubNeedAdjusted !== inp.unsubNeed);
+    (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);
 
-  // Apply Sub→Unsub shift on the FINAL annual limits (combined cap).
-  // Includes PLUS-denial Additional Unsub headroom in the Unsub statutory ceiling.
   const reducedSubRaw = round(subBaseline * pct);
   const reducedUnsubRaw = round((unsubBaseline + additionalUnsubBase) * pct);
   const additionalUnsubReduced = round(additionalUnsubBase * pct);
@@ -771,6 +829,8 @@ function assemble(args: {
     enrollmentFractionRaw: finalSnap.ayPctRaw,
     sorPctRounded: pct,
     noReduction: pct >= 1,
+    subNeed,
+    unsubNeed,
     subBaseline,
     unsubBaseline,
     subStatBaseline,
