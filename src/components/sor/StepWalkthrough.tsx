@@ -49,7 +49,8 @@ export function StepWalkthrough({
       <section className="border-b border-border pb-4">
         <StepHeader n={1} title="Initial Maximum Annual Loan Limit" />
         <p className="mb-2 text-xs text-muted-foreground">
-          Lower of statutory limit and student need, by loan type.
+          Annual Need {fmtCurrency(inputs.annualNeed)} is split: Sub takes the lesser of need
+          and the Sub statutory cap; Unsub gets the remainder up to the Unsub cap.
           {results.additionalUnsubBase > 0
             ? " Additional Unsub headroom (PLUS denial) is added to the Unsub ceiling."
             : ""}
@@ -62,7 +63,7 @@ export function StepWalkthrough({
             <div className="text-muted-foreground">Sub:</div>
             min({fmtCurrency(inputs.subStatutory)},{" "}
             {fmtCurrency(
-              results.doubleReductionApplied ? results.subNeedAdjusted : inputs.subNeed,
+              results.doubleReductionApplied ? results.subNeedAdjusted : results.subNeed,
             )}
             ) ={" "}
             <span className="font-semibold text-primary">{fmtCurrency(results.subBaseline)}</span>
@@ -73,7 +74,7 @@ export function StepWalkthrough({
             </div>
             min({fmtCurrency(inputs.unsubStatutory)},{" "}
             {fmtCurrency(
-              results.doubleReductionApplied ? results.unsubNeedAdjusted : inputs.unsubNeed,
+              results.doubleReductionApplied ? results.unsubNeedAdjusted : results.unsubNeed,
             )}
             )
             {results.additionalUnsubBase > 0
@@ -128,7 +129,9 @@ export function StepWalkthrough({
       <section className="border-b border-border py-4">
         <StepHeader n={3} title="Per-term Share of the Annual Limit" />
         <p className="mb-2 text-xs text-muted-foreground">
-          Annual ÷ N eligible terms (whole-dollar; last term absorbs remainder).
+          {inputs.distributionModel === "equal"
+            ? "Equal model — annual ÷ N eligible terms (whole-dollar; last term absorbs remainder)."
+            : "Proportional model — annual × (term FT credits ÷ Σ term FT credits)."}
         </p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[320px] text-[11px] tabular-nums">
@@ -163,7 +166,7 @@ export function StepWalkthrough({
         <StepHeader n={4} title="Per-term % × Share = Disbursement" />
         <p className="mb-2 text-xs text-muted-foreground">
           Term % = enrolled ÷ term FT (can exceed 100%). Disbursement = share × min(%, 100%);
-          overflow forwards to remaining terms with headroom.
+          overflow + lapsed shares forward to remaining eligible terms with headroom (v18 § H).
         </p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[420px] text-[11px] tabular-nums">

@@ -5,17 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * Ellucian-inspired design tokens. Deep purple primary (#4B2E83) with a
+ * warm gold accent (#FFB81C). All colors live as oklch tokens so the dark
+ * theme override and color-mix utilities continue to work cleanly.
  */
 
 @theme inline {
@@ -67,85 +59,93 @@
 }
 
 :root {
-  /* Ellucian-inspired modern: deep indigo/purple primary with soft neutrals */
-  --radius: 0.75rem;
-  --background: oklch(0.99 0.005 270);
-  --foreground: oklch(0.17 0.04 270);
+  /* Ellucian palette: deep purple + warm gold */
+  --radius: 0.625rem;
+  --background: oklch(0.99 0.004 290);
+  --foreground: oklch(0.18 0.04 285);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.17 0.04 270);
+  --card-foreground: oklch(0.18 0.04 285);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.17 0.04 270);
-  --primary: oklch(0.36 0.16 280);
-  --primary-foreground: oklch(0.99 0.005 270);
-  --primary-glow: oklch(0.55 0.22 285);
-  --secondary: oklch(0.96 0.012 270);
-  --secondary-foreground: oklch(0.25 0.06 280);
-  --muted: oklch(0.965 0.008 270);
-  --muted-foreground: oklch(0.5 0.03 270);
-  --accent: oklch(0.94 0.04 285);
-  --accent-foreground: oklch(0.25 0.1 285);
+  --popover-foreground: oklch(0.18 0.04 285);
+  /* #4B2E83 ≈ oklch(0.36 0.13 295) */
+  --primary: oklch(0.36 0.13 295);
+  --primary-foreground: oklch(0.99 0.004 290);
+  --primary-glow: oklch(0.5 0.18 295);
+  --secondary: oklch(0.96 0.012 290);
+  --secondary-foreground: oklch(0.25 0.07 295);
+  --muted: oklch(0.965 0.008 290);
+  --muted-foreground: oklch(0.48 0.025 290);
+  /* Gold accent #FFB81C ≈ oklch(0.83 0.15 85) */
+  --accent: oklch(0.83 0.15 85);
+  --accent-foreground: oklch(0.25 0.06 80);
   --destructive: oklch(0.6 0.22 25);
-  --destructive-foreground: oklch(0.99 0.005 270);
+  --destructive-foreground: oklch(0.99 0.004 290);
   --success: oklch(0.62 0.16 150);
   --success-foreground: oklch(0.99 0.005 150);
-  --warning: oklch(0.78 0.16 75);
-  --warning-foreground: oklch(0.25 0.08 75);
-  --border: oklch(0.92 0.012 270);
-  --input: oklch(0.92 0.012 270);
-  --ring: oklch(0.55 0.22 285);
+  --warning: oklch(0.83 0.15 85);
+  --warning-foreground: oklch(0.25 0.08 80);
+  --border: oklch(0.91 0.012 290);
+  --input: oklch(0.91 0.012 290);
+  --ring: oklch(0.5 0.18 295);
 
-  --gradient-primary: linear-gradient(135deg, oklch(0.36 0.16 280), oklch(0.55 0.22 285));
-  --gradient-subtle: linear-gradient(180deg, oklch(0.99 0.005 270), oklch(0.96 0.012 270));
-  --shadow-elegant: 0 10px 40px -12px color-mix(in oklab, oklch(0.36 0.16 280) 25%, transparent);
-  --shadow-card: 0 1px 3px 0 oklch(0.17 0.04 270 / 0.04), 0 1px 2px -1px oklch(0.17 0.04 270 / 0.04);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --gradient-primary: linear-gradient(135deg, oklch(0.32 0.12 295), oklch(0.5 0.18 295));
+  --gradient-subtle: linear-gradient(180deg, oklch(0.99 0.004 290), oklch(0.96 0.012 290));
+  --gradient-gold: linear-gradient(135deg, oklch(0.85 0.16 85), oklch(0.78 0.17 75));
+  --shadow-elegant: 0 12px 40px -14px color-mix(in oklab, oklch(0.36 0.13 295) 30%, transparent);
+  --shadow-card: 0 1px 3px 0 oklch(0.18 0.04 285 / 0.05), 0 1px 2px -1px oklch(0.18 0.04 285 / 0.05);
+  --chart-1: oklch(0.36 0.13 295);
+  --chart-2: oklch(0.83 0.15 85);
+  --chart-3: oklch(0.55 0.16 230);
+  --chart-4: oklch(0.62 0.16 150);
+  --chart-5: oklch(0.6 0.22 25);
+  --sidebar: oklch(0.984 0.003 290);
+  --sidebar-foreground: oklch(0.18 0.04 285);
+  --sidebar-primary: oklch(0.36 0.13 295);
+  --sidebar-primary-foreground: oklch(0.984 0.003 290);
+  --sidebar-accent: oklch(0.96 0.012 290);
+  --sidebar-accent-foreground: oklch(0.25 0.07 295);
+  --sidebar-border: oklch(0.91 0.012 290);
+  --sidebar-ring: oklch(0.5 0.18 295);
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --background: oklch(0.16 0.04 290);
+  --foreground: oklch(0.97 0.005 290);
+  --card: oklch(0.22 0.05 290);
+  --card-foreground: oklch(0.97 0.005 290);
+  --popover: oklch(0.22 0.05 290);
+  --popover-foreground: oklch(0.97 0.005 290);
+  --primary: oklch(0.7 0.15 295);
+  --primary-foreground: oklch(0.16 0.04 290);
+  --primary-glow: oklch(0.78 0.16 295);
+  --secondary: oklch(0.28 0.05 290);
+  --secondary-foreground: oklch(0.97 0.005 290);
+  --muted: oklch(0.28 0.05 290);
+  --muted-foreground: oklch(0.72 0.03 290);
+  --accent: oklch(0.83 0.15 85);
+  --accent-foreground: oklch(0.2 0.06 80);
+  --destructive: oklch(0.7 0.19 22);
+  --destructive-foreground: oklch(0.97 0.005 290);
+  --success: oklch(0.7 0.16 150);
+  --success-foreground: oklch(0.16 0.04 290);
+  --warning: oklch(0.83 0.15 85);
+  --warning-foreground: oklch(0.2 0.06 80);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.7 0.15 295);
+  --chart-1: oklch(0.7 0.15 295);
+  --chart-2: oklch(0.83 0.15 85);
+  --chart-3: oklch(0.65 0.18 230);
+  --chart-4: oklch(0.7 0.16 150);
+  --chart-5: oklch(0.68 0.2 25);
+  --sidebar: oklch(0.22 0.05 290);
+  --sidebar-foreground: oklch(0.97 0.005 290);
+  --sidebar-primary: oklch(0.7 0.15 295);
+  --sidebar-primary-foreground: oklch(0.16 0.04 290);
+  --sidebar-accent: oklch(0.28 0.05 290);
+  --sidebar-accent-foreground: oklch(0.97 0.005 290);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.7 0.15 295);
 }
 
 @layer base {
@@ -153,8 +153,25 @@
     border-color: var(--color-border);
   }
 
+  html {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.01em;
+  }
+
+  /* Tabular numbers everywhere by default keeps the matrix aligned. */
+  .num,
+  table tbody td,
+  table tfoot td {
+    font-variant-numeric: tabular-nums;
   }
 }
