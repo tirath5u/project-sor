@@ -1,71 +1,59 @@
 
-## What I found in the docs (the gap)
 
-The ED scenarios doc defines a **5-step** process — our engine implements only Steps 1, 2, and a simplified 3. Steps 3 + 4 are the missing piece that drives Scenarios 1, 2, 3, 8, 10.1, 11:
+## Plan — Implement v18 parity (full build)
 
-- **Step 1** — Initial max (grade level + dependency lookup) ← *not in app*
-- **Step 2** — AY enrollment % = `Σ enrolled / AY FT credits` ✅
-- **Step 3** — Per-term **share** of the AY limit (e.g., 2 terms = 50% each, 3 terms = 33.34/33.33/33.33). Computed in whole-dollar shares of the **annual loan limit**, NOT of "remaining". ❌
-- **Step 4** — Per-term enrollment % = `term enrolled / term FT` (can exceed 100%, capped at the term's share of remaining annual capacity). ❌
-- **Step 5** — Term disbursement = `term share × term %`. Excess credits in one term re-balance to other terms (Scenarios 1, 2, 8). ❌
+### 1. Engine + data model (`src/lib/loanLimits.ts`, `src/lib/sor.ts`)
+- Replace 5-grade enum with full **OBBBA grade codes 0–13** lookup table from v18 (1st-yr undergrad through 4th+ year, plus graduate / professional / preparatory teacher cert tiers). Each row returns `{ subAnnual, combinedAnnual, additionalUnsubIfPlusDenied }`.
+- Switch primary input to **single `annualNeed` field**. Engine derives `subBaseline = min(need, subStatutory)` and `unsubBaseline = min(need − subBaseline, unsubStatutory)` internally.
+- Rename term keys: `intersession1/2` → `winter1/winter2` everywhere (sor.ts, scenarios.ts, components, route).
+- Add `distributionModel: "equal" | "proportional"` toggle (Section G of v18).
+- Implement **balance-forward** distribution (Section H): walk eligible terms in order; each term consumes its share but unspent share (term % < 100% or term ineligible/already-paid) flows forward to remaining eligible terms, capped at each term's own ceiling. Keep existing disbursement-mode recalc walker on top of this.
+- Keep `disbursementMode` ("plan" vs "disbursement"), `disbursed` flag, `actualCredits` per term, recalc history.
 
-**Two big things our app gets wrong today:**
+### 2. UI — terms-as-columns matrix (`src/components/sor/TermsMatrix.tsx` new)
+Spreadsheet-style results table mirroring v18:
 
-1. **Distribution model is wrong.** "Equal" / "Proportional-to-credits" do not exist in the regulation. The correct model is **Step 3 share × Step 4 term %**, with the residual (from term % < 100%) flowing forward to remaining terms up to each term's own ceiling.
-2. **Per-term recalculation on enrollment change isn't modeled.** Scenarios 5, 9.1, 10.1 require: at each disbursement, recompute Steps 2–5 using actuals-to-date, subtract net paid, and apply the difference to the next term (negative = clawback off next term, positive = balloon).
-
-Plus the missing Grade Level / Dependency lookup you flagged.
-
-## Plan — what I'll change (no code yet)
-
-### 1. Add Section A1 — Grade Level + Dependency
-- Dropdown: Grade 0/1, Grade 2, Grade 3+, Graduate, Professional
-- Toggle: Dependent / Independent (disabled for grad/professional)
-- Auto-populates: Sub Max, Combined Cap (Sub+Unsub), and Additional Unsub (PLUS-denial) per the OBBBA 2026-27 table from the deep-dive
-- "Override" toggle keeps the current manual statutory/need fields available
-
-### 2. Rewrite the calculation engine to the 5-step ED model
-Replace `distributeWithRemainder` with the actual regulatory math:
-
-```
-Step 1  initialMax (Sub, Unsub) ← lookup or override
-Step 2  ayPct = enrolledAY / ftAY                  (not capped at 100%)
-        annualLimit = initialMax × min(ayPct, 100%)
-Step 3  termShare[i] = annualLimit ÷ N_terms       (cents-rounded; last term absorbs remainder)
-Step 4  termPct[i] = enrolled[i] / termFT[i]       (can be >100%)
-Step 5  rawTerm[i] = termShare[i] × termPct[i]
-        — overflow when termPct>100% is capped at termShare[i] and the overflow
-          dollars flow forward to subsequent terms whose termPct<100% had headroom
-          (this is what makes Scenario 1: Fall stays at 50%, Spring absorbs the extra 25%)
-        — terms with termPct < 50% → $0 (half-time gate)
+```text
+Row \ Col          | Fall  | Winter1 | Spring | Winter2 | Summer | AY Total
+-------------------|-------|---------|--------|---------|--------|---------
+FT Credits         |  12   |   —     |  12    |   —     |   6    |   30
+Enrolled Credits   |  12   |   —     |   9    |   —     |   6    |   27
+Term %             | 100%  |   —     |  75%   |   —     | 100%   |   —
+Step-3 Share Sub   | $1,750|   —     |$1,750  |   —     |  $0    | $3,500
+Net Paid Sub       | $1,750|   —     |$1,313  |   —     |  $0    | $3,063
+Net Paid Unsub     | $1,000|   —     |  $750  |   —     |  $0    | $1,750
+Final Sub          | $1,750|   —     |$1,313  |   —     |  $0    | $3,063
+Final Unsub        | $1,000|   —     |  $750  |   —     |  $0    | $1,750
 ```
 
-### 3. Add a "Time-of-disbursement" mode (the big addition you asked about)
-A toggle at the top: **"Plan view"** (intent-to-enroll) vs **"Disbursement view"** (recalculate each term).
+Sticky first column, horizontal scroll only when needed, COA-cap and adjustment cells highlighted inline.
 
-In Disbursement view, each term row has a **"Disbursed?"** checkbox + **Actual credits at disbursement** field. The engine:
-1. Walks terms in order
-2. At each disbursed term: locks paid amount, recomputes Steps 2–5 with actuals-to-date + planned for future terms
-3. Computes the **adjustment** (over/under-award) and applies it to the **next** undisbursed term — exactly like Scenario 5 (Spring Sub = $1,750 − $875 overaward = $875) and Scenario 9.1
-4. If a future term's enrollment goes UP and AY% returns to 100%, the next disbursement gets the "balloon" (Scenario 1, 2)
+### 3. UI — card view toggle (`src/components/sor/TermsCards.tsx` new)
+Existing per-term card layout, kept as a toggle (`Table | Cards`) above results. Default = Table.
 
-### 4. UI changes
-- Rename "Distribution Model" section → **"Per-term shares (Step 3)"** — show the auto-computed share table, no toggle (the model is the regulation)
-- Add **"Per-term recalculation history"** panel under Results showing each disbursement event: before/after AY%, annual limit, and the adjustment applied
-- Add the 5 missing canonical scenarios (1, 2, 5, 9.1, 10.1) to the scenario picker so QA can click & verify each matches the ED expected outcome to the dollar
-- Logic Walkthrough: rebuild around Steps 1→5 with the per-term share + term % shown explicitly
+### 4. UI — compact inputs (`src/routes/index.tsx`)
+- Section A: Grade Code dropdown (0–13 with descriptive labels), Dependency, PLUS-denied toggle, Annual Need — single row, 4 fields.
+- Section B: per-term enabled / FT credits / enrolled credits / COA cap, in a compact 5-column inline grid (one row per term, terms stacked vertically) — uses far less vertical space than today's stacked NumberFields.
+- Distribution toggle + Plan/Disbursement toggle inline above the matrix.
 
-### 5. Out of scope for this pass (call out, don't build)
-- R2T4 mechanics (Scenario 6, 7) — too large; show a "use single-term SOR for re-enrolling students" note
-- COA/SAI/OFA need calculator — keep manual `subNeed` / `unsubNeed` inputs for now
-- Aggregate lifetime cap check
+### 5. Ellucian brand retune (`src/styles.css`)
+- Primary: deep purple `#4B2E83` → `--primary: 260 49% 35%` (oklch/HSL converted).
+- Accent: gold `#FFB81C` → `--accent: 42 100% 55%`.
+- Tighten typography: Inter for body, slightly heavier weights on headings, tabular-nums everywhere numeric.
+- Update `--gradient-primary`, `--shadow-elegant` to match. Header chip with "Ellucian · Schedule of Reductions".
 
-## Technical files affected
-- `src/lib/sor.ts` — replace distribution logic with Steps 3/4/5; add `disbursementMode`, per-term `disbursed` + `actualCredits`, recalc walker, balloon/clawback
-- `src/lib/loanLimits.ts` — **new** OBBBA 2026-27 lookup
-- `src/lib/scenarios.ts` — add Scenarios 1, 2, 5, 9.1, 10.1 with expected outputs
-- `src/components/sor/StepWalkthrough.tsx` — rebuild as 5 steps
-- `src/components/sor/ResultsPanel.tsx` — add recalc-history block
-- `src/routes/index.tsx` — add Grade/Dependency selector, Plan vs Disbursement toggle, per-term Disbursed checkbox + actual credits input
+### 6. Bonus widgets
+- **`src/components/sor/QuickTermCalc.tsx`** — collapsible card on `/`: enter grade + 1 term's FT/enrolled + need → get max Sub/Unsub for that single term using same engine.
+- **`src/routes/lifecycle.tsx`** — new route `/lifecycle`: 4 academic years × terms grid; tracks cumulative Sub/Unsub against aggregate caps ($23,000 Sub dependent / $31,000 dependent total / $57,500 independent undergrad / $138,500 graduate). Each AY row links to a saved SOR run (in-memory for now; localStorage persistence).
 
-Approve and I'll switch to build mode and implement, then verify each ED scenario matches to the dollar.
+### 7. Scenarios update (`src/lib/scenarios.ts`)
+Re-key all existing scenarios to `winter1/winter2` and `annualNeed`; add 2-3 v18 reference scenarios with expected per-term Sub/Unsub to use as inline regression checks (badge "Matches v18 ✓" / "Off by $X").
+
+### 8. Files touched
+- New: `src/lib/loanLimits.ts` (rewrite), `src/components/sor/TermsMatrix.tsx`, `src/components/sor/TermsCards.tsx`, `src/components/sor/QuickTermCalc.tsx`, `src/routes/lifecycle.tsx`
+- Modified: `src/lib/sor.ts`, `src/lib/scenarios.ts`, `src/components/sor/StepWalkthrough.tsx`, `src/components/sor/ResultsPanel.tsx`, `src/routes/index.tsx`, `src/routes/__root.tsx` (nav link to /lifecycle), `src/styles.css`
+- Removed concept: separate `subNeed`/`unsubNeed` fields (replaced by single `annualNeed`)
+
+### 9. Verification
+After build, run all bundled v18 scenarios through the engine and confirm each term's Sub/Unsub matches the spreadsheet to the dollar; surface any deltas in the scenario picker.
+
