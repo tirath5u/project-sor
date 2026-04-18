@@ -145,12 +145,21 @@ export function lookupLimits(
   /** Portion of unsub that comes from the PLUS-denial uplift (Independent − Dependent). */
   additionalUnsub: number;
 } {
-  const isGP = isGradOrProf(grade);
+  // Defensive: map legacy/unknown grade keys to a sane default so a stale
+  // saved scenario can't blank-screen the app.
+  const safeGrade: GradeLevel = (LIMITS as Record<string, unknown>)[grade]
+    ? grade
+    : grade === ("g0_1" as string)
+      ? "g1"
+      : grade === ("g3plus" as string)
+        ? "g3"
+        : "g1";
+  const isGP = isGradOrProf(safeGrade);
   // Grad/Prof are independent by definition; PLUS denial doesn't apply.
   const effectiveDep: Dependency =
     isGP || dependency === "independent" || parentPlusDenied ? "independent" : "dependent";
-  const row = LIMITS[grade][effectiveDep];
-  const baseRow = LIMITS[grade]["dependent"];
+  const row = LIMITS[safeGrade][effectiveDep];
+  const baseRow = LIMITS[safeGrade]["dependent"];
   const baseUnsub = Math.max(0, baseRow.combined - baseRow.sub);
   const totalUnsub = Math.max(0, row.combined - row.sub);
   const additionalUnsub =
