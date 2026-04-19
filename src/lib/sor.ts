@@ -511,14 +511,16 @@ export function calculateSOR(inp: SORInputs): SORResults {
   );
   const combinedLimit = Math.max(0, inp.subStatutory) + Math.max(0, inp.unsubStatutory);
   const subBaseline = Math.min(inp.subStatutory, subNeed);
-  // Unsub baseline = combined cap minus what Sub actually took (decoupled from need).
+  // Unsub baseline = the remainder of the combined cap after Subsidized consumes
+  // its need-based share. `inp.unsubStatutory` already includes any PLUS-denial
+  // uplift coming from the lookup, so do not add it a second time downstream.
   const unsubBaseline = Math.max(0, combinedLimit - subBaseline);
   const lookup = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied);
   const additionalUnsubBase =
     !inp.overrideLimits && inp.parentPlusDenied && inp.dependency === "dependent"
       ? lookup.additionalUnsub
       : 0;
-  const unsubBaselineEff = unsubBaseline + additionalUnsubBase;
+  const unsubBaselineEff = unsubBaseline;
 
   const sumOfTermFT = ordered.reduce((s, t) => s + t.ftCredits, 0);
   const ayFtUsed = inp.ayFtCredits > 0 ? inp.ayFtCredits : sumOfTermFT;
@@ -538,7 +540,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
   });
 
   const effectiveCreditsBy = (t: TermInput) =>
-    isDisbursementMode && t.disbursed ? t.actualCredits : t.enrolledCredits;
+    isDisbursementMode ? t.actualCredits : t.enrolledCredits;
 
   const runSnapshot = (creditsFn: (t: TermInput) => number) => {
     const first = computeSnapshot(
@@ -555,8 +557,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     const subNeedReduced = Math.min(subNeed, Math.round(subNeed * pct));
     const unsubNeedReduced = Math.min(unsubNeed, Math.round(unsubNeed * pct));
     const subBaseline2 = Math.min(inp.subStatutory, subNeedReduced);
-    const unsubBaseline2 =
-      Math.min(inp.unsubStatutory, unsubNeedReduced) + additionalUnsubBase;
+    const unsubBaseline2 = Math.max(0, combinedLimit - subBaseline2);
     if (subBaseline2 === subBaseline && unsubBaseline2 === unsubBaselineEff) {
       return { snap: first, reduced: false };
     }
@@ -600,7 +601,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
   }
 
   // ----- Disbursement mode walker -----
-  let workingPlannedCredits: number[] = ordered.map((t) => t.enrolledCredits);
+  let workingPlannedCredits: number[] = ordered.map((t) => t.actualCredits);
   const baseSnapResult = runSnapshot((t) => {
     const idx = ordered.findIndex((x) => x.key === t.key);
     return workingPlannedCredits[idx];
@@ -752,14 +753,14 @@ function assemble(args: {
     (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);
 
   const reducedSubRaw = round(subBaseline * pct);
-  const reducedUnsubRaw = round((unsubBaseline + additionalUnsubBase) * pct);
+  const reducedUnsubRaw = round(unsubBaseline * pct);
   const additionalUnsubReduced = round(additionalUnsubBase * pct);
   let reducedSub = reducedSubRaw;
   let reducedUnsub = reducedUnsubRaw;
   let shiftedToUnsub = 0;
   if (inp.applySubUnsubShift) {
     const subStatCeiling = round(inp.subStatutory * pct);
-    const unsubStatCeiling = round((inp.unsubStatutory + additionalUnsubBase) * pct);
+    const unsubStatCeiling = round(inp.unsubStatutory * pct);
     const subUnused = Math.max(0, subStatCeiling - reducedSubRaw);
     const unsubHeadroom = Math.max(0, unsubStatCeiling - reducedUnsubRaw);
     shiftedToUnsub = Math.min(subUnused, unsubHeadroom);
