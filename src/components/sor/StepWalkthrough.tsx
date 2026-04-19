@@ -34,7 +34,7 @@ export function StepWalkthrough({
 }) {
   const eligible = results.termResults.filter((t) => t.eligible);
   const enrolledExpr = eligible.map((t) => t.effectiveCredits).join(" + ") || "0";
-  const ftExpr = inputs.ayFtCredits > 0 ? String(inputs.ayFtCredits) : "—";
+  const ftExpr = inputs.ayFtCredits > 0 ? String(inputs.ayFtCredits) : "-";
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
@@ -120,7 +120,7 @@ export function StepWalkthrough({
         </div>
         {results.noReduction ? (
           <p className="mt-2 rounded-md bg-success/10 px-3 py-2 text-xs text-success">
-            ✓ Student is full-time for the AY — no SOR reduction is required.
+            ✓ Student is full-time for the AY: no SOR reduction is required.
           </p>
         ) : null}
       </section>
@@ -130,8 +130,8 @@ export function StepWalkthrough({
         <StepHeader n={3} title="Per-term Share of the Annual Limit" />
         <p className="mb-2 text-xs text-muted-foreground">
           {inputs.distributionModel === "equal"
-            ? "Equal model — annual ÷ N eligible terms (whole-dollar; last term absorbs remainder)."
-            : "Proportional model — annual × (term FT credits ÷ Σ term FT credits)."}
+            ? "Equal model: annual ÷ N eligible terms (whole-dollar; last term absorbs remainder)."
+            : "Proportional model: annual × (term FT credits ÷ Σ term FT credits)."}
         </p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[320px] text-[11px] tabular-nums">
@@ -149,10 +149,10 @@ export function StepWalkthrough({
                   <tr key={t.key} className="border-b border-border/40">
                     <td className="px-2 py-1.5 font-medium text-foreground">{t.label}</td>
                     <td className="px-2 py-1.5 text-right">
-                      {t.eligible ? fmtCurrency(t.shareSub) : "—"}
+                      {t.eligible ? fmtCurrency(t.shareSub) : "-"}
                     </td>
                     <td className="px-2 py-1.5 text-right">
-                      {t.eligible ? fmtCurrency(t.shareUnsub) : "—"}
+                      {t.eligible ? fmtCurrency(t.shareUnsub) : "-"}
                     </td>
                   </tr>
                 ))}

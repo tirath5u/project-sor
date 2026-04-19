@@ -33,7 +33,7 @@ const ROWS: RowDef[] = [
   },
   {
     label: "Term %",
-    hint: "Enrolled ÷ FT, can exceed 100%",
+    hint: "Enrolled ÷ FT (informational only; SOR uses Annual %)",
     format: "pct",
     get: (t) => t.termPct,
     total: () => null,
@@ -99,7 +99,7 @@ const ROWS: RowDef[] = [
 ];
 
 function fmtVal(v: number | null, fmt: RowDef["format"]) {
-  if (v === null) return "—";
+  if (v === null) return "-";
   if (fmt === "money") return fmtCurrency(v);
   if (fmt === "pct") return `${Math.round(v * 100)}%`;
   return String(Math.round(v * 100) / 100);
@@ -119,7 +119,7 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
         <div>
           <h3 className="text-sm font-semibold text-foreground">Per-term Calculation Matrix</h3>
           <p className="text-[11px] text-muted-foreground">
-            Spreadsheet-style view mirroring v18 master sections B–J.
+            Spreadsheet-style view mirroring v18 master sections B-J.
           </p>
         </div>
         <div className="flex items-center gap-2 text-[10px]">
