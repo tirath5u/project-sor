@@ -753,14 +753,14 @@ function assemble(args: {
     (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);
 
   const reducedSubRaw = round(subBaseline * pct);
-  const reducedUnsubRaw = round((unsubBaseline + additionalUnsubBase) * pct);
+  const reducedUnsubRaw = round(unsubBaseline * pct);
   const additionalUnsubReduced = round(additionalUnsubBase * pct);
   let reducedSub = reducedSubRaw;
   let reducedUnsub = reducedUnsubRaw;
   let shiftedToUnsub = 0;
   if (inp.applySubUnsubShift) {
     const subStatCeiling = round(inp.subStatutory * pct);
-    const unsubStatCeiling = round((inp.unsubStatutory + additionalUnsubBase) * pct);
+    const unsubStatCeiling = round(inp.unsubStatutory * pct);
     const subUnused = Math.max(0, subStatCeiling - reducedSubRaw);
     const unsubHeadroom = Math.max(0, unsubStatCeiling - reducedUnsubRaw);
     shiftedToUnsub = Math.min(subUnused, unsubHeadroom);
