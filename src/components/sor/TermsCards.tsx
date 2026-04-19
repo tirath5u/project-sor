@@ -53,11 +53,11 @@ export function TermsCards({ results }: { results: SORResults }) {
               </dd>
               <dt className="text-muted-foreground">Share Sub</dt>
               <dd className="text-right tabular-nums text-foreground">
-                {t.eligible ? fmtCurrency(t.shareSub) : "—"}
+                {t.eligible ? fmtCurrency(t.shareSub) : "-"}
               </dd>
               <dt className="text-muted-foreground">Share Unsub</dt>
               <dd className="text-right tabular-nums text-foreground">
-                {t.eligible ? fmtCurrency(t.shareUnsub) : "—"}
+                {t.eligible ? fmtCurrency(t.shareUnsub) : "-"}
               </dd>
               <dt className="text-muted-foreground">Net Paid Sub</dt>
               <dd className="text-right tabular-nums text-foreground">

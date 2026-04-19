@@ -22,13 +22,13 @@ import {
 export const Route = createFileRoute("/lifecycle")({
   head: () => ({
     meta: [
-      { title: "Aid Lifecycle Tracker — Ellucian SOR" },
+      { title: "Aid Lifecycle Tracker - SOR" },
       {
         name: "description",
         content:
           "Track Title IV Sub/Unsub disbursements across a student's 4-year academic career against OBBBA aggregate caps.",
       },
-      { property: "og:title", content: "Aid Lifecycle Tracker — Ellucian SOR" },
+      { property: "og:title", content: "Aid Lifecycle Tracker - SOR" },
       {
         property: "og:description",
         content:
@@ -234,7 +234,7 @@ function LifecyclePage() {
 
         <p className="rounded-xl border border-border bg-card px-4 py-3 text-[11px] text-muted-foreground">
           Aggregate caps per OBBBA: Undergraduate dependent ${cap.sub.toLocaleString()} Sub /{" "}
-          ${cap.total.toLocaleString()} total. Tracker is informational only —
+          ${cap.total.toLocaleString()} total. Tracker is informational only;
           confirm against COD before disbursing.
         </p>
       </main>

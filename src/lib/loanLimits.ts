@@ -107,20 +107,20 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
 };
 
 export const GRADE_LABELS: Record<GradeLevel, string> = {
-  g0: "0 — 1st-year undergrad (≤ 1 AY remaining)",
-  g1: "1 — 1st-year undergrad",
-  g2: "2 — 2nd-year undergrad",
-  g3: "3 — 3rd-year undergrad",
-  g4: "4 — 4th-year undergrad",
-  g5: "5 — 5th-year undergrad",
-  g6: "6 — Continuing undergrad",
-  g7: "7 — Senior / 4+ year",
-  graduate: "G — Graduate",
-  professional: "P — Professional",
-  g10_teacher_cert: "10 — Post-bacc teacher certification",
-  g11_prep_undergrad: "11 — Preparatory coursework, undergrad",
-  g12_prep_teacher: "12 — Preparatory coursework, teacher cert",
-  g13_prep_grad: "13 — Preparatory coursework, graduate",
+  g0: "0 - 1st-year undergrad (≤ 1 AY remaining)",
+  g1: "1 - 1st-year undergrad",
+  g2: "2 - 2nd-year undergrad",
+  g3: "3 - 3rd-year undergrad",
+  g4: "4 - 4th-year undergrad",
+  g5: "5 - 5th-year undergrad",
+  g6: "6 - Continuing undergrad",
+  g7: "7 - Senior / 4+ year",
+  graduate: "G - Graduate",
+  professional: "P - Professional",
+  g10_teacher_cert: "10 - Post-bacc teacher certification",
+  g11_prep_undergrad: "11 - Preparatory coursework, undergrad",
+  g12_prep_teacher: "12 - Preparatory coursework, teacher cert",
+  g13_prep_grad: "13 - Preparatory coursework, graduate",
 };
 
 export const GRADE_GROUPS: { label: string; codes: GradeLevel[] }[] = [

@@ -162,16 +162,11 @@ function SORCalculatorPage() {
               <Calculator className="h-5 w-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-semibold leading-tight text-foreground sm:text-lg">
-                  Schedule of Reductions
-                </h1>
-                <span className="rounded-full bg-accent/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground">
-                  ​
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground sm:text-xs">
-                ​
+              <h1 className="text-base font-semibold leading-tight text-foreground sm:text-lg">
+                Schedule of Reductions - One Big Beautiful Bill Less Than Full-Time Reduction
+              </h1>
+              <p className="text-[10px] italic text-muted-foreground/70 sm:text-[11px]">
+                by Tirath Chhatriwala
               </p>
             </div>
           </div>
@@ -378,10 +373,10 @@ function SORCalculatorPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">AC1 — Standard term, SAY</SelectItem>
-                  <SelectItem value="2">AC2 — Standard term, BBAY</SelectItem>
-                  <SelectItem value="3">AC3 — Non-standard, terms</SelectItem>
-                  <SelectItem value="4">AC4 — Non-standard, non-terms</SelectItem>
+                  <SelectItem value="1">AC1 - Standard term, SAY</SelectItem>
+                  <SelectItem value="2">AC2 - Standard term, BBAY</SelectItem>
+                  <SelectItem value="3">AC3 - Non-standard, terms</SelectItem>
+                  <SelectItem value="4">AC4 - Non-standard, non-terms</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -500,7 +495,7 @@ function SORCalculatorPage() {
           title="Per-term Enrollment"
           description={
             isDisbursementMode
-              ? "Disbursement view — tick Disbursed when funds release; enter Actual credits at that point."
+              ? "Disbursement view: tick Disbursed when funds release; enter Actual credits at that point."
               : "Half-time cliff = FT ÷ 2. Below half-time → ineligible (no disbursement)."
           }
         >

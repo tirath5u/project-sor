@@ -1,5 +1,5 @@
 /**
- * Pre-built scenarios — official ED "Schedule of Reductions Scenarios for
+ * Pre-built scenarios - official ED "Schedule of Reductions Scenarios for
  * Direct Loans" set, plus the FSA Q&A April 2026 examples and three v18
  * master-spreadsheet regression checks.
  *
@@ -42,11 +42,11 @@ function mk(
 }
 
 export const SCENARIOS: Scenario[] = [
-  // -------- ED Scenarios — 5-step model --------
+  // -------- ED Scenarios - 5-step model --------
   {
     id: "ed-1",
     group: "ED Scenarios (5-step)",
-    title: "Scenario 1 — Fall LTFT, Spring overload (balloon)",
+    title: "Scenario 1 - Fall LTFT, Spring overload (balloon)",
     summary:
       "Sub $3,500 · Fall 6 / Spring 18 (FT 12/12) · 24 AY FT. Spring overload pushes AY back to 100%.",
     expected:
@@ -71,7 +71,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "ed-2",
     group: "ED Scenarios (5-step)",
-    title: "Scenario 2 — Three terms, one overload",
+    title: "Scenario 2 - Three terms, one overload",
     summary: "Sub $2,000 · Fall 9 / Spring 12 / Summer 15 (FT 12/12/12) · 36 AY FT.",
     expected:
       "AY% = 36/36 = 100%. Annual $2,000. Per-term share ≈ $666/$667/$667. Term %s: 75%/100%/125%. Disbursements: $500/$667/$833.",
@@ -98,7 +98,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "ed-3",
     group: "ED Scenarios (5-step)",
-    title: "Scenario 3 — Two-term LTFT (no overload)",
+    title: "Scenario 3 - Two-term LTFT (no overload)",
     summary: "Sub $3,500 · Fall 6 / Spring 9 · 24 AY FT.",
     expected:
       "AY% = 15/24 = 62.5% → 63%. Annual $2,205. Share $1,102/$1,103. Term %: 50%/75%. Disbursements: $551/$827.",
@@ -122,7 +122,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "ed-8",
     group: "ED Scenarios (5-step)",
-    title: "Scenario 8 — Fall overload, Spring LTFT",
+    title: "Scenario 8 - Fall overload, Spring LTFT",
     summary:
       "Sub $3,500 · Fall 15 / Spring 6 · 24 AY FT. Fall pays maximum share, overflow forwards to Spring.",
     expected:
@@ -149,7 +149,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "v18-a",
     group: "v18 Spreadsheet (regression)",
-    title: "v18-A — Two-term LTFT, full Sub+Unsub need",
+    title: "v18-A - Two-term LTFT, full Sub+Unsub need",
     summary:
       "Grade 1 dep, Need $5,500 · Fall 6 / Spring 9 · 24 AY FT. Mirrors v18 default scenario.",
     expected:
@@ -178,7 +178,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "v18-b",
     group: "v18 Spreadsheet (regression)",
-    title: "v18-B — Independent G3 with Winter 1 + Summer",
+    title: "v18-B - Independent G3 with Winter 1 + Summer",
     summary:
       "Indep g3 · Need $12,500 · Fall 12 / Winter1 6 / Spring 9 / Summer 6 · 30 AY FT.",
     expected:
@@ -207,7 +207,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "v18-c",
     group: "v18 Spreadsheet (regression)",
-    title: "v18-C — Proportional distribution (uneven terms)",
+    title: "v18-C - Proportional distribution (uneven terms)",
     summary:
       "Indep g2 · Need $10,500 · Fall 12 (FT 12) / Spring 6 (FT 6) · 18 AY FT. Proportional model weighted by FT credits.",
     expected:
@@ -235,7 +235,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "ed-5",
     group: "Disbursement-mode (recalc)",
-    title: "Scenario 5 — Spring drops after Fall paid (clawback)",
+    title: "Scenario 5 - Spring drops after Fall paid (clawback)",
     summary:
       "Sub $3,500 · Fall 9 paid as planned ($1,313). In Spring student drops to 6.",
     expected:
@@ -274,7 +274,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "ed-9-1",
     group: "Disbursement-mode (recalc)",
-    title: "Scenario 9.1 — Fall full-time, Spring withdraws to 0",
+    title: "Scenario 9.1 - Fall full-time, Spring withdraws to 0",
     summary:
       "Sub $3,500 · Fall paid at full-time ($1,750). Spring student withdraws to 0 credits.",
     expected:
@@ -313,7 +313,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "ed-10-1",
     group: "Disbursement-mode (recalc)",
-    title: "Scenario 10.1 — Fall LTFT, Spring overloads (balloon)",
+    title: "Scenario 10.1 - Fall LTFT, Spring overloads (balloon)",
     summary:
       "Sub $3,500 · Fall 6 paid at $875. Spring planned 12 but enrolls 18.",
     expected:
@@ -354,7 +354,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "fsa-1",
     group: "FSA Examples (Apr 2026)",
-    title: "FSA Ex#1 — Two-term LTFT (no overload)",
+    title: "FSA Ex#1 - Two-term LTFT (no overload)",
     summary: "Sub $3,500 / Unsub $2,000 · Fall 6 / Spring 9 · 24 AY FT.",
     expected:
       "AY% = 15/24 = 63%. Sub $2,205 / Unsub $1,260. Per-term share $1,102/$1,103 Sub.",
@@ -378,7 +378,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "fsa-3",
     group: "FSA Examples (Apr 2026)",
-    title: "FSA Ex#3 — Three-term proportional",
+    title: "FSA Ex#3 - Three-term proportional",
     summary: "Sub $2,000 · Fall 9 / Spring 12 / Summer 12 · 36 AY FT.",
     expected: "AY% = 33/36 = 92%. Annual $1,840.",
     build: () =>
