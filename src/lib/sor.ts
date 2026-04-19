@@ -495,14 +495,19 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const keys = activeKeys(inp);
   const ordered = keys.map((k) => inp.terms[k]);
 
-  // STEP 1 — derive Sub / Unsub need from the single annualNeed input.
+  // STEP 1 - derive Sub / Unsub baselines.
+  // Sub is need-based: capped at min(annualNeed, subStatutory).
+  // Unsub is NON-need-based (per FSA spec §5): the borrower can take the
+  // full Unsub statutory cap regardless of remaining need, as long as the
+  // combined Sub+Unsub does not exceed the combined annual limit.
   const { subNeed, unsubNeed } = splitNeed(
     inp.annualNeed,
     inp.subStatutory,
     inp.unsubStatutory,
   );
   const subBaseline = Math.min(inp.subStatutory, subNeed);
-  const unsubBaseline = Math.min(inp.unsubStatutory, unsubNeed);
+  // Unsub baseline = full Unsub statutory cap (decoupled from need).
+  const unsubBaseline = Math.max(0, inp.unsubStatutory);
   const lookup = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied);
   const additionalUnsubBase =
     !inp.overrideLimits && inp.parentPlusDenied && inp.dependency === "dependent"
