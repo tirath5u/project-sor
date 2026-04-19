@@ -495,19 +495,20 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const keys = activeKeys(inp);
   const ordered = keys.map((k) => inp.terms[k]);
 
-  // STEP 1 - derive Sub / Unsub baselines.
-  // Sub is need-based: capped at min(annualNeed, subStatutory).
-  // Unsub is NON-need-based (per FSA spec §5): the borrower can take the
-  // full Unsub statutory cap regardless of remaining need, as long as the
-  // combined Sub+Unsub does not exceed the combined annual limit.
+  // STEP 1 - derive Sub / Unsub baselines per FSA spec §1 (Combined Limit / Shifting Rule).
+  //   A. Subsidized_Max + Base_Unsub_Max = Total_Combined_Limit
+  //   B. Actual_Sub_Initial   = MIN(Annual_Need, Subsidized_Max)        (need-based)
+  //   C. Actual_Unsub_Initial = Total_Combined_Limit - Actual_Sub_Initial (NON-need-based;
+  //      the unsub bucket absorbs whatever sub did not consume of the combined cap).
   const { subNeed, unsubNeed } = splitNeed(
     inp.annualNeed,
     inp.subStatutory,
     inp.unsubStatutory,
   );
+  const combinedLimit = Math.max(0, inp.subStatutory) + Math.max(0, inp.unsubStatutory);
   const subBaseline = Math.min(inp.subStatutory, subNeed);
-  // Unsub baseline = full Unsub statutory cap (decoupled from need).
-  const unsubBaseline = Math.max(0, inp.unsubStatutory);
+  // Unsub baseline = combined cap minus what Sub actually took (decoupled from need).
+  const unsubBaseline = Math.max(0, combinedLimit - subBaseline);
   const lookup = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied);
   const additionalUnsubBase =
     !inp.overrideLimits && inp.parentPlusDenied && inp.dependency === "dependent"
