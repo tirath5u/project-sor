@@ -167,11 +167,11 @@ function SORCalculatorPage() {
                   Schedule of Reductions
                 </h1>
                 <span className="rounded-full bg-accent/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground">
-                  Ellucian
+                  ​
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground sm:text-xs">
-                v18 master parity · ED 5-step engine · OBBBA AY 2026-27
+                ​
               </p>
             </div>
           </div>
