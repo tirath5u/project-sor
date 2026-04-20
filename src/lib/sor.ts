@@ -282,6 +282,21 @@ export function defaultInputs(): SORInputs {
 }
 
 const round = (n: number) => Math.round(n);
+const netAmount = (paid: number, refund: number) => Math.max(0, (paid || 0) - (refund || 0));
+
+function hasHistoricalActivity(term: TermInput) {
+  return (
+    term.disbursed ||
+    term.paidSub !== 0 ||
+    term.paidUnsub !== 0 ||
+    term.refundSub !== 0 ||
+    term.refundUnsub !== 0
+  );
+}
+
+function historicalCredits(term: TermInput) {
+  return term.disbursed ? term.actualCredits : term.enrolledCredits;
+}
 
 function activeKeys(inp: SORInputs): TermKey[] {
   // Standard terms = first N of [term1..term4] in standard order, but we
@@ -325,15 +340,12 @@ function proportionalShares(annual: number, weights: number[]): number[] {
 }
 
 /**
- * STEP 5 — Per Lovable_SOR_Debug_Guide-4 (v18 master parity):
- *   - The Annual Reduced Limit is divided evenly across ALL ENABLED terms
- *     (not just currently-eligible ones). This is the per-term SHARE.
- *   - Each eligible term (≥ half-time) receives 100% of its share.
- *   - INELIGIBLE / below-half-time terms FORFEIT their share — it does NOT
- *     balance forward in plan mode. (Balance-forward only happens in
- *     disbursement mode via distributeRemainingPool when a paid term
- *     under-drew vs plan.)
- *   - Final term absorbs rounding remainder (Spec §6).
+ * STEP 5 — Plan-mode distribution for the current snapshot:
+ *   - Step-3 shares are displayed across all enabled terms.
+ *   - Eligible terms receive their displayed share for the snapshot.
+ *   - Ineligible terms receive $0 in the snapshot output.
+ *   - Historical anchoring + remaining-pool catch-up is applied later by the
+ *     disbursement walker via distributeRemainingPool.
  */
 function step5Distribute(
   shares: number[],
@@ -442,11 +454,8 @@ function computeSnapshot(
   const annualSub = round(initialSub * ayPctRounded);
   const annualUnsub = round(initialUnsub * ayPctRounded);
 
-  // Step 3 — per-term SHARE. Per Guide-4: divide the Annual Reduced Limit
-  // across ALL ENABLED terms (not just currently-eligible ones). Below-
-  // half-time terms still receive a "share" on paper but forfeit it at
-  // Step 5 (no forward balancing in plan mode). This prevents a single
-  // eligible term from absorbing the full annual amount.
+  // Step 3 — per-term SHARE across all enabled terms. Historical anchoring
+  // and balance-forward catch-up are reconciled later in distributeRemainingPool.
   const enabledIdx = termsInOrder
     .map((_, i) => i)
     .filter((i) => termsInOrder[i].enabled);
@@ -560,7 +569,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
   });
 
   const effectiveCreditsBy = (t: TermInput) =>
-    isDisbursementMode && t.disbursed ? t.actualCredits : t.enrolledCredits;
+    isDisbursementMode && hasHistoricalActivity(t) ? historicalCredits(t) : t.enrolledCredits;
 
   const runSnapshot = (creditsFn: (t: TermInput) => number) => {
     const first = computeSnapshot(
@@ -624,8 +633,8 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const weights = ordered.map((t) => t.ftCredits || 0);
   const creditModeAt = (lockedThrough: number) => (term: TermInput) => {
     const idx = ordered.findIndex((x) => x.key === term.key);
-    return idx <= lockedThrough && ordered[idx]?.disbursed
-      ? ordered[idx].actualCredits
+    return idx <= lockedThrough && hasHistoricalActivity(ordered[idx])
+      ? historicalCredits(ordered[idx])
       : ordered[idx].enrolledCredits;
   };
 
@@ -634,17 +643,15 @@ export function calculateSOR(inp: SORInputs): SORResults {
 
   for (let i = 0; i < ordered.length; i++) {
     const t = ordered[i];
-    if (!t.disbursed) continue;
+    if (!hasHistoricalActivity(t)) continue;
 
     const newSnap = runSnapshot(creditModeAt(i)).snap;
-    const lockedSub = ordered.map((term, idx) =>
-      term.disbursed && idx <= i ? Math.max(0, (term.paidSub || 0) - (term.refundSub || 0)) : null,
-    );
-    const lockedUnsub = ordered.map((term, idx) =>
-      term.disbursed && idx <= i
-        ? Math.max(0, (term.paidUnsub || 0) - (term.refundUnsub || 0))
-        : null,
-    );
+      const lockedSub = ordered.map((term, idx) =>
+        hasHistoricalActivity(term) && idx <= i ? netAmount(term.paidSub, term.refundSub) : null,
+      );
+      const lockedUnsub = ordered.map((term, idx) =>
+        hasHistoricalActivity(term) && idx <= i ? netAmount(term.paidUnsub, term.refundUnsub) : null,
+      );
     const distributedSub = distributeRemainingPool(
       newSnap.annualSub,
       newSnap.eligible,
@@ -665,8 +672,8 @@ export function calculateSOR(inp: SORInputs): SORResults {
       finalUnsubByKey[term.key] = distributedUnsub[idx];
     });
 
-    const paidSubLocked = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
-    const paidUnsubLocked = Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0));
+    const paidSubLocked = netAmount(t.paidSub, t.refundSub);
+    const paidUnsubLocked = netAmount(t.paidUnsub, t.refundUnsub);
     const adjSub = newSnap.termSub[i] - paidSubLocked;
     const adjUnsub = newSnap.termUnsub[i] - paidUnsubLocked;
 
@@ -706,12 +713,14 @@ export function calculateSOR(inp: SORInputs): SORResults {
     prevSnap = newSnap;
   }
 
-  const finalSnap = runSnapshot((t) => (t.disbursed ? t.actualCredits : t.enrolledCredits)).snap;
+  const finalSnap = runSnapshot((t) =>
+    hasHistoricalActivity(t) ? historicalCredits(t) : t.enrolledCredits,
+  ).snap;
   const finalLockedSub = ordered.map((t) =>
-    t.disbursed ? Math.max(0, (t.paidSub || 0) - (t.refundSub || 0)) : null,
+    hasHistoricalActivity(t) ? netAmount(t.paidSub, t.refundSub) : null,
   );
   const finalLockedUnsub = ordered.map((t) =>
-    t.disbursed ? Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0)) : null,
+    hasHistoricalActivity(t) ? netAmount(t.paidUnsub, t.refundUnsub) : null,
   );
   const finalDistributedSub = distributeRemainingPool(
     finalSnap.annualSub,
