@@ -442,36 +442,33 @@ function computeSnapshot(
   const annualSub = round(initialSub * ayPctRounded);
   const annualUnsub = round(initialUnsub * ayPctRounded);
 
-  // Step 3 — per term share for eligible terms.
-  const eligibleIdx = termsInOrder
+  // Step 3 — per-term SHARE. Per Guide-4: divide the Annual Reduced Limit
+  // across ALL ENABLED terms (not just currently-eligible ones). Below-
+  // half-time terms still receive a "share" on paper but forfeit it at
+  // Step 5 (no forward balancing in plan mode). This prevents a single
+  // eligible term from absorbing the full annual amount.
+  const enabledIdx = termsInOrder
     .map((_, i) => i)
-    .filter((i) => eligible[i]);
-  const eligibleCount = eligibleIdx.length;
+    .filter((i) => termsInOrder[i].enabled);
+  const enabledCount = enabledIdx.length;
 
   let shareSubFlat: number[] = [];
   let shareUnsubFlat: number[] = [];
-  if (eligibleCount > 0) {
+  if (enabledCount > 0) {
     if (distributionModel === "proportional") {
-      const weights = eligibleIdx.map((i) => termsInOrder[i].ftCredits || 0);
+      const weights = enabledIdx.map((i) => termsInOrder[i].ftCredits || 0);
       shareSubFlat = proportionalShares(annualSub, weights);
       shareUnsubFlat = proportionalShares(annualUnsub, weights);
     } else {
-      shareSubFlat = equalShares(annualSub, eligibleCount);
-      shareUnsubFlat = equalShares(annualUnsub, eligibleCount);
+      shareSubFlat = equalShares(annualSub, enabledCount);
+      shareUnsubFlat = equalShares(annualUnsub, enabledCount);
     }
   }
-  const shareSub: number[] = [];
-  const shareUnsub: number[] = [];
-  let idx = 0;
-  termsInOrder.forEach((_, i) => {
-    if (eligible[i]) {
-      shareSub.push(shareSubFlat[idx]);
-      shareUnsub.push(shareUnsubFlat[idx]);
-      idx++;
-    } else {
-      shareSub.push(0);
-      shareUnsub.push(0);
-    }
+  const shareSub: number[] = new Array(termsInOrder.length).fill(0);
+  const shareUnsub: number[] = new Array(termsInOrder.length).fill(0);
+  enabledIdx.forEach((termIdx, k) => {
+    shareSub[termIdx] = shareSubFlat[k];
+    shareUnsub[termIdx] = shareUnsubFlat[k];
   });
   const termPctRaw = termsInOrder.map((t) =>
     t.ftCredits > 0 ? effectiveCreditsBy(t) / t.ftCredits : 0,
