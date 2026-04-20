@@ -525,20 +525,36 @@ function computeSnapshot(
   const termPctRaw = termsInOrder.map((t) =>
     t.ftCredits > 0 ? effectiveCreditsBy(t) / t.ftCredits : 0,
   );
-  const termSub = step5Distribute(shareSub, termPctRaw, eligible);
-  const termUnsub = step5Distribute(shareUnsub, termPctRaw, eligible);
+  const weights = termsInOrder.map((t) => t.ftCredits || 0);
+  const unlocked = new Array<number | null>(termsInOrder.length).fill(null);
+  const subDistribution = distributeRunningPoolDetailed(
+    annualSub,
+    termsInOrder,
+    eligible,
+    unlocked,
+    distributionModel,
+    weights,
+  );
+  const unsubDistribution = distributeRunningPoolDetailed(
+    annualUnsub,
+    termsInOrder,
+    eligible,
+    unlocked,
+    distributionModel,
+    weights,
+  );
 
   return {
     ayPctRaw,
     ayPctRounded,
     annualSub,
     annualUnsub,
-    shareSub,
-    shareUnsub,
+    shareSub: subDistribution.share,
+    shareUnsub: unsubDistribution.share,
     termPctRaw,
     eligible,
-    termSub,
-    termUnsub,
+    termSub: subDistribution.calc,
+    termUnsub: unsubDistribution.calc,
   };
 }
 
@@ -697,6 +713,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
       );
     const distributedSub = distributeRemainingPool(
       newSnap.annualSub,
+      ordered,
       newSnap.eligible,
       lockedSub,
       inp.distributionModel,
@@ -704,6 +721,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     );
     const distributedUnsub = distributeRemainingPool(
       newSnap.annualUnsub,
+      ordered,
       newSnap.eligible,
       lockedUnsub,
       inp.distributionModel,
@@ -767,6 +785,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
   );
   const finalDistributedSub = distributeRemainingPool(
     finalSnap.annualSub,
+    ordered,
     finalSnap.eligible,
     finalLockedSub,
     inp.distributionModel,
@@ -774,6 +793,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
   );
   const finalDistributedUnsub = distributeRemainingPool(
     finalSnap.annualUnsub,
+    ordered,
     finalSnap.eligible,
     finalLockedUnsub,
     inp.distributionModel,
@@ -887,7 +907,6 @@ function assemble(args: {
     annual: reducedSub,
     termsInOrder: ordered,
     eligible: finalSnap.eligible,
-    intensityPct,
     locked: lockedSubDisplay,
     distributionModel: inp.distributionModel,
     weights,
@@ -896,7 +915,6 @@ function assemble(args: {
     annual: reducedUnsub,
     termsInOrder: ordered,
     eligible: finalSnap.eligible,
-    intensityPct,
     locked: lockedUnsubDisplay,
     distributionModel: inp.distributionModel,
     weights,
