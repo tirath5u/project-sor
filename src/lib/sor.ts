@@ -340,15 +340,12 @@ function proportionalShares(annual: number, weights: number[]): number[] {
 }
 
 /**
- * STEP 5 — Per Lovable_SOR_Debug_Guide-4 (v18 master parity):
- *   - The Annual Reduced Limit is divided evenly across ALL ENABLED terms
- *     (not just currently-eligible ones). This is the per-term SHARE.
- *   - Each eligible term (≥ half-time) receives 100% of its share.
- *   - INELIGIBLE / below-half-time terms FORFEIT their share — it does NOT
- *     balance forward in plan mode. (Balance-forward only happens in
- *     disbursement mode via distributeRemainingPool when a paid term
- *     under-drew vs plan.)
- *   - Final term absorbs rounding remainder (Spec §6).
+ * STEP 5 — Plan-mode distribution for the current snapshot:
+ *   - Step-3 shares are displayed across all enabled terms.
+ *   - Eligible terms receive their displayed share for the snapshot.
+ *   - Ineligible terms receive $0 in the snapshot output.
+ *   - Historical anchoring + remaining-pool catch-up is applied later by the
+ *     disbursement walker via distributeRemainingPool.
  */
 function step5Distribute(
   shares: number[],
@@ -457,11 +454,8 @@ function computeSnapshot(
   const annualSub = round(initialSub * ayPctRounded);
   const annualUnsub = round(initialUnsub * ayPctRounded);
 
-  // Step 3 — per-term SHARE. Per Guide-4: divide the Annual Reduced Limit
-  // across ALL ENABLED terms (not just currently-eligible ones). Below-
-  // half-time terms still receive a "share" on paper but forfeit it at
-  // Step 5 (no forward balancing in plan mode). This prevents a single
-  // eligible term from absorbing the full annual amount.
+  // Step 3 — per-term SHARE across all enabled terms. Historical anchoring
+  // and balance-forward catch-up are reconciled later in distributeRemainingPool.
   const enabledIdx = termsInOrder
     .map((_, i) => i)
     .filter((i) => termsInOrder[i].enabled);
