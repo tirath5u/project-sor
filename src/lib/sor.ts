@@ -388,8 +388,8 @@ function distributeRemainingPool(
   weights: number[],
 ): number[] {
   const out = locked.map((v) => v ?? 0);
-  let remainingPool =
-    annual - locked.reduce((sum, v) => sum + (v == null ? 0 : v), 0);
+  const lockedTotal = locked.reduce<number>((sum, v) => sum + (v ?? 0), 0);
+  let remainingPool = annual - lockedTotal;
 
   for (let i = 0; i < eligible.length; i++) {
     if (locked[i] != null || !eligible[i]) continue;
