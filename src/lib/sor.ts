@@ -340,54 +340,37 @@ function proportionalShares(annual: number, weights: number[]): number[] {
   return out;
 }
 
-/**
- * STEP 5 — Plan-mode distribution for the current snapshot:
- *   - Step-3 shares are displayed across all enabled terms.
- *   - Eligible terms receive their displayed share for the snapshot.
- *   - Ineligible terms receive $0 in the snapshot output.
- *   - Historical anchoring + remaining-pool catch-up is applied later by the
- *     disbursement walker via distributeRemainingPool.
- */
-function step5Distribute(
-  shares: number[],
-  _termPctRaw: number[],
-  eligible: boolean[],
-  /** Per-term hard ceiling (used to lock already-disbursed terms). */
-  ceilings?: number[],
-): number[] {
-  const n = shares.length;
-  const hasCeiling = (i: number) =>
-    ceilings != null && Number.isFinite(ceilings[i]);
-  const cap = (i: number) => (hasCeiling(i) ? ceilings![i] : Infinity);
-
-  // Each eligible term gets its share (capped by ceilings for locked terms).
-  // Ineligible / below-half-time terms forfeit — no forward balancing in
-  // plan mode (matches v18 master spreadsheet behavior per Guide-4).
-  const out = new Array(n).fill(0);
-  for (let i = 0; i < n; i++) {
-    if (!eligible[i]) continue;
-    out[i] = Math.min(shares[i], cap(i));
-  }
-  return out;
-}
-
-function distributeRemainingPool(
+function distributeRunningPoolDetailed(
   annual: number,
+  termsInOrder: TermInput[],
   eligible: boolean[],
   locked: Array<number | null>,
   distributionModel: DistributionModel,
   weights: number[],
-): number[] {
-  const out = locked.map((v) => v ?? 0);
-  const lockedTotal = locked.reduce<number>((sum, v) => sum + (v ?? 0), 0);
-  let remainingPool = annual - lockedTotal;
+): { share: number[]; calc: number[] } {
+  const share = new Array(termsInOrder.length).fill(0);
+  const calc = new Array(termsInOrder.length).fill(0);
+  let remainingPool = Math.max(0, annual);
 
-  for (let i = 0; i < eligible.length; i++) {
-    if (locked[i] != null || !eligible[i]) continue;
+  for (let i = 0; i < termsInOrder.length; i++) {
+    if (!termsInOrder[i]?.enabled) continue;
+
+    const lockedAmount = locked[i];
+    if (lockedAmount != null) {
+      const anchored = Math.max(0, lockedAmount);
+      share[i] = anchored;
+      calc[i] = anchored;
+      remainingPool = Math.max(0, remainingPool - anchored);
+      continue;
+    }
+
+    if (!eligible[i]) continue;
 
     const remainingEligibleIdx: number[] = [];
-    for (let j = i; j < eligible.length; j++) {
-      if (locked[j] == null && eligible[j]) remainingEligibleIdx.push(j);
+    for (let j = i; j < termsInOrder.length; j++) {
+      if (termsInOrder[j]?.enabled && locked[j] == null && eligible[j]) {
+        remainingEligibleIdx.push(j);
+      }
     }
     if (remainingEligibleIdx.length === 0) continue;
 
@@ -409,11 +392,30 @@ function distributeRemainingPool(
         isLast ? remainingPool : Math.floor(remainingPool / remainingEligibleIdx.length);
     }
 
-    out[i] = payout;
+    share[i] = payout;
+    calc[i] = payout;
     remainingPool -= payout;
   }
 
-  return out;
+  return { share, calc };
+}
+
+function distributeRemainingPool(
+  annual: number,
+  termsInOrder: TermInput[],
+  eligible: boolean[],
+  locked: Array<number | null>,
+  distributionModel: DistributionModel,
+  weights: number[],
+): number[] {
+  return distributeRunningPoolDetailed(
+    annual,
+    termsInOrder,
+    eligible,
+    locked,
+    distributionModel,
+    weights,
+  ).calc;
 }
 
 function computeIntensityPct(termsInOrder: TermInput[], effectiveCredits: number[]): number[] {
@@ -441,65 +443,19 @@ function computeDisplayRows(args: {
   annual: number;
   termsInOrder: TermInput[];
   eligible: boolean[];
-  intensityPct: number[];
   locked: Array<number | null>;
   distributionModel: DistributionModel;
   weights: number[];
 }): { share: number[]; calc: number[] } {
-  const { annual, termsInOrder, eligible, intensityPct, locked, distributionModel, weights } = args;
-  const share = new Array(termsInOrder.length).fill(0);
-  const calc = new Array(termsInOrder.length).fill(0);
-  let remainingPool = Math.max(0, annual);
-
-  for (let i = 0; i < termsInOrder.length; i++) {
-    const term = termsInOrder[i];
-    if (!term.enabled) continue;
-
-    const lockedAmount = locked[i];
-    if (lockedAmount != null) {
-      share[i] = lockedAmount;
-      calc[i] = lockedAmount;
-      remainingPool = Math.max(0, remainingPool - lockedAmount);
-      continue;
-    }
-
-    if (!eligible[i]) {
-      share[i] = 0;
-      calc[i] = 0;
-      continue;
-    }
-
-    const remainingEligibleIdx: number[] = [];
-    for (let j = i; j < termsInOrder.length; j++) {
-      if (termsInOrder[j].enabled && eligible[j] && locked[j] == null) {
-        remainingEligibleIdx.push(j);
-      }
-    }
-    if (remainingEligibleIdx.length === 0) continue;
-
-    const isLast = remainingEligibleIdx[remainingEligibleIdx.length - 1] === i;
-    let runningShare = 0;
-    if (distributionModel === "proportional") {
-      const totalWeight = remainingEligibleIdx.reduce(
-        (sum, j) => sum + Math.max(0, weights[j] || 0),
-        0,
-      );
-      const currentWeight = Math.max(0, weights[i] || 0);
-      runningShare =
-        isLast || totalWeight <= 0
-          ? remainingPool
-          : Math.floor((remainingPool * currentWeight) / totalWeight);
-    } else {
-      runningShare =
-        isLast ? remainingPool : Math.floor(remainingPool / remainingEligibleIdx.length);
-    }
-
-    share[i] = runningShare;
-    calc[i] = Math.min(runningShare, Math.round(runningShare * Math.min(1, intensityPct[i] || 0)));
-    remainingPool = Math.max(0, remainingPool - calc[i]);
-  }
-
-  return { share, calc };
+  const { annual, termsInOrder, eligible, locked, distributionModel, weights } = args;
+  return distributeRunningPoolDetailed(
+    annual,
+    termsInOrder,
+    eligible,
+    locked,
+    distributionModel,
+    weights,
+  );
 }
 
 /** Compute Steps 2-5 for a snapshot (used by both plan + disbursement-walker).
