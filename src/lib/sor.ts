@@ -585,7 +585,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
   });
 
   const effectiveCreditsBy = (t: TermInput) =>
-    isDisbursementMode ? t.actualCredits : t.enrolledCredits;
+    isDisbursementMode && t.disbursed ? t.actualCredits : t.enrolledCredits;
 
   const runSnapshot = (creditsFn: (t: TermInput) => number) => {
     const first = computeSnapshot(
@@ -646,56 +646,61 @@ export function calculateSOR(inp: SORInputs): SORResults {
   }
 
   // ----- Disbursement mode walker -----
-  let workingPlannedCredits: number[] = ordered.map((t) => t.actualCredits);
-  const baseSnapResult = runSnapshot((t) => {
-    const idx = ordered.findIndex((x) => x.key === t.key);
-    return workingPlannedCredits[idx];
-  });
-  const baseSnap = baseSnapResult.snap;
-  ordered.forEach((t, i) => {
-    finalSubByKey[t.key] = baseSnap.termSub[i];
-    finalUnsubByKey[t.key] = baseSnap.termUnsub[i];
-  });
+  const weights = ordered.map((t) => t.ftCredits || 0);
+  const creditModeAt = (lockedThrough: number) => (term: TermInput) => {
+    const idx = ordered.findIndex((x) => x.key === term.key);
+    return idx <= lockedThrough && ordered[idx]?.disbursed
+      ? ordered[idx].actualCredits
+      : ordered[idx].enrolledCredits;
+  };
 
-  let prevSnap = baseSnap;
+  const plannedSnap = runSnapshot((t) => t.enrolledCredits).snap;
+  let prevSnap = plannedSnap;
+
   for (let i = 0; i < ordered.length; i++) {
     const t = ordered[i];
     if (!t.disbursed) continue;
-    workingPlannedCredits = workingPlannedCredits.map((c, j) =>
-      j === i ? t.actualCredits : c,
-    );
-    const newSnapResult = runSnapshot((_t) => {
-      const idx = ordered.findIndex((x) => x.key === _t.key);
-      return workingPlannedCredits[idx];
-    });
-    const newSnap = newSnapResult.snap;
-    const paidSubLocked = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
-    const paidUnsubLocked = Math.max(
-      0,
-      (t.paidUnsub || 0) - (t.refundUnsub || 0),
-    );
-    finalSubByKey[t.key] = paidSubLocked;
-    finalUnsubByKey[t.key] = paidUnsubLocked;
 
-    const targetSub = newSnap.termSub[i];
-    const targetUnsub = newSnap.termUnsub[i];
-    const adjSub = targetSub - paidSubLocked;
-    const adjUnsub = targetUnsub - paidUnsubLocked;
+    const newSnap = runSnapshot(creditModeAt(i)).snap;
+    const lockedSub = ordered.map((term, idx) =>
+      term.disbursed && idx <= i ? Math.max(0, (term.paidSub || 0) - (term.refundSub || 0)) : null,
+    );
+    const lockedUnsub = ordered.map((term, idx) =>
+      term.disbursed && idx <= i
+        ? Math.max(0, (term.paidUnsub || 0) - (term.refundUnsub || 0))
+        : null,
+    );
+    const distributedSub = distributeRemainingPool(
+      newSnap.annualSub,
+      newSnap.eligible,
+      lockedSub,
+      inp.distributionModel,
+      weights,
+    );
+    const distributedUnsub = distributeRemainingPool(
+      newSnap.annualUnsub,
+      newSnap.eligible,
+      lockedUnsub,
+      inp.distributionModel,
+      weights,
+    );
+
+    ordered.forEach((term, idx) => {
+      finalSubByKey[term.key] = distributedSub[idx];
+      finalUnsubByKey[term.key] = distributedUnsub[idx];
+    });
+
+    const paidSubLocked = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
+    const paidUnsubLocked = Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0));
+    const adjSub = newSnap.termSub[i] - paidSubLocked;
+    const adjUnsub = newSnap.termUnsub[i] - paidUnsubLocked;
 
     let appliedTo: TermKey | null = null;
     for (let j = i + 1; j < ordered.length; j++) {
-      if (!ordered[j].disbursed) {
+      if (!ordered[j].disbursed && newSnap.eligible[j]) {
         appliedTo = ordered[j].key;
-        finalSubByKey[appliedTo] = newSnap.termSub[j] + adjSub;
-        finalUnsubByKey[appliedTo] = newSnap.termUnsub[j] + adjUnsub;
-        adjustmentSubByKey[appliedTo] += adjSub;
-        adjustmentUnsubByKey[appliedTo] += adjUnsub;
-        for (let k = j + 1; k < ordered.length; k++) {
-          if (!ordered[k].disbursed) {
-            finalSubByKey[ordered[k].key] = newSnap.termSub[k];
-            finalUnsubByKey[ordered[k].key] = newSnap.termUnsub[k];
-          }
-        }
+        adjustmentSubByKey[appliedTo] += distributedSub[j] - newSnap.termSub[j];
+        adjustmentUnsubByKey[appliedTo] += distributedUnsub[j] - newSnap.termUnsub[j];
         break;
       }
     }
@@ -718,13 +723,39 @@ export function calculateSOR(inp: SORInputs): SORResults {
           : appliedTo
             ? `Net adjustment of ${fmtCurrency(adjSub)} Sub / ${fmtCurrency(
                 adjUnsub,
-              )} Unsub applied to ${TERM_LABELS[appliedTo]}.`
+              )} carried into ${TERM_LABELS[appliedTo]} via the remaining-pool catch-up.`
             : `Adjustment of ${fmtCurrency(adjSub)} Sub / ${fmtCurrency(
                 adjUnsub,
-              )} Unsub — no remaining term to apply against.`,
+              )} — no remaining eligible term to apply against.`,
     });
     prevSnap = newSnap;
   }
+
+  const finalSnap = runSnapshot((t) => (t.disbursed ? t.actualCredits : t.enrolledCredits)).snap;
+  const finalLockedSub = ordered.map((t) =>
+    t.disbursed ? Math.max(0, (t.paidSub || 0) - (t.refundSub || 0)) : null,
+  );
+  const finalLockedUnsub = ordered.map((t) =>
+    t.disbursed ? Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0)) : null,
+  );
+  const finalDistributedSub = distributeRemainingPool(
+    finalSnap.annualSub,
+    finalSnap.eligible,
+    finalLockedSub,
+    inp.distributionModel,
+    weights,
+  );
+  const finalDistributedUnsub = distributeRemainingPool(
+    finalSnap.annualUnsub,
+    finalSnap.eligible,
+    finalLockedUnsub,
+    inp.distributionModel,
+    weights,
+  );
+  ordered.forEach((t, i) => {
+    finalSubByKey[t.key] = finalDistributedSub[i];
+    finalUnsubByKey[t.key] = finalDistributedUnsub[i];
+  });
 
   return assemble({
     inp,
@@ -742,7 +773,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     effectiveCreditsBy,
     recalcHistory,
     warnings,
-    finalSnap: prevSnap,
+    finalSnap,
   });
 }
 
