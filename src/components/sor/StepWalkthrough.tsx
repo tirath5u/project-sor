@@ -149,10 +149,10 @@ export function StepWalkthrough({
                   <tr key={t.key} className="border-b border-border/40">
                     <td className="px-2 py-1.5 font-medium text-foreground">{t.label}</td>
                     <td className="px-2 py-1.5 text-right">
-                      {t.eligible ? fmtCurrency(t.shareSub) : "-"}
+                      {fmtCurrency(t.shareSub)}
                     </td>
                     <td className="px-2 py-1.5 text-right">
-                      {t.eligible ? fmtCurrency(t.shareUnsub) : "-"}
+                      {fmtCurrency(t.shareUnsub)}
                     </td>
                   </tr>
                 ))}
@@ -173,7 +173,8 @@ export function StepWalkthrough({
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="px-2 py-1.5 font-medium">Term</th>
-                <th className="px-2 py-1.5 text-right font-medium">Term %</th>
+                 <th className="px-2 py-1.5 text-right font-medium">Term %</th>
+                 <th className="px-2 py-1.5 text-right font-medium">Intensity %</th>
                 <th className="px-2 py-1.5 text-right font-medium">Calc Sub</th>
                 <th className="px-2 py-1.5 text-right font-medium">Calc Unsub</th>
               </tr>
@@ -182,7 +183,7 @@ export function StepWalkthrough({
               {results.termResults
                 .filter((t) => t.enabled)
                 .map((t) => {
-                  const overload = t.termPct > 1;
+                  const overload = t.intensityPct > 1;
                   return (
                     <tr key={t.key} className="border-b border-border/40">
                       <td className="px-2 py-1.5 font-medium text-foreground">{t.label}</td>
@@ -194,10 +195,13 @@ export function StepWalkthrough({
                         {(t.termPct * 100).toFixed(0)}%{overload ? " ↑" : ""}
                       </td>
                       <td className="px-2 py-1.5 text-right">
-                        {t.eligible ? fmtCurrency(t.calcSub) : "$0"}
+                        {(t.intensityPct * 100).toFixed(0)}%{overload ? " ↑" : ""}
                       </td>
                       <td className="px-2 py-1.5 text-right">
-                        {t.eligible ? fmtCurrency(t.calcUnsub) : "$0"}
+                        {fmtCurrency(t.calcSub)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right">
+                        {fmtCurrency(t.calcUnsub)}
                       </td>
                     </tr>
                   );
@@ -205,7 +209,7 @@ export function StepWalkthrough({
             </tbody>
           </table>
         </div>
-        {results.termResults.some((t) => t.enabled && t.termPct > 1) ? (
+        {results.termResults.some((t) => t.enabled && t.intensityPct > 1) ? (
           <p className="mt-2 rounded-md bg-primary/5 px-3 py-2 text-[11px] text-foreground">
             ↪ One or more terms overload (&gt; 100%). Excess dollars forward to terms with
             remaining share headroom (Step 5 redistribution).
