@@ -380,6 +380,51 @@ function step5Distribute(
   return out;
 }
 
+function distributeRemainingPool(
+  annual: number,
+  eligible: boolean[],
+  locked: Array<number | null>,
+  distributionModel: DistributionModel,
+  weights: number[],
+): number[] {
+  const out = locked.map((v) => v ?? 0);
+  let remainingPool =
+    annual - locked.reduce((sum, v) => sum + (v == null ? 0 : v), 0);
+
+  for (let i = 0; i < eligible.length; i++) {
+    if (locked[i] != null || !eligible[i]) continue;
+
+    const remainingEligibleIdx: number[] = [];
+    for (let j = i; j < eligible.length; j++) {
+      if (locked[j] == null && eligible[j]) remainingEligibleIdx.push(j);
+    }
+    if (remainingEligibleIdx.length === 0) continue;
+
+    const isLast = remainingEligibleIdx[remainingEligibleIdx.length - 1] === i;
+    let payout = 0;
+
+    if (distributionModel === "proportional") {
+      const totalWeight = remainingEligibleIdx.reduce(
+        (sum, j) => sum + Math.max(0, weights[j] || 0),
+        0,
+      );
+      const currentWeight = Math.max(0, weights[i] || 0);
+      payout =
+        isLast || totalWeight <= 0
+          ? remainingPool
+          : Math.floor((remainingPool * currentWeight) / totalWeight);
+    } else {
+      payout =
+        isLast ? remainingPool : Math.floor(remainingPool / remainingEligibleIdx.length);
+    }
+
+    out[i] = payout;
+    remainingPool -= payout;
+  }
+
+  return out;
+}
+
 /** Compute Steps 2-5 for a snapshot (used by both plan + disbursement-walker).
  *  When `countLthtInAyPct` is true, below-half-time terms still contribute their
  *  credits to the AY% numerator (per 4/15 VFG) but remain ineligible for any
