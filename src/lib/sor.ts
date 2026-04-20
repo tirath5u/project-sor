@@ -325,16 +325,15 @@ function proportionalShares(annual: number, weights: number[]): number[] {
 }
 
 /**
- * STEP 5 — Per FSA Spec §4 (NO double-discounting) and §5 (Balance Forward):
- *   - Once a term is ≥ half-time eligible, it receives 100% of its SHARE.
- *     Term intensity (termPct) is ONLY a half-time eligibility cliff —
- *     it must NOT scale the per-term payout, because the Annual Reduced
- *     Limit already accounted for lower enrollment via the AY SOR%.
- *   - INELIGIBLE terms forfeit their share into a pool that "balances
- *     forward" to subsequent eligible terms (no per-term cap; the only
- *     cap is the annual total, which is already enforced upstream).
- *   - Final term absorbs rounding remainder (Spec §6) — handled by
- *     redistributing the pool sequentially.
+ * STEP 5 — Per Lovable_SOR_Debug_Guide-4 (v18 master parity):
+ *   - The Annual Reduced Limit is divided evenly across ALL ENABLED terms
+ *     (not just currently-eligible ones). This is the per-term SHARE.
+ *   - Each eligible term (≥ half-time) receives 100% of its share.
+ *   - INELIGIBLE / below-half-time terms FORFEIT their share — it does NOT
+ *     balance forward in plan mode. (Balance-forward only happens in
+ *     disbursement mode via distributeRemainingPool when a paid term
+ *     under-drew vs plan.)
+ *   - Final term absorbs rounding remainder (Spec §6).
  */
 function step5Distribute(
   shares: number[],
@@ -348,34 +347,13 @@ function step5Distribute(
     ceilings != null && Number.isFinite(ceilings[i]);
   const cap = (i: number) => (hasCeiling(i) ? ceilings![i] : Infinity);
 
-  // Initial pass: every eligible term gets its full share (capped only by
-  // a hard ceiling for locked/disbursed terms). Ineligible terms get $0
-  // and their share goes into the forward pool.
+  // Each eligible term gets its share (capped by ceilings for locked terms).
+  // Ineligible / below-half-time terms forfeit — no forward balancing in
+  // plan mode (matches v18 master spreadsheet behavior per Guide-4).
   const out = new Array(n).fill(0);
-  let pool = 0;
   for (let i = 0; i < n; i++) {
-    if (!eligible[i]) {
-      pool += shares[i]; // lapsed share → forward
-      continue;
-    }
-    const want = shares[i];
-    const give = Math.min(want, cap(i));
-    out[i] = give;
-    pool += want - give; // any excess above a hard ceiling forwards too
-  }
-
-  // Forward-fill the pool to subsequent eligible terms in order. With no
-  // per-term ceiling (default), the next eligible term simply absorbs all
-  // remaining balance — matching v18's "Remaining_Pool / Terms_Remaining"
-  // waterfall and the Spec §5 example (T1 paid, T2 below HT → T3 takes the
-  // rest).
-  for (let i = 0; i < n && pool > 0; i++) {
     if (!eligible[i]) continue;
-    const ceiling = cap(i);
-    const headroom = ceiling === Infinity ? pool : Math.max(0, ceiling - out[i]);
-    const give = Math.min(headroom, pool);
-    out[i] += give;
-    pool -= give;
+    out[i] = Math.min(shares[i], cap(i));
   }
   return out;
 }
