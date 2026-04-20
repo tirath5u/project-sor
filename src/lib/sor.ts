@@ -119,6 +119,7 @@ export interface TermResult {
   effectiveCredits: number; // actual if disbursed-mode locked, else planned
   termPct: number; // Step 4 (raw, can exceed 1)
   termPctCapped: number; // min(termPct, 1)
+  intensityPct: number; // display intensity incl. carried LTHT credits
   shareSub: number; // Step 3 share
   shareUnsub: number;
   eligible: boolean;
@@ -413,6 +414,92 @@ function distributeRemainingPool(
   }
 
   return out;
+}
+
+function computeIntensityPct(termsInOrder: TermInput[], effectiveCredits: number[]): number[] {
+  let carriedLthtCredits = 0;
+
+  return termsInOrder.map((t, i) => {
+    if (!t.enabled || t.ftCredits <= 0) return 0;
+
+    const eff = Math.max(0, effectiveCredits[i] || 0);
+    const half = t.ftCredits / 2;
+    const intensity = (eff + carriedLthtCredits) / t.ftCredits;
+
+    if (eff >= half && carriedLthtCredits > 0) {
+      carriedLthtCredits = 0;
+    }
+    if (eff > 0 && eff < half) {
+      carriedLthtCredits += eff;
+    }
+
+    return intensity;
+  });
+}
+
+function computeDisplayRows(args: {
+  annual: number;
+  termsInOrder: TermInput[];
+  eligible: boolean[];
+  intensityPct: number[];
+  locked: Array<number | null>;
+  distributionModel: DistributionModel;
+  weights: number[];
+}): { share: number[]; calc: number[] } {
+  const { annual, termsInOrder, eligible, intensityPct, locked, distributionModel, weights } = args;
+  const share = new Array(termsInOrder.length).fill(0);
+  const calc = new Array(termsInOrder.length).fill(0);
+  let remainingPool = Math.max(0, annual);
+
+  for (let i = 0; i < termsInOrder.length; i++) {
+    const term = termsInOrder[i];
+    if (!term.enabled) continue;
+
+    const lockedAmount = locked[i];
+    if (lockedAmount != null) {
+      share[i] = lockedAmount;
+      calc[i] = lockedAmount;
+      remainingPool = Math.max(0, remainingPool - lockedAmount);
+      continue;
+    }
+
+    if (!eligible[i]) {
+      share[i] = 0;
+      calc[i] = 0;
+      continue;
+    }
+
+    const remainingEligibleIdx: number[] = [];
+    for (let j = i; j < termsInOrder.length; j++) {
+      if (termsInOrder[j].enabled && eligible[j] && locked[j] == null) {
+        remainingEligibleIdx.push(j);
+      }
+    }
+    if (remainingEligibleIdx.length === 0) continue;
+
+    const isLast = remainingEligibleIdx[remainingEligibleIdx.length - 1] === i;
+    let runningShare = 0;
+    if (distributionModel === "proportional") {
+      const totalWeight = remainingEligibleIdx.reduce(
+        (sum, j) => sum + Math.max(0, weights[j] || 0),
+        0,
+      );
+      const currentWeight = Math.max(0, weights[i] || 0);
+      runningShare =
+        isLast || totalWeight <= 0
+          ? remainingPool
+          : Math.floor((remainingPool * currentWeight) / totalWeight);
+    } else {
+      runningShare =
+        isLast ? remainingPool : Math.floor(remainingPool / remainingEligibleIdx.length);
+    }
+
+    share[i] = runningShare;
+    calc[i] = Math.min(runningShare, Math.round(runningShare * Math.min(1, intensityPct[i] || 0)));
+    remainingPool = Math.max(0, remainingPool - calc[i]);
+  }
+
+  return { share, calc };
 }
 
 /** Compute Steps 2-5 for a snapshot (used by both plan + disbursement-walker).
