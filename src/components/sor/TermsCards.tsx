@@ -51,13 +51,22 @@ export function TermsCards({ results }: { results: SORResults }) {
               >
                 {Math.round(t.termPct * 100)}%
               </dd>
+              <dt className="text-muted-foreground">Intensity %</dt>
+              <dd
+                className={cn(
+                  "text-right tabular-nums text-foreground",
+                  t.intensityPct > 1 && "font-semibold text-primary",
+                )}
+              >
+                {Math.round(t.intensityPct * 100)}%
+              </dd>
               <dt className="text-muted-foreground">Share Sub</dt>
               <dd className="text-right tabular-nums text-foreground">
-                {t.eligible ? fmtCurrency(t.shareSub) : "-"}
+                {fmtCurrency(t.shareSub)}
               </dd>
               <dt className="text-muted-foreground">Share Unsub</dt>
               <dd className="text-right tabular-nums text-foreground">
-                {t.eligible ? fmtCurrency(t.shareUnsub) : "-"}
+                {fmtCurrency(t.shareUnsub)}
               </dd>
               <dt className="text-muted-foreground">Net Paid Sub</dt>
               <dd className="text-right tabular-nums text-foreground">

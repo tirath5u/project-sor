@@ -119,6 +119,7 @@ export interface TermResult {
   effectiveCredits: number; // actual if disbursed-mode locked, else planned
   termPct: number; // Step 4 (raw, can exceed 1)
   termPctCapped: number; // min(termPct, 1)
+  intensityPct: number; // display intensity incl. carried LTHT credits
   shareSub: number; // Step 3 share
   shareUnsub: number;
   eligible: boolean;
@@ -413,6 +414,92 @@ function distributeRemainingPool(
   }
 
   return out;
+}
+
+function computeIntensityPct(termsInOrder: TermInput[], effectiveCredits: number[]): number[] {
+  let carriedLthtCredits = 0;
+
+  return termsInOrder.map((t, i) => {
+    if (!t.enabled || t.ftCredits <= 0) return 0;
+
+    const eff = Math.max(0, effectiveCredits[i] || 0);
+    const half = t.ftCredits / 2;
+    const intensity = (eff + carriedLthtCredits) / t.ftCredits;
+
+    if (eff >= half && carriedLthtCredits > 0) {
+      carriedLthtCredits = 0;
+    }
+    if (eff > 0 && eff < half) {
+      carriedLthtCredits += eff;
+    }
+
+    return intensity;
+  });
+}
+
+function computeDisplayRows(args: {
+  annual: number;
+  termsInOrder: TermInput[];
+  eligible: boolean[];
+  intensityPct: number[];
+  locked: Array<number | null>;
+  distributionModel: DistributionModel;
+  weights: number[];
+}): { share: number[]; calc: number[] } {
+  const { annual, termsInOrder, eligible, intensityPct, locked, distributionModel, weights } = args;
+  const share = new Array(termsInOrder.length).fill(0);
+  const calc = new Array(termsInOrder.length).fill(0);
+  let remainingPool = Math.max(0, annual);
+
+  for (let i = 0; i < termsInOrder.length; i++) {
+    const term = termsInOrder[i];
+    if (!term.enabled) continue;
+
+    const lockedAmount = locked[i];
+    if (lockedAmount != null) {
+      share[i] = lockedAmount;
+      calc[i] = lockedAmount;
+      remainingPool = Math.max(0, remainingPool - lockedAmount);
+      continue;
+    }
+
+    if (!eligible[i]) {
+      share[i] = 0;
+      calc[i] = 0;
+      continue;
+    }
+
+    const remainingEligibleIdx: number[] = [];
+    for (let j = i; j < termsInOrder.length; j++) {
+      if (termsInOrder[j].enabled && eligible[j] && locked[j] == null) {
+        remainingEligibleIdx.push(j);
+      }
+    }
+    if (remainingEligibleIdx.length === 0) continue;
+
+    const isLast = remainingEligibleIdx[remainingEligibleIdx.length - 1] === i;
+    let runningShare = 0;
+    if (distributionModel === "proportional") {
+      const totalWeight = remainingEligibleIdx.reduce(
+        (sum, j) => sum + Math.max(0, weights[j] || 0),
+        0,
+      );
+      const currentWeight = Math.max(0, weights[i] || 0);
+      runningShare =
+        isLast || totalWeight <= 0
+          ? remainingPool
+          : Math.floor((remainingPool * currentWeight) / totalWeight);
+    } else {
+      runningShare =
+        isLast ? remainingPool : Math.floor(remainingPool / remainingEligibleIdx.length);
+    }
+
+    share[i] = runningShare;
+    calc[i] = Math.min(runningShare, Math.round(runningShare * Math.min(1, intensityPct[i] || 0)));
+    remainingPool = Math.max(0, remainingPool - calc[i]);
+  }
+
+  return { share, calc };
 }
 
 /** Compute Steps 2-5 for a snapshot (used by both plan + disbursement-walker).
@@ -831,12 +918,40 @@ function assemble(args: {
     return s + (finalSnap.eligible[i] ? effectiveCreditsBy(t) : 0);
   }, 0);
 
+  const effectiveCredits = ordered.map((t) => effectiveCreditsBy(t));
+  const intensityPct = computeIntensityPct(ordered, effectiveCredits);
+  const lockedSubDisplay = ordered.map((t) =>
+    hasHistoricalActivity(t) ? netAmount(t.paidSub, t.refundSub) : null,
+  );
+  const lockedUnsubDisplay = ordered.map((t) =>
+    hasHistoricalActivity(t) ? netAmount(t.paidUnsub, t.refundUnsub) : null,
+  );
+  const weights = ordered.map((t) => t.ftCredits || 0);
+  const displaySub = computeDisplayRows({
+    annual: reducedSub,
+    termsInOrder: ordered,
+    eligible: finalSnap.eligible,
+    intensityPct,
+    locked: lockedSubDisplay,
+    distributionModel: inp.distributionModel,
+    weights,
+  });
+  const displayUnsub = computeDisplayRows({
+    annual: reducedUnsub,
+    termsInOrder: ordered,
+    eligible: finalSnap.eligible,
+    intensityPct,
+    locked: lockedUnsubDisplay,
+    distributionModel: inp.distributionModel,
+    weights,
+  });
+
   const termResults: TermResult[] = ordered.map((t, i) => {
     const eff = effectiveCreditsBy(t);
     const half = t.ftCredits / 2;
     const eligible = finalSnap.eligible[i];
-    const calcSub = finalSnap.termSub[i];
-    const calcUnsub = finalSnap.termUnsub[i];
+    const calcSub = displaySub.calc[i];
+    const calcUnsub = displayUnsub.calc[i];
     const finalSub = finalSubByKey[t.key];
     const finalUnsub = finalUnsubByKey[t.key];
     const cappedSub = t.coaCapSub > 0 ? Math.min(finalSub, t.coaCapSub) : finalSub;
@@ -854,8 +969,9 @@ function assemble(args: {
       effectiveCredits: eff,
       termPct,
       termPctCapped: Math.min(1, termPct),
-      shareSub: finalSnap.shareSub[i],
-      shareUnsub: finalSnap.shareUnsub[i],
+      intensityPct: intensityPct[i],
+      shareSub: displaySub.share[i],
+      shareUnsub: displayUnsub.share[i],
       eligible,
       status: !t.enabled ? "off" : eligible ? "eligible" : "below_half_time",
       disbursed: t.disbursed,

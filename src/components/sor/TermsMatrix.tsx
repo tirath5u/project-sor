@@ -37,20 +37,27 @@ const ROWS: RowDef[] = [
     format: "pct",
     get: (t) => t.termPct,
     total: () => null,
+  },
+  {
+    label: "Intensity %",
+    hint: "Display intensity including carried LTHT credits",
+    format: "pct",
+    get: (t) => t.intensityPct,
+    total: () => null,
     divider: true,
   },
   {
     label: "Step-3 Share Sub",
     hint: "Annual Sub ÷ eligible terms (or proportional)",
     format: "money",
-    get: (t) => (t.eligible ? t.shareSub : null),
-    total: (rs) => rs.reduce((s, t) => s + (t.eligible ? t.shareSub : 0), 0),
+    get: (t) => t.shareSub,
+    total: (rs) => rs.reduce((s, t) => s + t.shareSub, 0),
   },
   {
     label: "Step-3 Share Unsub",
     format: "money",
-    get: (t) => (t.eligible ? t.shareUnsub : null),
-    total: (rs) => rs.reduce((s, t) => s + (t.eligible ? t.shareUnsub : 0), 0),
+    get: (t) => t.shareUnsub,
+    total: (rs) => rs.reduce((s, t) => s + t.shareUnsub, 0),
     divider: true,
   },
   {
@@ -191,7 +198,9 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
                   </td>
                   {visible.map((t) => {
                     const v = row.get(t);
-                    const overload = row.label === "Term %" && t.termPct > 1;
+                    const overload =
+                      (row.label === "Term %" && t.termPct > 1) ||
+                      (row.label === "Intensity %" && t.intensityPct > 1);
                     const subCapped =
                       row.label === "Final Sub" && t.coaCapSub > 0 && t.calcSub > t.coaCapSub;
                     const unsubCapped =
