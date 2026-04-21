@@ -1,10 +1,14 @@
 /**
- * Pre-built scenarios - official ED "Schedule of Reductions Scenarios for
- * Direct Loans" set, plus the FSA Q&A April 2026 examples and three v18
- * master-spreadsheet regression checks.
+ * Pre-built scenarios for the Schedule of Reductions calculator.
  *
- * Each scenario produces a complete SORInputs config and includes the
- * expected outcome so QA can verify dollar-for-dollar.
+ * Scenarios are written in plain English so that anyone — financial-aid
+ * counselors, students, QA testers — can pick one and immediately understand:
+ *   • who the student is,
+ *   • what's special about their enrollment,
+ *   • what the calculator should produce.
+ *
+ * The internal `id`s are kept stable so the regression suite (sor.test.ts)
+ * can still assert against them.
  */
 
 import { defaultInputs, TERM_LABELS, type SORInputs, type TermKey } from "./sor";
@@ -12,16 +16,21 @@ import { defaultInputs, TERM_LABELS, type SORInputs, type TermKey } from "./sor"
 export interface Scenario {
   id: string;
   group:
-    | "ED Scenarios (5-step)"
-    | "FSA Examples (Apr 2026)"
-    | "Disbursement-mode (recalc)"
-    | "v18 Spreadsheet (regression)"
-    | "Legacy DL Scenarios";
+    | "Common situations"
+    | "What if a student changes mid-year?"
+    | "Edge cases & overloads"
+    | "Regression checks (advanced)";
   title: string;
+  /** One short sentence: who is this student? */
+  student?: string;
+  /** One short sentence: what makes this case interesting? */
+  whatsSpecial?: string;
   summary: string;
   expected?: string;
   /** Optional per-term expected dollars for the regression badge in the matrix. */
   expectedTerms?: Partial<Record<TermKey, { sub?: number; unsub?: number }>>;
+  /** Optional annual totals for the regression suite to assert against. */
+  expectedTotals?: { sub?: number; unsub?: number };
   build: () => SORInputs;
 }
 
