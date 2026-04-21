@@ -98,7 +98,12 @@ export function ResultsPanel({ results }: { results: SORResults }) {
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-        <h3 className="mb-3 text-sm font-semibold text-foreground">Per-term Disbursements</h3>
+        <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+          Per-term Disbursements
+          <InfoTip label="About per-term disbursements">
+            How the reduced annual Sub/Unsub pools are sliced across each eligible term using the chosen distribution rule (Equal or Proportional). Disbursed/paid terms are anchored — the engine never retroactively changes them; the remaining pool is redistributed to future eligible terms. Final values are clamped to per-term COA caps.
+          </InfoTip>
+        </h3>
         <div className="-mx-2 overflow-x-auto">
           <table className="w-full min-w-[480px] text-xs">
             <thead>
@@ -212,7 +217,12 @@ export function ResultsPanel({ results }: { results: SORResults }) {
       ) : null}
 
       <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-        <h3 className="mb-3 text-sm font-semibold text-foreground">Verification</h3>
+        <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+          Verification
+          <InfoTip label="About verification">
+            Sanity check: sums all per-term Final Sub/Unsub and compares against the reduced annual limits. "Balanced" (ideal) means the engine fully distributed the pool with no rounding loss. "Under by" indicates leftover headroom (e.g. COA caps or ineligible terms truncated the pool); "Over by" would signal a calculation bug.
+          </InfoTip>
+        </h3>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <VerifyBadge label="Sub" diff={results.verifySub} />
           <VerifyBadge label="Unsub" diff={results.verifyUnsub} />
