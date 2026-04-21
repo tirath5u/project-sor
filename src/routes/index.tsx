@@ -684,46 +684,57 @@ function SORCalculatorPage() {
           )}
 
           {/* Distribution + view-mode toggles */}
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <ToggleGroup
-              label="View"
-              value={inputs.viewMode}
-              options={[
-                { v: "plan", label: "Plan" },
-                { v: "disbursement", label: "Disbursement" },
-              ]}
-              onChange={(v) => update({ viewMode: v as ViewMode })}
-            />
-            <ToggleGroup
-              label="Step-3 distribution"
-              value={inputs.distributionModel}
-              options={[
-                { v: "equal", label: "Equal" },
-                { v: "proportional", label: "Proportional" },
-              ]}
-              onChange={(v) => update({ distributionModel: v as DistributionModel })}
-            />
-            <Label className="ml-auto flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs">
-              <Switch
-                checked={inputs.applySubUnsubShift}
-                onCheckedChange={(v) => update({ applySubUnsubShift: v })}
+          <div className="mt-4 border-t border-border/60 pt-3">
+            <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Calculation rules
+              <InfoTip>How the engine slices the annual pool, applies enrollment intensity, and honors disbursement history.</InfoTip>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <ToggleGroup
+                label="View"
+                value={inputs.viewMode}
+                options={[
+                  { v: "plan", label: "Plan" },
+                  { v: "disbursement", label: "Disbursement" },
+                ]}
+                onChange={(v) => update({ viewMode: v as ViewMode })}
+                tip="Plan = forward-looking projection. Disbursement = honors history; locks paid terms and redistributes the remaining annual pool to future eligible terms."
               />
-              <span>Sub→Unsub shift</span>
-            </Label>
-            <Label className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs">
-              <Switch
-                checked={inputs.applyDoubleReduction}
-                onCheckedChange={(v) => update({ applyDoubleReduction: v })}
+              <ToggleGroup
+                label="Step-3 distribution"
+                value={inputs.distributionModel}
+                options={[
+                  { v: "equal", label: "Equal" },
+                  { v: "proportional", label: "Proportional" },
+                ]}
+                onChange={(v) => update({ distributionModel: v as DistributionModel })}
+                tip="Equal = annual pool ÷ remaining eligible terms. Proportional = weighted by each term's enrolled credits. Equal is the regulatory default."
               />
-              <span>Double-reduction</span>
-            </Label>
-            <Label className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs">
-              <Switch
-                checked={inputs.countLthtInAyPct}
-                onCheckedChange={(v) => update({ countLthtInAyPct: v })}
-              />
-              <span>Count LTHT in AY%</span>
-            </Label>
+              <Label className="ml-auto flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs">
+                <Switch
+                  checked={inputs.applySubUnsubShift}
+                  onCheckedChange={(v) => update({ applySubUnsubShift: v })}
+                />
+                <span>Sub→Unsub shift</span>
+                <InfoTip>When the student's Sub need drops below the calculated Sub amount, shift the unused Sub allowance into Unsub (up to the Combined Limit). Off = excess Sub is forfeited.</InfoTip>
+              </Label>
+              <Label className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs">
+                <Switch
+                  checked={inputs.applyDoubleReduction}
+                  onCheckedChange={(v) => update({ applyDoubleReduction: v })}
+                />
+                <span>Double-reduction</span>
+                <InfoTip>Apply both the AY% intensity reduction AND the per-term enrollment-intensity reduction. Off = single reduction only (most common interpretation).</InfoTip>
+              </Label>
+              <Label className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs">
+                <Switch
+                  checked={inputs.countLthtInAyPct}
+                  onCheckedChange={(v) => update({ countLthtInAyPct: v })}
+                />
+                <span>Count LTHT in AY%</span>
+                <InfoTip>Less-Than-Half-Time credits: include them in the Academic Year % numerator. Lapsed credits then carry forward to boost the next eligible term's intensity (e.g. 125%).</InfoTip>
+              </Label>
+            </div>
           </div>
         </Section>
 
@@ -779,7 +790,17 @@ function SORCalculatorPage() {
   );
 }
 
-function Pill({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function Pill({
+  label,
+  value,
+  accent,
+  tip,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+  tip?: string;
+}) {
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 ${
@@ -790,6 +811,7 @@ function Pill({ label, value, accent }: { label: string; value: string; accent?:
     >
       <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold tabular-nums">{value}</span>
+      {tip ? <InfoTip>{tip}</InfoTip> : null}
     </span>
   );
 }
@@ -828,15 +850,20 @@ function ToggleGroup<T extends string>({
   value,
   options,
   onChange,
+  tip,
 }: {
   label: string;
   value: T;
   options: { v: T; label: string }[];
   onChange: (v: T) => void;
+  tip?: string;
 }) {
   return (
     <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-background px-2 text-xs">
-      <span className="text-muted-foreground">{label}</span>
+      <span className="flex items-center gap-1 text-muted-foreground">
+        {label}
+        {tip ? <InfoTip>{tip}</InfoTip> : null}
+      </span>
       <div className="flex gap-0.5">
         {options.map((o) => (
           <button
