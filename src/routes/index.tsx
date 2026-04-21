@@ -840,32 +840,6 @@ function SORCalculatorPage() {
   );
 }
 
-function Pill({
-  label,
-  value,
-  accent,
-  tip,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-  tip?: string;
-}) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 ${
-        accent
-          ? "border-accent/40 bg-accent/15 text-accent-foreground"
-          : "border-border bg-background text-foreground"
-      }`}
-    >
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold tabular-nums">{value}</span>
-      {tip ? <InfoTip>{tip}</InfoTip> : null}
-    </span>
-  );
-}
-
 function CompactNum({
   value,
   onChange,
