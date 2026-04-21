@@ -164,15 +164,15 @@ export function exportSORCaseFile({
     margin: { left: margin, right: margin },
     head: [["Term", "FT", "Enrolled", "Paid Sub", "Paid Unsub", "Refund S/U", "COA cap S/U"]],
     body: visibleTerms.map((t) => [
-      t.label,
+      safe(t.label),
       String(t.ftCredits),
       String(t.enrolledCredits),
       fmtCurrency(t.paidSub),
       fmtCurrency(t.paidUnsub),
       `${fmtCurrency(t.refundSub)} / ${fmtCurrency(t.refundUnsub)}`,
-      `${t.coaCapSub ? fmtCurrency(t.coaCapSub) : "—"} / ${
+      safe(`${t.coaCapSub ? fmtCurrency(t.coaCapSub) : "—"} / ${
         t.coaCapUnsub ? fmtCurrency(t.coaCapUnsub) : "—"
-      }`,
+      }`),
     ]),
     headStyles: { fillColor: COLOR_PRIMARY, textColor: 255, fontSize: 9 },
     bodyStyles: { fontSize: 8.5, textColor: COLOR_INK },
@@ -201,7 +201,7 @@ export function exportSORCaseFile({
       ],
     ],
     body: visibleTerms.map((t) => [
-      t.label,
+      safe(t.label),
       pct(t.termPctCapped),
       pct(t.intensityPct),
       fmtCurrency(t.shareSub),
@@ -209,7 +209,7 @@ export function exportSORCaseFile({
       fmtCurrency(t.finalSub),
       fmtCurrency(t.finalUnsub),
       fmtCurrency(t.netPaidSub + t.netPaidUnsub),
-      t.disbursed ? "PAID" : t.eligible ? "Eligible" : "Below ½-time",
+      safe(t.disbursed ? "PAID" : t.eligible ? "Eligible" : "Below 1/2-time"),
     ]),
     headStyles: { fillColor: COLOR_PRIMARY, textColor: 255, fontSize: 9 },
     bodyStyles: { fontSize: 8.5, textColor: COLOR_INK },
