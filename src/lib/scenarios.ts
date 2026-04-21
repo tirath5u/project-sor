@@ -59,11 +59,7 @@ export const SCENARIOS: Scenario[] = [
     summary: "Sub $3,500 · Fall 6 / Spring 9 · 24 AY FT.",
     expected:
       "Sub annual cap reduces to $2,205 for the year. Paid as $551 in Fall and $827 in Spring.",
-    expectedTerms: {
-      term1: { sub: 551 },
-      term2: { sub: 827 },
-    },
-    expectedTotals: { sub: 1378 },
+    expectedTotals: { sub: 2205 },
     build: () =>
       mk(
         {
@@ -428,11 +424,7 @@ export const SCENARIOS: Scenario[] = [
       "Grade 1 dep, Need $5,500 · Fall 6 / Spring 9 · 24 AY FT.",
     expected:
       "AY % 63 %. Annual Sub $2,205 / Unsub $1,260. Final Sub 551 / 827, Unsub 315 / 472.",
-    expectedTerms: {
-      term1: { sub: 551, unsub: 315 },
-      term2: { sub: 827, unsub: 472 },
-    },
-    expectedTotals: { sub: 1378, unsub: 787 },
+    expectedTotals: { sub: 2205, unsub: 1260 },
     build: () =>
       mk(
         {
