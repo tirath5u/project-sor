@@ -40,6 +40,24 @@ function pct(n: number): string {
   return `${Math.round(n * 100)}%`;
 }
 
+/**
+ * Sanitize strings for jsPDF's default helvetica font (WinAnsi encoding).
+ * Replaces common Unicode characters that would otherwise render as broken
+ * glyphs (e.g. arrow → renders as !' and breaks line-width measurement).
+ */
+function safe(text: string): string {
+  return text
+    .replace(/[→⟶⇒]/g, "->")
+    .replace(/[←⟵⇐]/g, "<-")
+    .replace(/[↔⇔]/g, "<->")
+    .replace(/[•·]/g, "-")
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[…]/g, "...")
+    .replace(/[✓]/g, "[x]")
+    .replace(/[✗✘]/g, "[ ]");
+}
+
 export function exportSORCaseFile({
   inputs,
   results,
@@ -56,12 +74,12 @@ export function exportSORCaseFile({
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text("Schedule of Reductions — Case File", margin, 32);
+  doc.text(safe("Schedule of Reductions — Case File"), margin, 32);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`Generated ${pretty()}`, margin, 50);
+  doc.text(safe(`Generated ${pretty()}`), margin, 50);
   if (scenarioTitle) {
-    doc.text(`Scenario: ${scenarioTitle}`, margin, 62);
+    doc.text(safe(`Scenario: ${scenarioTitle}`), margin, 62);
   }
 
   let y = 95;
@@ -75,7 +93,7 @@ export function exportSORCaseFile({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(...COLOR_PRIMARY);
-    doc.text(label, margin, y);
+    doc.text(safe(label), margin, y);
     doc.setDrawColor(...COLOR_DIVIDER);
     doc.line(margin, y + 4, pageWidth - margin, y + 4);
     doc.setTextColor(...COLOR_INK);
@@ -88,7 +106,7 @@ export function exportSORCaseFile({
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      body: rows,
+      body: rows.map(([k, v]) => [safe(k), safe(v)]),
       theme: "plain",
       styles: { fontSize: 9.5, cellPadding: { top: 2, bottom: 2, left: 0, right: 4 } },
       columnStyles: {
@@ -119,9 +137,9 @@ export function exportSORCaseFile({
   // ---------- 2. COMPUTED BASELINES ----------
   sectionHeading("2. Computed baselines");
   doc.text(
-    `Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(
+    safe(`Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(
       results.unsubBaseline,
-    )} · derived from $${inputs.subStatutory.toLocaleString()} / $${inputs.unsubStatutory.toLocaleString()} statutory caps via the Combined Limit Shifting Rule.`,
+    )} · derived from $${inputs.subStatutory.toLocaleString()} / $${inputs.unsubStatutory.toLocaleString()} statutory caps via the Combined Limit Shifting Rule.`),
     margin,
     y,
     { maxWidth: pageWidth - margin * 2 },
@@ -130,7 +148,7 @@ export function exportSORCaseFile({
   if (results.additionalUnsubBase > 0) {
     doc.setTextColor(...COLOR_PRIMARY);
     doc.text(
-      `+ ${fmtCurrency(results.additionalUnsubBase)} additional Unsub from PLUS-denial uplift.`,
+      safe(`+ ${fmtCurrency(results.additionalUnsubBase)} additional Unsub from PLUS-denial uplift.`),
       margin,
       y,
     );
@@ -146,15 +164,15 @@ export function exportSORCaseFile({
     margin: { left: margin, right: margin },
     head: [["Term", "FT", "Enrolled", "Paid Sub", "Paid Unsub", "Refund S/U", "COA cap S/U"]],
     body: visibleTerms.map((t) => [
-      t.label,
+      safe(t.label),
       String(t.ftCredits),
       String(t.enrolledCredits),
       fmtCurrency(t.paidSub),
       fmtCurrency(t.paidUnsub),
       `${fmtCurrency(t.refundSub)} / ${fmtCurrency(t.refundUnsub)}`,
-      `${t.coaCapSub ? fmtCurrency(t.coaCapSub) : "—"} / ${
+      safe(`${t.coaCapSub ? fmtCurrency(t.coaCapSub) : "—"} / ${
         t.coaCapUnsub ? fmtCurrency(t.coaCapUnsub) : "—"
-      }`,
+      }`),
     ]),
     headStyles: { fillColor: COLOR_PRIMARY, textColor: 255, fontSize: 9 },
     bodyStyles: { fontSize: 8.5, textColor: COLOR_INK },
@@ -183,7 +201,7 @@ export function exportSORCaseFile({
       ],
     ],
     body: visibleTerms.map((t) => [
-      t.label,
+      safe(t.label),
       pct(t.termPctCapped),
       pct(t.intensityPct),
       fmtCurrency(t.shareSub),
@@ -191,7 +209,7 @@ export function exportSORCaseFile({
       fmtCurrency(t.finalSub),
       fmtCurrency(t.finalUnsub),
       fmtCurrency(t.netPaidSub + t.netPaidUnsub),
-      t.disbursed ? "PAID" : t.eligible ? "Eligible" : "Below ½-time",
+      safe(t.disbursed ? "PAID" : t.eligible ? "Eligible" : "Below 1/2-time"),
     ]),
     headStyles: { fillColor: COLOR_PRIMARY, textColor: 255, fontSize: 9 },
     bodyStyles: { fontSize: 8.5, textColor: COLOR_INK },
@@ -219,21 +237,21 @@ export function exportSORCaseFile({
     `Step 1 — Initial maxima: Sub baseline ${fmtCurrency(
       results.subBaseline,
     )}, Unsub baseline ${fmtCurrency(results.unsubBaseline)} (statutory caps $${inputs.subStatutory.toLocaleString()} / $${inputs.unsubStatutory.toLocaleString()}).`,
-    `Step 2 — AY enrollment %: ${results.enrolledSumAll} ÷ ${results.ftSumAll} = ${(
+    `Step 2 — AY enrollment %: ${results.enrolledSumAll} / ${results.ftSumAll} = ${(
       results.enrollmentFractionRaw * 100
-    ).toFixed(2)}% → rounded to ${pct(results.sorPctRounded)}. Reduced annual Sub ${fmtCurrency(
+    ).toFixed(2)}% -> rounded to ${pct(results.sorPctRounded)}. Reduced annual Sub ${fmtCurrency(
       results.reducedSub,
     )}, Unsub ${fmtCurrency(results.reducedUnsub)}.`,
     `Step 3 — Per-term share via "${inputs.distributionModel}" model across ${results.eligibleTermsCount} eligible term(s).`,
-    `Step 4 — Per-term enrollment intensity (term enrolled ÷ term FT). Capped to 100% for disbursement math.`,
-    `Step 5 — Disbursement = share × min(intensity, 100%). Unspent share carries forward to remaining eligible terms; finals are clamped to per-term COA caps.`,
+    `Step 4 — Per-term enrollment intensity (term enrolled / term FT). Capped to 100% for disbursement math.`,
+    `Step 5 — Disbursement = share x min(intensity, 100%). Unspent share carries forward to remaining eligible terms; finals are clamped to per-term COA caps.`,
   ];
   steps.forEach((s) => {
     if (y > 720) {
       doc.addPage();
       y = 50;
     }
-    const split = doc.splitTextToSize(s, pageWidth - margin * 2);
+    const split = doc.splitTextToSize(safe(s), pageWidth - margin * 2);
     doc.text(split, margin, y);
     y += split.length * 11 + 6;
   });
@@ -245,7 +263,7 @@ export function exportSORCaseFile({
     doc.setFontSize(8);
     doc.setTextColor(...COLOR_MUTED);
     doc.text(
-      `Generated by Schedule of Reductions Calculator · Page ${i} of ${total}`,
+      safe(`Generated by Schedule of Reductions Calculator · Page ${i} of ${total}`),
       margin,
       doc.internal.pageSize.getHeight() - 20,
     );
