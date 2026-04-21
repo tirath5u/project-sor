@@ -869,44 +869,6 @@ function CompactNum({
   );
 }
 
-function ToggleGroup<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-  tip,
-}: {
-  label: string;
-  value: T;
-  options: { v: T; label: string }[];
-  onChange: (v: T) => void;
-  tip?: string;
-}) {
-  return (
-    <div className="flex h-9 items-center gap-2 rounded-lg border border-border bg-background px-2 text-xs">
-      <span className="flex items-center gap-1 text-muted-foreground">
-        {label}
-        {tip ? <InfoTip>{tip}</InfoTip> : null}
-      </span>
-      <div className="flex gap-0.5">
-        {options.map((o) => (
-          <button
-            key={o.v}
-            onClick={() => onChange(o.v)}
-            className={`rounded-md px-2 py-0.5 font-medium transition ${
-              value === o.v
-                ? "bg-primary text-primary-foreground"
-                : "text-foreground/70 hover:bg-muted"
-            }`}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /**
  * Accessible segmented control: ARIA radiogroup with arrow-key navigation.
  */
