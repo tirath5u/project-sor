@@ -74,12 +74,12 @@ export function exportSORCaseFile({
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text("Schedule of Reductions — Case File", margin, 32);
+  doc.text(safe("Schedule of Reductions — Case File"), margin, 32);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`Generated ${pretty()}`, margin, 50);
+  doc.text(safe(`Generated ${pretty()}`), margin, 50);
   if (scenarioTitle) {
-    doc.text(`Scenario: ${scenarioTitle}`, margin, 62);
+    doc.text(safe(`Scenario: ${scenarioTitle}`), margin, 62);
   }
 
   let y = 95;
@@ -93,7 +93,7 @@ export function exportSORCaseFile({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(...COLOR_PRIMARY);
-    doc.text(label, margin, y);
+    doc.text(safe(label), margin, y);
     doc.setDrawColor(...COLOR_DIVIDER);
     doc.line(margin, y + 4, pageWidth - margin, y + 4);
     doc.setTextColor(...COLOR_INK);
