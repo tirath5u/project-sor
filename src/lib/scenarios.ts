@@ -1,14 +1,10 @@
 /**
  * Pre-built scenarios for the Schedule of Reductions calculator.
  *
- * Scenarios are written in plain English so that anyone — financial-aid
- * counselors, students, QA testers — can pick one and immediately understand:
- *   • who the student is,
- *   • what's special about their enrollment,
- *   • what the calculator should produce.
- *
- * The internal `id`s are kept stable so the regression suite (sor.test.ts)
- * can still assert against them.
+ * Scenarios are written in plain English so anyone can pick one and
+ * understand the student, what's special about the case, and what the
+ * calculator should produce. Internal `id`s are stable so the regression
+ * suite (sor.test.ts) can assert against them.
  */
 
 import { defaultInputs, TERM_LABELS, type SORInputs, type TermKey } from "./sor";
@@ -27,7 +23,7 @@ export interface Scenario {
   whatsSpecial?: string;
   summary: string;
   expected?: string;
-  /** Optional per-term expected dollars for the regression badge in the matrix. */
+  /** Optional per-term expected dollars (regression badge in the matrix). */
   expectedTerms?: Partial<Record<TermKey, { sub?: number; unsub?: number }>>;
   /** Optional annual totals for the regression suite to assert against. */
   expectedTotals?: { sub?: number; unsub?: number };
@@ -51,15 +47,23 @@ function mk(
 }
 
 export const SCENARIOS: Scenario[] = [
-  // -------- ED Scenarios - 5-step model --------
+  // -------- Common situations --------
   {
-    id: "ed-1",
-    group: "ED Scenarios (5-step)",
-    title: "Scenario 1 - Fall LTFT, Spring overload (balloon)",
-    summary:
-      "Sub $3,500 · Fall 6 / Spring 18 (FT 12/12) · 24 AY FT. Spring overload pushes AY back to 100%.",
+    id: "ed-3",
+    group: "Common situations",
+    title: "Half-time Fall, three-quarter Spring",
+    student:
+      "Dependent freshman with $3,500 of need, taking 6 credits in Fall and 9 in Spring at a school with 24 full-time credits per year.",
+    whatsSpecial:
+      "Both terms are below full-time, so the annual loan limit is reduced (AY % = 63%).",
+    summary: "Sub $3,500 · Fall 6 / Spring 9 · 24 AY FT.",
     expected:
-      "Step 2 AY% = 24/24 = 100% → no SOR reduction. Per-term share $1,750 each. Step 4: Fall 50% → $875; Spring 150% → capped at $1,750 share (overflow forwards but no headroom). Result: Fall $875, Spring $2,625 (Spring absorbs $875 balloon).",
+      "Sub annual cap reduces to $2,205 for the year. Paid as $551 in Fall and $827 in Spring.",
+    expectedTerms: {
+      term1: { sub: 551 },
+      term2: { sub: 827 },
+    },
+    expectedTotals: { sub: 1378 },
     build: () =>
       mk(
         {
@@ -73,17 +77,50 @@ export const SCENARIOS: Scenario[] = [
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
-          term2: { enabled: true, ftCredits: 12, enrolledCredits: 18 },
+          term2: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
+        },
+      ),
+  },
+  {
+    id: "fsa-1",
+    group: "Common situations",
+    title: "Half-time Fall, three-quarter Spring (with Unsub)",
+    student:
+      "Dependent freshman taking 6 credits in Fall and 9 in Spring, with both Sub ($3,500) and Unsub ($2,000) eligibility.",
+    whatsSpecial:
+      "Same enrollment as above, but now both loan types are reduced together by the 63% AY %.",
+    summary: "Sub $3,500 / Unsub $2,000 · Fall 6 / Spring 9 · 24 AY FT.",
+    expected:
+      "Sub caps at $2,205 for the year. Unsub caps at $1,260. Per-term Sub share is roughly $1,102 / $1,103.",
+    build: () =>
+      mk(
+        {
+          numStandardTerms: 2,
+          ayFtCredits: 24,
+          gradeLevel: "g1",
+          dependency: "dependent",
+          annualNeed: 5500,
+          subStatutory: 3500,
+          unsubStatutory: 2000,
+        },
+        {
+          term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
+          term2: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
         },
       ),
   },
   {
     id: "ed-2",
-    group: "ED Scenarios (5-step)",
-    title: "Scenario 2 - Three terms, one overload",
-    summary: "Sub $2,000 · Fall 9 / Spring 12 / Summer 15 (FT 12/12/12) · 36 AY FT.",
+    group: "Common situations",
+    title: "Three terms, full-year enrollment",
+    student:
+      "Dependent freshman with $2,000 of need, taking 9 / 12 / 15 credits across Fall, Spring, and Summer (36 full-time credits per year).",
+    whatsSpecial:
+      "Total credits add up to a full academic year, so there's no AY-% reduction. The summer term carries an overload.",
+    summary: "Sub $2,000 · Fall 9 / Spring 12 / Summer 15 · 36 AY FT.",
     expected:
-      "AY% = 36/36 = 100%. Annual $2,000. Per-term share ≈ $666/$667/$667. Term %s: 75%/100%/125%. Disbursements: $500/$667/$833.",
+      "Annual stays at $2,000. Per-term shares of about $666 / $667 / $667. Disbursements: $500 / $667 / $833.",
+    expectedTotals: { sub: 2000 },
     build: () =>
       mk(
         {
@@ -105,68 +142,16 @@ export const SCENARIOS: Scenario[] = [
       ),
   },
   {
-    id: "ed-3",
-    group: "ED Scenarios (5-step)",
-    title: "Scenario 3 - Two-term LTFT (no overload)",
-    summary: "Sub $3,500 · Fall 6 / Spring 9 · 24 AY FT.",
+    id: "leg-4",
+    group: "Common situations",
+    title: "Spring drops below half-time",
+    student:
+      "Dependent freshman with $5,500 of need, taking 9 credits in Fall but only 3 in Spring (FT = 12).",
+    whatsSpecial:
+      "Spring drops below half-time, so the student becomes ineligible that term — only Fall pays.",
+    summary: "Fall 9 / Spring 3 (FT 12/12, AY 24).",
     expected:
-      "AY% = 15/24 = 62.5% → 63%. Annual $2,205. Share $1,102/$1,103. Term %: 50%/75%. Disbursements: $551/$827.",
-    build: () =>
-      mk(
-        {
-          numStandardTerms: 2,
-          ayFtCredits: 24,
-          gradeLevel: "g1",
-          dependency: "dependent",
-          annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
-        },
-        {
-          term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
-          term2: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
-        },
-      ),
-  },
-  {
-    id: "ed-8",
-    group: "ED Scenarios (5-step)",
-    title: "Scenario 8 - Fall overload, Spring LTFT",
-    summary:
-      "Sub $3,500 · Fall 15 / Spring 6 · 24 AY FT. Fall pays maximum share, overflow forwards to Spring.",
-    expected:
-      "AY% = 21/24 = 87.5% → 88%. Annual $3,080. Share $1,540 each. Term %: 125%/50%. Fall capped at $1,540, Spring gets $770 + the $385 forwarded = $1,155.",
-    build: () =>
-      mk(
-        {
-          numStandardTerms: 2,
-          ayFtCredits: 24,
-          gradeLevel: "g1",
-          dependency: "dependent",
-          annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
-        },
-        {
-          term1: { enabled: true, ftCredits: 12, enrolledCredits: 15 },
-          term2: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
-        },
-      ),
-  },
-
-  // -------- v18 Spreadsheet regression scenarios --------
-  {
-    id: "v18-a",
-    group: "v18 Spreadsheet (regression)",
-    title: "v18-A - Two-term LTFT, full Sub+Unsub need",
-    summary:
-      "Grade 1 dep, Need $5,500 · Fall 6 / Spring 9 · 24 AY FT. Mirrors v18 default scenario.",
-    expected:
-      "AY% 63%. Annual Sub $2,205, Unsub $1,260. Per-term shares Sub $1,102/$1,103, Unsub $630/$630. Final Sub $551/$827, Unsub $315/$472.",
-    expectedTerms: {
-      term1: { sub: 551, unsub: 315 },
-      term2: { sub: 827, unsub: 472 },
-    },
+      "Spring is INELIGIBLE (no disbursement). Fall pays at its share × 75%.",
     build: () =>
       mk(
         {
@@ -179,76 +164,24 @@ export const SCENARIOS: Scenario[] = [
           unsubStatutory: 2000,
         },
         {
-          term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
-          term2: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
-        },
-      ),
-  },
-  {
-    id: "v18-b",
-    group: "v18 Spreadsheet (regression)",
-    title: "v18-B - Independent G3 with Winter 1 + Summer",
-    summary:
-      "Indep g3 · Need $12,500 · Fall 12 / Winter1 6 / Spring 9 / Summer 6 · 30 AY FT.",
-    expected:
-      "Winter 1 enabled mid-year. Distribution shares the annual across 4 eligible terms.",
-    build: () =>
-      mk(
-        {
-          numStandardTerms: 2,
-          includeWinter1: true,
-          includeSummer1: true,
-          ayFtCredits: 30,
-          gradeLevel: "g3",
-          dependency: "independent",
-          annualNeed: 12500,
-          subStatutory: 5500,
-          unsubStatutory: 7000,
-        },
-        {
-          term1: { enabled: true, ftCredits: 12, enrolledCredits: 12 },
-          winter1: { enabled: true, ftCredits: 6, enrolledCredits: 6 },
-          term2: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
-          summer1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
-        },
-      ),
-  },
-  {
-    id: "v18-c",
-    group: "v18 Spreadsheet (regression)",
-    title: "v18-C - Proportional distribution (uneven terms)",
-    summary:
-      "Indep g2 · Need $10,500 · Fall 12 (FT 12) / Spring 6 (FT 6) · 18 AY FT. Proportional model weighted by FT credits.",
-    expected:
-      "AY% 100%. Equal model would give 50/50; proportional gives 2/3 to Fall, 1/3 to Spring.",
-    build: () =>
-      mk(
-        {
-          numStandardTerms: 2,
-          ayFtCredits: 18,
-          gradeLevel: "g2",
-          dependency: "independent",
-          annualNeed: 10500,
-          subStatutory: 4500,
-          unsubStatutory: 6000,
-          distributionModel: "proportional",
-        },
-        {
-          term1: { enabled: true, ftCredits: 12, enrolledCredits: 12 },
-          term2: { enabled: true, ftCredits: 6, enrolledCredits: 6 },
+          term1: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
+          term2: { enabled: true, ftCredits: 12, enrolledCredits: 3 },
         },
       ),
   },
 
-  // -------- Disbursement-mode (recalc) --------
+  // -------- What if a student changes mid-year? --------
   {
     id: "ed-5",
-    group: "Disbursement-mode (recalc)",
-    title: "Scenario 5 - Spring drops after Fall paid (clawback)",
-    summary:
-      "Sub $3,500 · Fall 9 paid as planned ($1,313). In Spring student drops to 6.",
+    group: "What if a student changes mid-year?",
+    title: "Spring drops after Fall has been paid (clawback)",
+    student:
+      "Dependent freshman who got $1,313 of Sub in Fall (planned 9 credits) but drops to 6 in Spring.",
+    whatsSpecial:
+      "Fall is locked because it was already disbursed. The Spring share gets reduced to claw back the over-award from Fall.",
+    summary: "Sub $3,500 · Fall 9 paid as planned ($1,313). Spring drops to 6.",
     expected:
-      "After Spring recalc: AY% = 15/24 = 63% → annual $2,205. Spring's recalculated share gets reduced by Fall's over-award.",
+      "After Spring recalc: AY % = 63 %, annual $2,205. Spring's share is reduced by Fall's over-award.",
     build: () =>
       mk(
         {
@@ -282,12 +215,14 @@ export const SCENARIOS: Scenario[] = [
   },
   {
     id: "ed-9-1",
-    group: "Disbursement-mode (recalc)",
-    title: "Scenario 9.1 - Fall full-time, Spring withdraws to 0",
-    summary:
-      "Sub $3,500 · Fall paid at full-time ($1,750). Spring student withdraws to 0 credits.",
-    expected:
-      "Spring is ineligible (below half-time). Final Sub = Fall $1,750 only.",
+    group: "What if a student changes mid-year?",
+    title: "Fall full-time, Spring withdraws to zero",
+    student:
+      "Dependent freshman who was paid $1,750 of Sub at full-time in Fall, then withdraws completely in Spring.",
+    whatsSpecial:
+      "Spring is below half-time and ineligible. Only the Fall payment counts toward the annual total.",
+    summary: "Sub $3,500 · Fall paid at full-time ($1,750). Spring 0 credits.",
+    expected: "Spring is INELIGIBLE. Final Sub for the year = Fall's $1,750.",
     build: () =>
       mk(
         {
@@ -321,12 +256,15 @@ export const SCENARIOS: Scenario[] = [
   },
   {
     id: "ed-10-1",
-    group: "Disbursement-mode (recalc)",
-    title: "Scenario 10.1 - Fall LTFT, Spring overloads (balloon)",
-    summary:
-      "Sub $3,500 · Fall 6 paid at $875. Spring planned 12 but enrolls 18.",
+    group: "What if a student changes mid-year?",
+    title: "Fall part-time, Spring overloads (balloon)",
+    student:
+      "Dependent freshman who was paid $875 of Sub in Fall (6 credits) and now enrolls in 18 credits in Spring instead of the planned 12.",
+    whatsSpecial:
+      "Spring's overload pushes AY % back to 100 %. The leftover annual headroom balloons into the Spring disbursement.",
+    summary: "Sub $3,500 · Fall 6 paid at $875. Spring planned 12 / actual 18.",
     expected:
-      "After Spring disbursement triggers recalc: AY% returns to 100%. Spring final = Annual $3,500 − Fall $875 = $2,625.",
+      "After Spring recalc: AY % returns to 100 %. Spring final = annual $3,500 − Fall $875 = $2,625.",
     build: () =>
       mk(
         {
@@ -359,14 +297,19 @@ export const SCENARIOS: Scenario[] = [
       ),
   },
 
-  // -------- FSA Examples (Apr 2026) --------
+  // -------- Edge cases & overloads --------
   {
-    id: "fsa-1",
-    group: "FSA Examples (Apr 2026)",
-    title: "FSA Ex#1 - Two-term LTFT (no overload)",
-    summary: "Sub $3,500 / Unsub $2,000 · Fall 6 / Spring 9 · 24 AY FT.",
+    id: "ed-1",
+    group: "Edge cases & overloads",
+    title: "Part-time Fall, overload Spring (balloon)",
+    student:
+      "Dependent freshman with $3,500 of need, taking 6 credits in Fall and an overload of 18 in Spring (FT = 12).",
+    whatsSpecial:
+      "Total credits hit a full year, so AY % stays at 100 %. Fall pays only 50 %, leaving a big balloon for Spring.",
+    summary: "Sub $3,500 · Fall 6 / Spring 18 (FT 12/12) · 24 AY FT.",
     expected:
-      "AY% = 15/24 = 63%. Sub $2,205 / Unsub $1,260. Per-term share $1,102/$1,103 Sub.",
+      "AY % = 100 %, annual $3,500. Fall pays $875. Spring absorbs the rest: $2,625.",
+    expectedTotals: { sub: 3500 },
     build: () =>
       mk(
         {
@@ -374,22 +317,54 @@ export const SCENARIOS: Scenario[] = [
           ayFtCredits: 24,
           gradeLevel: "g1",
           dependency: "dependent",
-          annualNeed: 5500,
+          annualNeed: 3500,
           subStatutory: 3500,
-          unsubStatutory: 2000,
+          unsubStatutory: 0,
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
-          term2: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
+          term2: { enabled: true, ftCredits: 12, enrolledCredits: 18 },
+        },
+      ),
+  },
+  {
+    id: "ed-8",
+    group: "Edge cases & overloads",
+    title: "Overload Fall, part-time Spring (forward catch-up)",
+    student:
+      "Dependent freshman with $3,500 of need, taking an overload of 15 in Fall and dropping to 6 in Spring.",
+    whatsSpecial:
+      "Fall is capped at its own share, but the unused share carries forward into Spring.",
+    summary: "Sub $3,500 · Fall 15 / Spring 6 · 24 AY FT.",
+    expected:
+      "AY % = 88 %, annual $3,080. Fall capped at $1,540. Spring picks up its $770 plus a $385 forward = $1,155.",
+    build: () =>
+      mk(
+        {
+          numStandardTerms: 2,
+          ayFtCredits: 24,
+          gradeLevel: "g1",
+          dependency: "dependent",
+          annualNeed: 3500,
+          subStatutory: 3500,
+          unsubStatutory: 0,
+        },
+        {
+          term1: { enabled: true, ftCredits: 12, enrolledCredits: 15 },
+          term2: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
         },
       ),
   },
   {
     id: "fsa-3",
-    group: "FSA Examples (Apr 2026)",
-    title: "FSA Ex#3 - Three-term proportional",
+    group: "Edge cases & overloads",
+    title: "Three terms, near-full enrollment",
+    student:
+      "Dependent freshman with $2,000 of need, taking 9 / 12 / 12 across Fall, Spring, and Summer.",
+    whatsSpecial:
+      "Just shy of a full year — AY % comes out to 92 %, slightly reducing the annual.",
     summary: "Sub $2,000 · Fall 9 / Spring 12 / Summer 12 · 36 AY FT.",
-    expected: "AY% = 33/36 = 92%. Annual $1,840.",
+    expected: "AY % = 92 %, annual $1,840.",
     build: () =>
       mk(
         {
@@ -410,14 +385,54 @@ export const SCENARIOS: Scenario[] = [
         },
       ),
   },
-
-  // -------- Legacy DL Scenarios --------
   {
-    id: "leg-4",
-    group: "Legacy DL Scenarios",
-    title: "Spring drops below half-time",
-    summary: "9 Fall / 3 Spring (FT 12/12, AY 24).",
-    expected: "Spring INELIGIBLE. Fall pays at its share × 75%.",
+    id: "v18-c",
+    group: "Edge cases & overloads",
+    title: "Proportional split across uneven terms",
+    student:
+      "Independent sophomore with $10,500 of need, taking 12 credits in Fall (FT = 12) and 6 in Spring (FT = 6).",
+    whatsSpecial:
+      "Spring is a shorter term with a lower FT count. The proportional model weights each term by its FT credits, so Fall gets ~⅔ and Spring ~⅓.",
+    summary: "Independent G2 · Need $10,500 · Fall 12 (FT 12) / Spring 6 (FT 6) · 18 AY FT.",
+    expected:
+      "AY % = 100 %. Equal model would split 50 / 50; proportional gives roughly ⅔ / ⅓.",
+    build: () =>
+      mk(
+        {
+          numStandardTerms: 2,
+          ayFtCredits: 18,
+          gradeLevel: "g2",
+          dependency: "independent",
+          annualNeed: 10500,
+          subStatutory: 4500,
+          unsubStatutory: 6000,
+          distributionModel: "proportional",
+        },
+        {
+          term1: { enabled: true, ftCredits: 12, enrolledCredits: 12 },
+          term2: { enabled: true, ftCredits: 6, enrolledCredits: 6 },
+        },
+      ),
+  },
+
+  // -------- Regression checks (advanced) --------
+  {
+    id: "v18-a",
+    group: "Regression checks (advanced)",
+    title: "v18-A — Two-term LTFT, full Sub + Unsub need",
+    student:
+      "Dependent G1 with $5,500 need, taking 6 / 9 across Fall / Spring with 24 AY FT credits.",
+    whatsSpecial:
+      "Mirrors the v18 master spreadsheet default. Used to verify the engine matches dollar-for-dollar.",
+    summary:
+      "Grade 1 dep, Need $5,500 · Fall 6 / Spring 9 · 24 AY FT.",
+    expected:
+      "AY % 63 %. Annual Sub $2,205 / Unsub $1,260. Final Sub 551 / 827, Unsub 315 / 472.",
+    expectedTerms: {
+      term1: { sub: 551, unsub: 315 },
+      term2: { sub: 827, unsub: 472 },
+    },
+    expectedTotals: { sub: 1378, unsub: 787 },
     build: () =>
       mk(
         {
@@ -430,8 +445,41 @@ export const SCENARIOS: Scenario[] = [
           unsubStatutory: 2000,
         },
         {
-          term1: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
-          term2: { enabled: true, ftCredits: 12, enrolledCredits: 3 },
+          term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
+          term2: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
+        },
+      ),
+  },
+  {
+    id: "v18-b",
+    group: "Regression checks (advanced)",
+    title: "v18-B — Independent G3 with Winter 1 + Summer",
+    student:
+      "Independent grad student (G3) with $12,500 need, enrolling Fall 12 / Winter1 6 / Spring 9 / Summer 6 across 30 AY FT credits.",
+    whatsSpecial:
+      "Four-term mid-year structure. Verifies that Winter terms slot into the distribution correctly.",
+    summary:
+      "Indep g3 · Need $12,500 · Fall 12 / Winter1 6 / Spring 9 / Summer 6 · 30 AY FT.",
+    expected:
+      "Winter 1 enabled mid-year. Distribution shares the annual across 4 eligible terms.",
+    build: () =>
+      mk(
+        {
+          numStandardTerms: 2,
+          includeWinter1: true,
+          includeSummer1: true,
+          ayFtCredits: 30,
+          gradeLevel: "g3",
+          dependency: "independent",
+          annualNeed: 12500,
+          subStatutory: 5500,
+          unsubStatutory: 7000,
+        },
+        {
+          term1: { enabled: true, ftCredits: 12, enrolledCredits: 12 },
+          winter1: { enabled: true, ftCredits: 6, enrolledCredits: 6 },
+          term2: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
+          summer1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
         },
       ),
   },
