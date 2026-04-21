@@ -2,6 +2,7 @@ import * as React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { InfoTip } from "./InfoTip";
 
 interface NumberFieldProps {
   label: string;
@@ -12,6 +13,7 @@ interface NumberFieldProps {
   min?: number;
   step?: number;
   hint?: string;
+  tooltip?: React.ReactNode;
   className?: string;
   inputClassName?: string;
   id?: string;
@@ -26,6 +28,7 @@ export function NumberField({
   min = 0,
   step,
   hint,
+  tooltip,
   className,
   inputClassName,
   id: idProp,
@@ -34,9 +37,12 @@ export function NumberField({
   const id = idProp ?? reactId;
   return (
     <div className={cn("space-y-1.5", className)}>
-      <Label htmlFor={id} className="text-xs font-medium text-foreground">
-        {label}
-      </Label>
+      <div className="flex items-center gap-1.5">
+        <Label htmlFor={id} className="text-xs font-medium text-foreground">
+          {label}
+        </Label>
+        {tooltip ? <InfoTip>{tooltip}</InfoTip> : null}
+      </div>
       <div className="relative">
         {prefix ? (
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
