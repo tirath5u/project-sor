@@ -926,10 +926,10 @@ function assemble(args: {
     const eligible = finalSnap.eligible[i];
     const calcSub = displaySub.calc[i];
     const calcUnsub = displayUnsub.calc[i];
-    const finalSub = finalSubByKey[t.key];
-    const finalUnsub = finalUnsubByKey[t.key];
-    const cappedSub = t.coaCapSub > 0 ? Math.min(finalSub, t.coaCapSub) : finalSub;
-    const cappedUnsub = t.coaCapUnsub > 0 ? Math.min(finalUnsub, t.coaCapUnsub) : finalUnsub;
+    // Final = MIN(Step 5 Calc, COA cap). No averaging, no override —
+    // Final must rigidly mirror the Step-5 output to preserve history anchoring.
+    const cappedSub = t.coaCapSub > 0 ? Math.min(calcSub, t.coaCapSub) : calcSub;
+    const cappedUnsub = t.coaCapUnsub > 0 ? Math.min(calcUnsub, t.coaCapUnsub) : calcUnsub;
     const netPaidSub = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
     const netPaidUnsub = Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0));
     const termPct = t.ftCredits > 0 ? eff / t.ftCredits : 0;
