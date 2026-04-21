@@ -21,8 +21,7 @@ export function Section({ letter, title, description, tooltip, children, classNa
     >
       <header className="mb-4 flex items-start gap-3 border-b border-border/60 pb-3">
         <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-primary-foreground"
-          style={{ background: "var(--gradient-primary)" }}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary"
           aria-hidden
         >
           {letter}
