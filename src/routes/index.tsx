@@ -566,6 +566,7 @@ function SORCalculatorPage() {
               ? "Disbursement view: tick Disbursed when funds release; enter Actual credits at that point."
               : "Half-time cliff = FT ÷ 2. Below half-time → ineligible (no disbursement)."
           }
+          tooltip="Per-term FT thresholds, enrollment, paid amounts, refunds, and COA caps. Each row drives the per-term calculation in the Results matrix below."
         >
           {activeTermKeys.length === 0 ? (
             <p className="text-sm text-muted-foreground">No terms enabled yet.</p>
@@ -575,27 +576,67 @@ function SORCalculatorPage() {
                 <thead>
                   <tr className="border-b border-border text-left text-muted-foreground">
                     <th className="px-2 py-2 font-medium">Term</th>
-                    <th className="px-2 py-2 font-medium">FT</th>
                     <th className="px-2 py-2 font-medium">
-                      {isDisbursementMode ? "Planned" : "Enrolled"}
+                      <span className="inline-flex items-center gap-1">
+                        FT
+                        <InfoTip>Full-time credit threshold for THIS term. Half-time = FT ÷ 2.</InfoTip>
+                      </span>
+                    </th>
+                    <th className="px-2 py-2 font-medium">
+                      <span className="inline-flex items-center gap-1">
+                        {isDisbursementMode ? "Planned" : "Enrolled"}
+                        <InfoTip>
+                          Plan view: what you expect the student to take. Disbursement view: planned credits at original disbursement.
+                        </InfoTip>
+                      </span>
                     </th>
                     {isDisbursementMode ? (
                       <>
-                        <th className="px-2 py-2 font-medium">Disbursed?</th>
-                        <th className="px-2 py-2 font-medium">Actual</th>
+                        <th className="px-2 py-2 font-medium">
+                          <span className="inline-flex items-center gap-1">
+                            Disbursed?
+                            <InfoTip>Mark when funds have actually released. Disbursed terms are anchored — the engine cannot retroactively change them.</InfoTip>
+                          </span>
+                        </th>
+                        <th className="px-2 py-2 font-medium">
+                          <span className="inline-flex items-center gap-1">
+                            Actual
+                            <InfoTip>Credits the student is actually enrolled in at the disbursement point in time.</InfoTip>
+                          </span>
+                        </th>
                       </>
                     ) : null}
-                    <th className="px-2 py-2 font-medium">Paid Sub</th>
-                    <th className="px-2 py-2 font-medium">Paid Unsub</th>
-                    <th className="px-2 py-2 font-medium">Refund S/U</th>
-                    <th className="px-2 py-2 font-medium">COA cap S/U</th>
+                    <th className="px-2 py-2 font-medium">
+                      <span className="inline-flex items-center gap-1">
+                        Paid Sub
+                        <InfoTip>Sub amount already disbursed. Locks this term's Final value (history anchoring).</InfoTip>
+                      </span>
+                    </th>
+                    <th className="px-2 py-2 font-medium">
+                      <span className="inline-flex items-center gap-1">
+                        Paid Unsub
+                        <InfoTip>Unsub amount already disbursed. Locks this term's Final value (history anchoring).</InfoTip>
+                      </span>
+                    </th>
+                    <th className="px-2 py-2 font-medium">
+                      <span className="inline-flex items-center gap-1">
+                        Refund S/U
+                        <InfoTip>Subsidized / Unsubsidized refunded back. Reduces the locked Net amount for this term.</InfoTip>
+                      </span>
+                    </th>
+                    <th className="px-2 py-2 font-medium">
+                      <span className="inline-flex items-center gap-1">
+                        COA cap S/U
+                        <InfoTip>Per-term Cost of Attendance cap (Sub / Unsub). Final values are clamped to this.</InfoTip>
+                      </span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="tabular-nums">
                   {activeTermKeys.map((key) => {
                     const t = inputs.terms[key];
                     return (
-                      <tr key={key} className="border-b border-border/40 align-middle">
+                      <tr key={key} className="border-b border-border/40 align-middle even:bg-muted/30">
                         <td className="px-2 py-1.5 font-semibold text-foreground">
                           {TERM_LABELS[key]}
                           <div className="text-[9px] font-normal text-muted-foreground">
@@ -742,7 +783,12 @@ function SORCalculatorPage() {
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_360px]">
           <div className="space-y-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">Results</h2>
+              <div className="flex items-center gap-1.5">
+                <h2 className="text-sm font-semibold text-foreground">Results</h2>
+                <InfoTip>
+                  Table = spreadsheet-style matrix mirroring v18 (sections B–J). Cards = per-term card layout, easier on narrow viewports.
+                </InfoTip>
+              </div>
               <div className="inline-flex rounded-lg border border-border bg-background p-1 text-xs">
                 <button
                   onClick={() => setResultView("table")}
