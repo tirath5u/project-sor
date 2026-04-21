@@ -40,6 +40,24 @@ function pct(n: number): string {
   return `${Math.round(n * 100)}%`;
 }
 
+/**
+ * Sanitize strings for jsPDF's default helvetica font (WinAnsi encoding).
+ * Replaces common Unicode characters that would otherwise render as broken
+ * glyphs (e.g. arrow → renders as !' and breaks line-width measurement).
+ */
+function safe(text: string): string {
+  return text
+    .replace(/[→⟶⇒]/g, "->")
+    .replace(/[←⟵⇐]/g, "<-")
+    .replace(/[↔⇔]/g, "<->")
+    .replace(/[•·]/g, "-")
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[…]/g, "...")
+    .replace(/[✓]/g, "[x]")
+    .replace(/[✗✘]/g, "[ ]");
+}
+
 export function exportSORCaseFile({
   inputs,
   results,
