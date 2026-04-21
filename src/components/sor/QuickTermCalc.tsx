@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { InfoTip } from "./InfoTip";
 
 export function QuickTermCalc() {
   const [open, setOpen] = React.useState(false);
@@ -68,8 +69,13 @@ export function QuickTermCalc() {
             <Zap className="h-4 w-4" />
           </span>
           <div>
-            <div className="text-sm font-semibold text-foreground">
+            <div className="flex items-center gap-1 text-sm font-semibold text-foreground">
               Quick single-term calculator
+              <span onClick={(e) => e.stopPropagation()}>
+                <InfoTip label="About the quick calculator">
+                  Estimate one term's maximum Sub/Unsub disbursement in isolation — useful for spot-checking a single term without configuring the full annual SOR. Uses the same engine and statutory limits.
+                </InfoTip>
+              </span>
             </div>
             <div className="text-[11px] text-muted-foreground">
               Estimate one term's max Sub/Unsub without configuring the full SOR.
