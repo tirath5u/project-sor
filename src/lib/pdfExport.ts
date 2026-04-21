@@ -96,7 +96,7 @@ export function exportSORCaseFile({
         1: { textColor: COLOR_INK, fontStyle: "bold" },
       },
     });
-    // @ts-expect-error - lastAutoTable injected by plugin
+    
     y = (doc as any).lastAutoTable.finalY + 14;
   };
 
@@ -161,7 +161,7 @@ export function exportSORCaseFile({
     alternateRowStyles: { fillColor: [248, 246, 252] },
     styles: { cellPadding: 4 },
   });
-  // @ts-expect-error
+  
   y = (doc as any).lastAutoTable.finalY + 18;
 
   // ---------- 4. RESULTS MATRIX ----------
@@ -198,7 +198,7 @@ export function exportSORCaseFile({
     alternateRowStyles: { fillColor: [248, 246, 252] },
     styles: { cellPadding: 4 },
   });
-  // @ts-expect-error
+  
   y = (doc as any).lastAutoTable.finalY + 18;
 
   // ---------- 5. ANNUAL TOTALS ----------
