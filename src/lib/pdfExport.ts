@@ -106,7 +106,7 @@ export function exportSORCaseFile({
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      body: rows,
+      body: rows.map(([k, v]) => [safe(k), safe(v)]),
       theme: "plain",
       styles: { fontSize: 9.5, cellPadding: { top: 2, bottom: 2, left: 0, right: 4 } },
       columnStyles: {
@@ -137,9 +137,9 @@ export function exportSORCaseFile({
   // ---------- 2. COMPUTED BASELINES ----------
   sectionHeading("2. Computed baselines");
   doc.text(
-    `Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(
+    safe(`Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(
       results.unsubBaseline,
-    )} · derived from $${inputs.subStatutory.toLocaleString()} / $${inputs.unsubStatutory.toLocaleString()} statutory caps via the Combined Limit Shifting Rule.`,
+    )} · derived from $${inputs.subStatutory.toLocaleString()} / $${inputs.unsubStatutory.toLocaleString()} statutory caps via the Combined Limit Shifting Rule.`),
     margin,
     y,
     { maxWidth: pageWidth - margin * 2 },
@@ -148,7 +148,7 @@ export function exportSORCaseFile({
   if (results.additionalUnsubBase > 0) {
     doc.setTextColor(...COLOR_PRIMARY);
     doc.text(
-      `+ ${fmtCurrency(results.additionalUnsubBase)} additional Unsub from PLUS-denial uplift.`,
+      safe(`+ ${fmtCurrency(results.additionalUnsubBase)} additional Unsub from PLUS-denial uplift.`),
       margin,
       y,
     );
