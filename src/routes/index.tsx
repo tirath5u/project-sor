@@ -172,14 +172,20 @@ function SORCalculatorPage() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/lifecycle"
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition hover:bg-accent/10"
-            >
-              <GraduationCap className="h-4 w-4 text-primary" />
-              Lifecycle Tracker
-            </Link>
+            <div className="flex items-center gap-1">
+              <Link
+                to="/lifecycle"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition hover:bg-accent/10"
+              >
+                <GraduationCap className="h-4 w-4 text-primary" />
+                Lifecycle Tracker
+              </Link>
+              <InfoTip label="About Lifecycle Tracker">
+                Walk a single student through enrollment changes term-by-term across multiple academic years.
+              </InfoTip>
+            </div>
             <div className="hidden md:block">
+              <div className="flex items-center gap-1">
               <Select
                 value={activeScenario}
                 onValueChange={(id) => {
@@ -204,19 +210,28 @@ function SORCalculatorPage() {
                   ))}
                 </SelectContent>
               </Select>
+              <InfoTip label="About scenarios">
+                Pre-built test cases from the Debug Guide. Selecting one overwrites all current inputs.
+              </InfoTip>
+              </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setInputs(defaultInputs());
-                setActiveScenario("");
-              }}
-              className="rounded-lg"
-            >
-              <RotateCcw className="h-4 w-4" />
-              <span className="hidden sm:inline">Reset</span>
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setInputs(defaultInputs());
+                  setActiveScenario("");
+                }}
+                className="rounded-lg"
+              >
+                <RotateCcw className="h-4 w-4" />
+                <span className="hidden sm:inline">Reset</span>
+              </Button>
+              <InfoTip label="About reset">
+                Clears all inputs back to defaults. Cannot be undone.
+              </InfoTip>
+            </div>
           </div>
         </div>
       </header>
