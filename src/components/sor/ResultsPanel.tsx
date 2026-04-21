@@ -1,6 +1,7 @@
 import { CheckCircle2, AlertTriangle, History } from "lucide-react";
 import { fmtCurrency, type SORResults } from "@/lib/sor";
 import { cn } from "@/lib/utils";
+import { InfoTip } from "./InfoTip";
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -33,7 +34,7 @@ function VerifyBadge({ label, diff }: { label: string; diff: number }) {
 export function ResultsPanel({ results }: { results: SORResults }) {
   const visibleTerms = results.termResults.filter((t) => t.enabled);
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 xl:border-l-2 xl:border-primary/30 xl:pl-4">
       <div
         className="rounded-2xl border border-primary/20 p-5 text-primary-foreground shadow-[var(--shadow-elegant)]"
         style={{ background: "var(--gradient-primary)" }}
@@ -48,7 +49,10 @@ export function ResultsPanel({ results }: { results: SORResults }) {
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-white/10 p-3">
-            <div className="text-[11px] uppercase tracking-wide opacity-80">AY %</div>
+            <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-80">
+              AY %
+              <InfoTip>Sum of enrolled credits across eligible terms ÷ AY full-time credits, rounded.</InfoTip>
+            </div>
             <div className="mt-1 text-2xl font-bold tabular-nums">
               {Math.round(results.sorPctRounded * 100)}%
             </div>
@@ -57,14 +61,20 @@ export function ResultsPanel({ results }: { results: SORResults }) {
             </div>
           </div>
           <div className="rounded-lg bg-white/10 p-3">
-            <div className="text-[11px] uppercase tracking-wide opacity-80">Raw fraction</div>
+            <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-80">
+              Raw fraction
+              <InfoTip>The unrounded enrollment fraction before SOR rounding rules are applied.</InfoTip>
+            </div>
             <div className="mt-1 text-2xl font-bold tabular-nums">
               {(results.enrollmentFractionRaw * 100).toFixed(2)}%
             </div>
             <div className="text-[11px] opacity-80">Pre-rounding</div>
           </div>
           <div className="rounded-lg bg-white/10 p-3">
-            <div className="text-[11px] uppercase tracking-wide opacity-80">Annual Sub limit</div>
+            <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-80">
+              Annual Sub limit
+              <InfoTip>Sub baseline × AY %. The reduced annual Sub pool that gets sliced across terms.</InfoTip>
+            </div>
             <div className="mt-1 text-xl font-semibold tabular-nums">
               {fmtCurrency(results.reducedSub)}
             </div>
@@ -73,7 +83,10 @@ export function ResultsPanel({ results }: { results: SORResults }) {
             </div>
           </div>
           <div className="rounded-lg bg-white/10 p-3">
-            <div className="text-[11px] uppercase tracking-wide opacity-80">Annual Unsub limit</div>
+            <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-80">
+              Annual Unsub limit
+              <InfoTip>Unsub baseline × AY %, plus any Sub→Unsub shift if enabled.</InfoTip>
+            </div>
             <div className="mt-1 text-xl font-semibold tabular-nums">
               {fmtCurrency(results.reducedUnsub)}
             </div>

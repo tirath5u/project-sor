@@ -5,6 +5,7 @@
 import { fmtCurrency, type SORResults } from "@/lib/sor";
 import { StatusChip } from "./StatusChip";
 import { cn } from "@/lib/utils";
+import { InfoTip } from "./InfoTip";
 
 export function TermsCards({ results }: { results: SORResults }) {
   const visible = results.termResults.filter((t) => t.enabled);
@@ -38,11 +39,17 @@ export function TermsCards({ results }: { results: SORResults }) {
               </div>
             </div>
             <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
-              <dt className="text-muted-foreground">FT / Enrolled</dt>
+              <dt className="flex items-center gap-1 text-muted-foreground">
+                FT / Enrolled
+                <InfoTip>Term FT credit threshold / student's effective enrolled credits this term.</InfoTip>
+              </dt>
               <dd className="text-right tabular-nums text-foreground">
                 {t.ftCredits} / {t.effectiveCredits}
               </dd>
-              <dt className="text-muted-foreground">Term %</dt>
+              <dt className="flex items-center gap-1 text-muted-foreground">
+                Term %
+                <InfoTip>Enrolled ÷ FT for this single term. Informational only.</InfoTip>
+              </dt>
               <dd
                 className={cn(
                   "text-right tabular-nums text-foreground",
@@ -51,7 +58,10 @@ export function TermsCards({ results }: { results: SORResults }) {
               >
                 {Math.round(t.termPct * 100)}%
               </dd>
-              <dt className="text-muted-foreground">Intensity %</dt>
+              <dt className="flex items-center gap-1 text-muted-foreground">
+                Intensity %
+                <InfoTip>(Enrolled + lapsed credits from prior below-half-time terms) ÷ FT. May exceed 100% (balloon).</InfoTip>
+              </dt>
               <dd
                 className={cn(
                   "text-right tabular-nums text-foreground",
@@ -60,7 +70,10 @@ export function TermsCards({ results }: { results: SORResults }) {
               >
                 {Math.round(t.intensityPct * 100)}%
               </dd>
-              <dt className="text-muted-foreground">Share Sub</dt>
+              <dt className="flex items-center gap-1 text-muted-foreground">
+                Share Sub
+                <InfoTip>This term's slice of the running annual Sub pool, after subtracting locked/paid amounts from prior terms.</InfoTip>
+              </dt>
               <dd className="text-right tabular-nums text-foreground">
                 {fmtCurrency(t.shareSub)}
               </dd>
@@ -68,7 +81,10 @@ export function TermsCards({ results }: { results: SORResults }) {
               <dd className="text-right tabular-nums text-foreground">
                 {fmtCurrency(t.shareUnsub)}
               </dd>
-              <dt className="text-muted-foreground">Net Paid Sub</dt>
+              <dt className="flex items-center gap-1 text-muted-foreground">
+                Net Paid Sub
+                <InfoTip>Paid Sub − Refunded Sub. Anchors this term in disbursement view.</InfoTip>
+              </dt>
               <dd className="text-right tabular-nums text-foreground">
                 {fmtCurrency(t.netPaidSub)}
               </dd>

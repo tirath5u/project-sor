@@ -2,8 +2,9 @@
  * Step-by-step walkthrough panel — narrates the official 5-step ED process.
  */
 import { fmtCurrency, type SORInputs, type SORResults } from "@/lib/sor";
+import { InfoTip } from "./InfoTip";
 
-function StepHeader({ n, title }: { n: number; title: string }) {
+function StepHeader({ n, title, tip }: { n: number; title: string; tip?: string }) {
   return (
     <div className="mb-2 flex items-center gap-2">
       <span
@@ -13,6 +14,7 @@ function StepHeader({ n, title }: { n: number; title: string }) {
         {n}
       </span>
       <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      {tip ? <InfoTip>{tip}</InfoTip> : null}
     </div>
   );
 }
@@ -47,7 +49,11 @@ export function StepWalkthrough({
 
       {/* Step 1 */}
       <section className="border-b border-border pb-4">
-        <StepHeader n={1} title="Initial Maximum Annual Loan Limit" />
+        <StepHeader
+          n={1}
+          title="Initial Maximum Annual Loan Limit"
+          tip="Combined Limit Shifting Rule (34 CFR 685.203): Sub = MIN(stat cap, need). Unsub fills the remaining Combined Limit headroom, NOT remaining need."
+        />
         <p className="mb-2 text-xs text-muted-foreground">
           Annual Need {fmtCurrency(inputs.annualNeed)} is split: Sub takes the lesser of need
           and the Sub statutory cap; Unsub gets the remainder up to the Unsub cap.
@@ -90,7 +96,11 @@ export function StepWalkthrough({
 
       {/* Step 2 */}
       <section className="border-b border-border py-4">
-        <StepHeader n={2} title="AY Enrollment % → Annual Loan Limit" />
+        <StepHeader
+          n={2}
+          title="AY Enrollment % → Annual Loan Limit"
+          tip="Σ enrolled credits across eligible terms ÷ AY FT credits. This is the SOR % applied to baselines."
+        />
         <Eq>
           AY % = ({enrolledExpr}) ÷ {ftExpr}
           <br />={" "}
@@ -127,7 +137,11 @@ export function StepWalkthrough({
 
       {/* Step 3 */}
       <section className="border-b border-border py-4">
-        <StepHeader n={3} title="Per-term Share of the Annual Limit" />
+        <StepHeader
+          n={3}
+          title="Per-term Share of the Annual Limit"
+          tip="Equal = annual ÷ N eligible terms. Proportional = weighted by each term's FT credits. Equal is the regulatory default."
+        />
         <p className="mb-2 text-xs text-muted-foreground">
           {inputs.distributionModel === "equal"
             ? "Equal model: annual ÷ N eligible terms (whole-dollar; last term absorbs remainder)."
@@ -163,7 +177,11 @@ export function StepWalkthrough({
 
       {/* Step 4 + 5 */}
       <section className="pt-4">
-        <StepHeader n={4} title="Per-term % × Share = Disbursement" />
+        <StepHeader
+          n={4}
+          title="Per-term % × Share = Disbursement"
+          tip="Step 5 caps each share by min(term %, 100%). Excess + lapsed credits forward (balance-forward) to remaining eligible terms with headroom."
+        />
         <p className="mb-2 text-xs text-muted-foreground">
           Term % = enrolled ÷ term FT (can exceed 100%). Disbursement = share × min(%, 100%);
           overflow + lapsed shares forward to remaining eligible terms with headroom (v18 § H).
