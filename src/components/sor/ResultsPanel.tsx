@@ -1,7 +1,9 @@
-import { CheckCircle2, AlertTriangle, History } from "lucide-react";
-import { fmtCurrency, type SORResults } from "@/lib/sor";
+import { CheckCircle2, AlertTriangle, History, FileDown } from "lucide-react";
+import { fmtCurrency, type SORResults, type SORInputs } from "@/lib/sor";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "./InfoTip";
+import { exportSORCaseFile } from "@/lib/pdfExport";
+import { Button } from "@/components/ui/button";
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -31,10 +33,37 @@ function VerifyBadge({ label, diff }: { label: string; diff: number }) {
   );
 }
 
-export function ResultsPanel({ results }: { results: SORResults }) {
+export function ResultsPanel({
+  results,
+  inputs,
+  scenarioTitle,
+  scenarioId,
+}: {
+  results: SORResults;
+  inputs?: SORInputs;
+  scenarioTitle?: string;
+  scenarioId?: string;
+}) {
   const visibleTerms = results.termResults.filter((t) => t.enabled);
   return (
-    <div className="space-y-5 xl:border-l-2 xl:border-primary/30 xl:pl-4">
+    <div
+      id="results-region"
+      role="region"
+      aria-label="Calculated results"
+      aria-live="polite"
+      className="space-y-5 xl:border-l-2 xl:border-primary/30 xl:pl-4"
+    >
+      {inputs ? (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => exportSORCaseFile({ inputs, results, scenarioTitle, scenarioId })}
+          className="w-full justify-center gap-2 rounded-lg"
+        >
+          <FileDown className="h-4 w-4" /> Export PDF case file
+        </Button>
+      ) : null}
+
       <div
         className="rounded-2xl border border-primary/20 p-5 text-primary-foreground shadow-[var(--shadow-elegant)]"
         style={{ background: "var(--gradient-primary)" }}
