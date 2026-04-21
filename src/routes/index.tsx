@@ -290,10 +290,14 @@ function SORCalculatorPage() {
           letter="A"
           title="Student & Loan Period"
           description="Grade, dependency, and the single Annual Financial Need that drives Sub/Unsub split."
+          tooltip="Inputs that determine the statutory loan ceilings and baseline Sub/Unsub split per the Combined Limit Shifting Rule (34 CFR 685.203)."
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Grade Code</Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">Grade Code</Label>
+                <InfoTip>Determines the statutory Sub/Unsub annual maximums per 34 CFR 685.203.</InfoTip>
+              </div>
               <Select
                 value={inputs.gradeLevel}
                 onValueChange={(v) => update({ gradeLevel: v as GradeLevel })}
@@ -317,9 +321,14 @@ function SORCalculatorPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">
-                Dependency {gradLocked ? "· locked" : ""}
-              </Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">
+                  Dependency {gradLocked ? "· locked" : ""}
+                </Label>
+                <InfoTip>
+                  Independent students get the additional Unsub allowance. Graduate / professional are always Independent (locked).
+                </InfoTip>
+              </div>
               <RadioGroup
                 value={gradLocked ? "independent" : inputs.dependency}
                 onValueChange={(v) => update({ dependency: v as Dependency })}
@@ -346,6 +355,7 @@ function SORCalculatorPage() {
               value={inputs.annualNeed}
               onChange={(v) => update({ annualNeed: v })}
               hint={`→ Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(results.unsubBaseline)}`}
+              tooltip="Cost of Attendance − EFC/SAI − other aid. Drives the Sub baseline. Unsub is NOT need-based — it's calculated from the Combined Limit Shifting Rule."
             />
 
             <NumberField
@@ -354,12 +364,16 @@ function SORCalculatorPage() {
               step={0.5}
               onChange={(v) => update({ ayFtCredits: v })}
               hint="Step 2 denominator"
+              tooltip="The denominator for the Academic Year %. Example: 24 FT credits per year for a typical undergrad SAY."
             />
           </div>
 
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Standard terms</Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">Standard terms</Label>
+                <InfoTip>Number of standard terms in the academic year (Fall, Spring, optionally Summer).</InfoTip>
+              </div>
               <RadioGroup
                 value={String(inputs.numStandardTerms)}
                 onValueChange={(v) =>
@@ -380,7 +394,12 @@ function SORCalculatorPage() {
               </RadioGroup>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Calendar</Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">Calendar</Label>
+                <InfoTip>
+                  AC1 = Standard term, Scheduled AY · AC2 = Standard term, Borrower-Based AY · AC3 = Non-standard, term-based · AC4 = Non-standard, non-term (clock-hour or credit-hour without terms).
+                </InfoTip>
+              </div>
               <Select
                 value={String(inputs.calType)}
                 onValueChange={(v) => update({ calType: Number(v) as CalType })}
@@ -397,7 +416,10 @@ function SORCalculatorPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Program Level</Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">Program Level</Label>
+                <InfoTip>Undergraduate vs. Graduate. Drives the grade-code lookup and aggregate caps.</InfoTip>
+              </div>
               <Select
                 value={inputs.programLevel}
                 onValueChange={(v) =>
@@ -414,7 +436,12 @@ function SORCalculatorPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">AY Type</Label>
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">AY Type</Label>
+                <InfoTip>
+                  SAY = Scheduled Academic Year (fixed calendar). BBAY = Borrower-Based Academic Year (floats with enrollment).
+                </InfoTip>
+              </div>
               <Select
                 value={inputs.ayType}
                 onValueChange={(v) => update({ ayType: v as SORInputs["ayType"] })}
