@@ -38,6 +38,7 @@ import { StepWalkthrough } from "@/components/sor/StepWalkthrough";
 import { TermsMatrix } from "@/components/sor/TermsMatrix";
 import { TermsCards } from "@/components/sor/TermsCards";
 import { QuickTermCalc } from "@/components/sor/QuickTermCalc";
+import { InfoTip } from "@/components/sor/InfoTip";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
