@@ -490,6 +490,7 @@ function SORCalculatorPage() {
                 onCheckedChange={(v) => update({ parentPlusDenied: v })}
               />
               <span className="font-medium">Parent PLUS denied</span>
+              <InfoTip>Triggers the additional Unsub allowance for dependent undergraduates whose parent was denied a PLUS loan.</InfoTip>
             </Label>
             <Label className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs">
               <Switch
@@ -497,6 +498,7 @@ function SORCalculatorPage() {
                 onCheckedChange={(v) => update({ overrideLimits: v })}
               />
               <span className="font-medium">Override statutory limits</span>
+              <InfoTip>Manually enter Sub/Unsub maximums instead of using the grade-level lookup. Use only for edge cases.</InfoTip>
             </Label>
           </div>
 
@@ -516,18 +518,41 @@ function SORCalculatorPage() {
               />
             </div>
           ) : (
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-              <Pill label="Sub stat cap" value={fmtCurrency(inputs.subStatutory)} />
-              <Pill label="Unsub stat cap" value={fmtCurrency(inputs.unsubStatutory)} />
-              {results.additionalUnsubBase > 0 ? (
+            <div className="mt-3 border-t border-border/60 pt-3">
+              <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Computed baselines
+                <InfoTip>Derived from the Grade Code, Dependency, PLUS-denial flag, and Annual Need. These feed Step 1 of the SOR engine.</InfoTip>
+              </div>
+              <div className="flex flex-wrap gap-2 text-[11px]">
                 <Pill
-                  label="+ PLUS-denial Unsub"
-                  value={fmtCurrency(results.additionalUnsubBase)}
-                  accent
+                  label="Sub stat cap"
+                  value={fmtCurrency(inputs.subStatutory)}
+                  tip="Statutory annual maximum Subsidized — looked up from grade code & dependency."
                 />
-              ) : null}
-              <Pill label="Sub baseline" value={fmtCurrency(results.subBaseline)} />
-              <Pill label="Unsub baseline" value={fmtCurrency(results.unsubBaseline)} />
+                <Pill
+                  label="Unsub stat cap"
+                  value={fmtCurrency(inputs.unsubStatutory)}
+                  tip="Statutory annual maximum Unsubsidized — looked up from grade code & dependency."
+                />
+                {results.additionalUnsubBase > 0 ? (
+                  <Pill
+                    label="+ PLUS-denial Unsub"
+                    value={fmtCurrency(results.additionalUnsubBase)}
+                    accent
+                    tip="Additional Unsub headroom granted because parent PLUS was denied (dependent undergrads only)."
+                  />
+                ) : null}
+                <Pill
+                  label="Sub baseline"
+                  value={fmtCurrency(results.subBaseline)}
+                  tip="MIN(Sub stat cap, Annual Need). Step 1 Sub starting point."
+                />
+                <Pill
+                  label="Unsub baseline"
+                  value={fmtCurrency(results.unsubBaseline)}
+                  tip="Combined Limit Shifting Rule: (Sub stat cap + Unsub stat cap) − Sub baseline, capped by Unsub stat cap."
+                />
+              </div>
             </div>
           )}
         </Section>
