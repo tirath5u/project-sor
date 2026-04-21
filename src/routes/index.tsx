@@ -524,40 +524,29 @@ function SORCalculatorPage() {
             </div>
           ) : (
             <div className="mt-3 border-t border-border/60 pt-3">
-              <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Computed baselines
-                <InfoTip>Derived from the Grade Code, Dependency, PLUS-denial flag, and Annual Need. These feed Step 1 of the SOR engine.</InfoTip>
-              </div>
-              <div className="flex flex-wrap gap-2 text-[11px]">
-                <Pill
-                  label="Sub stat cap"
-                  value={fmtCurrency(inputs.subStatutory)}
-                  tip="Statutory annual maximum Subsidized — looked up from grade code & dependency."
-                />
-                <Pill
-                  label="Unsub stat cap"
-                  value={fmtCurrency(inputs.unsubStatutory)}
-                  tip="Statutory annual maximum Unsubsidized — looked up from grade code & dependency."
-                />
+              <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] leading-relaxed text-foreground">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Computed baselines:
+                </span>
+                <span className="font-semibold tabular-nums">
+                  Sub baseline {fmtCurrency(results.subBaseline)}
+                </span>
+                <span className="text-muted-foreground">·</span>
+                <span className="font-semibold tabular-nums">
+                  Unsub baseline {fmtCurrency(results.unsubBaseline)}
+                </span>
+                <span className="text-muted-foreground/70">
+                  · from {fmtCurrency(inputs.subStatutory)} / {fmtCurrency(inputs.unsubStatutory)} statutory caps
+                </span>
                 {results.additionalUnsubBase > 0 ? (
-                  <Pill
-                    label="+ PLUS-denial Unsub"
-                    value={fmtCurrency(results.additionalUnsubBase)}
-                    accent
-                    tip="Additional Unsub headroom granted because parent PLUS was denied (dependent undergrads only)."
-                  />
+                  <span className="font-semibold text-accent-foreground">
+                    · + {fmtCurrency(results.additionalUnsubBase)} PLUS-denial Unsub
+                  </span>
                 ) : null}
-                <Pill
-                  label="Sub baseline"
-                  value={fmtCurrency(results.subBaseline)}
-                  tip="MIN(Sub stat cap, Annual Need). Step 1 Sub starting point."
-                />
-                <Pill
-                  label="Unsub baseline"
-                  value={fmtCurrency(results.unsubBaseline)}
-                  tip="Combined Limit Shifting Rule: (Sub stat cap + Unsub stat cap) − Sub baseline, capped by Unsub stat cap."
-                />
-              </div>
+                <InfoTip>
+                  Step 1 of the SOR engine. Sub baseline = MIN(Sub stat cap, Annual Need). Unsub baseline = (Sub stat cap + Unsub stat cap) − Sub baseline, capped by Unsub stat cap (Combined Limit Shifting Rule).
+                </InfoTip>
+              </p>
             </div>
           )}
         </Section>
@@ -735,8 +724,8 @@ function SORCalculatorPage() {
               Calculation rules
               <InfoTip>How the engine slices the annual pool, applies enrollment intensity, and honors disbursement history.</InfoTip>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <ToggleGroup
+            <div className="flex flex-wrap items-center gap-3">
+              <Segmented
                 label="View"
                 value={inputs.viewMode}
                 options={[
@@ -746,8 +735,8 @@ function SORCalculatorPage() {
                 onChange={(v) => update({ viewMode: v as ViewMode })}
                 tip="Plan = forward-looking projection. Disbursement = honors history; locks paid terms and redistributes the remaining annual pool to future eligible terms."
               />
-              <ToggleGroup
-                label="Step-3 distribution"
+              <Segmented
+                label="Distribution"
                 value={inputs.distributionModel}
                 options={[
                   { v: "equal", label: "Equal" },
@@ -756,7 +745,12 @@ function SORCalculatorPage() {
                 onChange={(v) => update({ distributionModel: v as DistributionModel })}
                 tip="Equal = annual pool ÷ remaining eligible terms. Proportional = weighted by each term's enrolled credits. Equal is the regulatory default."
               />
-              <Label className="ml-auto flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs">
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/40 pt-3">
+              <span className="mr-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                Advanced rules
+              </span>
+              <Label className="flex h-8 cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 text-[11px]">
                 <Switch
                   checked={inputs.applySubUnsubShift}
                   onCheckedChange={(v) => update({ applySubUnsubShift: v })}
@@ -764,7 +758,7 @@ function SORCalculatorPage() {
                 <span>Sub→Unsub shift</span>
                 <InfoTip>When the student's Sub need drops below the calculated Sub amount, shift the unused Sub allowance into Unsub (up to the Combined Limit). Off = excess Sub is forfeited.</InfoTip>
               </Label>
-              <Label className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs">
+              <Label className="flex h-8 cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 text-[11px]">
                 <Switch
                   checked={inputs.applyDoubleReduction}
                   onCheckedChange={(v) => update({ applyDoubleReduction: v })}
@@ -772,7 +766,7 @@ function SORCalculatorPage() {
                 <span>Double-reduction</span>
                 <InfoTip>Apply both the AY% intensity reduction AND the per-term enrollment-intensity reduction. Off = single reduction only (most common interpretation).</InfoTip>
               </Label>
-              <Label className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs">
+              <Label className="flex h-8 cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 text-[11px]">
                 <Switch
                   checked={inputs.countLthtInAyPct}
                   onCheckedChange={(v) => update({ countLthtInAyPct: v })}
@@ -828,7 +822,12 @@ function SORCalculatorPage() {
           </div>
 
           <aside className="xl:sticky xl:top-[88px] xl:self-start">
-            <ResultsPanel results={results} />
+            <ResultsPanel
+              results={results}
+              inputs={inputs}
+              scenarioTitle={currentScenario?.title}
+              scenarioId={currentScenario?.id}
+            />
           </aside>
         </div>
 
