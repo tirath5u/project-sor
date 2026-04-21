@@ -932,3 +932,68 @@ function ToggleGroup<T extends string>({
     </div>
   );
 }
+
+/**
+ * Accessible segmented control: ARIA radiogroup with arrow-key navigation.
+ */
+function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+  tip,
+}: {
+  label: string;
+  value: T;
+  options: { v: T; label: string }[];
+  onChange: (v: T) => void;
+  tip?: string;
+}) {
+  const refs = React.useRef<Array<HTMLButtonElement | null>>([]);
+  const onKeyDown = (e: React.KeyboardEvent, idx: number) => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    const dir = e.key === "ArrowRight" ? 1 : -1;
+    const next = (idx + dir + options.length) % options.length;
+    onChange(options[next].v);
+    refs.current[next]?.focus();
+  };
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+        {label}
+        {tip ? <InfoTip>{tip}</InfoTip> : null}
+      </span>
+      <div
+        role="radiogroup"
+        aria-label={label}
+        className="inline-flex h-9 items-center rounded-lg border border-border bg-background p-0.5 text-xs shadow-sm"
+      >
+        {options.map((o, i) => {
+          const checked = value === o.v;
+          return (
+            <button
+              key={o.v}
+              ref={(el) => {
+                refs.current[i] = el;
+              }}
+              type="button"
+              role="radio"
+              aria-checked={checked}
+              tabIndex={checked ? 0 : -1}
+              onClick={() => onChange(o.v)}
+              onKeyDown={(e) => onKeyDown(e, i)}
+              className={`rounded-md px-3 py-1 font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                checked
+                  ? "bg-primary text-primary-foreground shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)]"
+                  : "text-foreground/70 hover:bg-muted"
+              }`}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
