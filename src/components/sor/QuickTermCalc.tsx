@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { InfoTip } from "./InfoTip";
 
 export function QuickTermCalc() {
   const [open, setOpen] = React.useState(false);

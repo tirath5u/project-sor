@@ -211,7 +211,7 @@ function SORCalculatorPage() {
                 </SelectContent>
               </Select>
               <InfoTip label="About scenarios">
-                Pre-built test cases from the Debug Guide. Selecting one overwrites all current inputs.
+                Pre-built use cases for quick reference. Selecting one overwrites all current inputs.
               </InfoTip>
               </div>
             </div>
