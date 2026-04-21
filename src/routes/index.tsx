@@ -329,7 +329,7 @@ function SORCalculatorPage() {
               prefix="$"
               value={inputs.annualNeed}
               onChange={(v) => update({ annualNeed: v })}
-              hint={`→ Sub ${fmtCurrency(splitPreview.subNeed)} · Unsub ${fmtCurrency(splitPreview.unsubNeed)}`}
+              hint={`→ Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(results.unsubBaseline)}`}
             />
 
             <NumberField
