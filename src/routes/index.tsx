@@ -152,13 +152,15 @@ function SORCalculatorPage() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--gradient-subtle)" }}>
+      <a href="#results-region" className="skip-link">
+        Skip to results
+      </a>
       {/* Header */}
       <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <div
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-primary-foreground shadow-[var(--shadow-elegant)]"
-              style={{ background: "var(--gradient-primary)" }}
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"
             >
               <Calculator className="h-5 w-5" />
             </div>
