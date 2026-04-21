@@ -5,10 +5,12 @@
 import { fmtCurrency, type SORResults, type TermResult } from "@/lib/sor";
 import { cn } from "@/lib/utils";
 import type { Scenario } from "@/lib/scenarios";
+import { InfoTip } from "./InfoTip";
 
 interface RowDef {
   label: string;
   hint?: string;
+  tip?: string;
   format: "int" | "pct" | "money";
   get: (t: TermResult) => number | null;
   total?: (visible: TermResult[]) => number | null;
@@ -20,6 +22,7 @@ const ROWS: RowDef[] = [
   {
     label: "FT credits",
     hint: "Term full-time credit hours",
+    tip: "Full-time credit threshold for THIS term. Half-time eligibility cutoff = FT ÷ 2.",
     format: "int",
     get: (t) => t.ftCredits,
     total: (rs) => rs.reduce((s, t) => s + t.ftCredits, 0),
@@ -27,6 +30,7 @@ const ROWS: RowDef[] = [
   {
     label: "Enrolled credits",
     hint: "Student enrolled credit hours",
+    tip: "Credits the student is actually enrolled in for this term (or actual credits in disbursement view).",
     format: "int",
     get: (t) => t.effectiveCredits,
     total: (rs) => rs.reduce((s, t) => s + t.effectiveCredits, 0),
@@ -34,6 +38,7 @@ const ROWS: RowDef[] = [
   {
     label: "Term %",
     hint: "Enrolled ÷ FT (informational only; SOR uses Annual %)",
+    tip: "Enrolled ÷ FT for this single term. Informational only — the SOR engine drives reductions from the Annual %.",
     format: "pct",
     get: (t) => t.termPct,
     total: () => null,
@@ -41,6 +46,7 @@ const ROWS: RowDef[] = [
   {
     label: "Intensity %",
     hint: "Display intensity including carried LTHT credits",
+    tip: "(Enrolled + lapsed credits from prior below-half-time terms) ÷ FT. Can exceed 100% (balloon). Capped to 100% in the actual COD export.",
     format: "pct",
     get: (t) => t.intensityPct,
     total: () => null,
@@ -49,12 +55,14 @@ const ROWS: RowDef[] = [
   {
     label: "Step-3 Share Sub",
     hint: "Annual Sub ÷ eligible terms (or proportional)",
+    tip: "This term's slice of the running annual Sub pool, calculated AFTER subtracting any locked/paid amounts from earlier terms.",
     format: "money",
     get: (t) => t.shareSub,
     total: (rs) => rs.reduce((s, t) => s + t.shareSub, 0),
   },
   {
     label: "Step-3 Share Unsub",
+    tip: "This term's slice of the running annual Unsub pool, calculated AFTER subtracting any locked/paid amounts from earlier terms.",
     format: "money",
     get: (t) => t.shareUnsub,
     total: (rs) => rs.reduce((s, t) => s + t.shareUnsub, 0),
@@ -63,12 +71,14 @@ const ROWS: RowDef[] = [
   {
     label: "Calc Sub (Step 5)",
     hint: "Share × min(term %, 100%) + balance-forward",
+    tip: "Step 5 output: Share × min(term %, 100%), plus carried-forward unspent share from prior eligible terms.",
     format: "money",
     get: (t) => t.calcSub,
     total: (rs) => rs.reduce((s, t) => s + t.calcSub, 0),
   },
   {
     label: "Calc Unsub (Step 5)",
+    tip: "Step 5 output for Unsub. Same formula as Calc Sub but against the Unsub pool.",
     format: "money",
     get: (t) => t.calcUnsub,
     total: (rs) => rs.reduce((s, t) => s + t.calcUnsub, 0),
@@ -77,12 +87,14 @@ const ROWS: RowDef[] = [
   {
     label: "Net Paid Sub",
     hint: "Already paid − refund (locks in disbursement mode)",
+    tip: "Paid Sub − Refunded Sub. In Disbursement view this anchors the term — the engine cannot retroactively change it.",
     format: "money",
     get: (t) => t.netPaidSub,
     total: (rs) => rs.reduce((s, t) => s + t.netPaidSub, 0),
   },
   {
     label: "Net Paid Unsub",
+    tip: "Paid Unsub − Refunded Unsub. In Disbursement view this anchors the term.",
     format: "money",
     get: (t) => t.netPaidUnsub,
     total: (rs) => rs.reduce((s, t) => s + t.netPaidUnsub, 0),
@@ -91,6 +103,7 @@ const ROWS: RowDef[] = [
   {
     label: "Final Sub",
     hint: "Disbursement after COA cap & adjustments",
+    tip: "MIN(Calc Sub, COA cap). Mirrors the Step 5 engine output exactly — no averaging.",
     format: "money",
     get: (t) => t.finalSub,
     total: (rs) => rs.reduce((s, t) => s + t.finalSub, 0),
@@ -98,6 +111,7 @@ const ROWS: RowDef[] = [
   },
   {
     label: "Final Unsub",
+    tip: "MIN(Calc Unsub, COA cap). Mirrors the Step 5 engine output exactly.",
     format: "money",
     get: (t) => t.finalUnsub,
     total: (rs) => rs.reduce((s, t) => s + t.finalUnsub, 0),
@@ -141,7 +155,7 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-[12px] tabular-nums">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-card">
             <tr className="border-b border-border text-left">
               <th className="sticky left-0 z-10 min-w-[180px] bg-card px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Calculation
@@ -177,6 +191,7 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
                   key={ri}
                   className={cn(
                     "border-b border-border/40",
+                    !row.emphasize && ri % 2 === 1 && "bg-muted/30",
                     row.emphasize && "bg-primary/5",
                     row.divider && "border-b-2 border-border",
                   )}
@@ -184,11 +199,12 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
                   <td className="sticky left-0 z-10 bg-card px-3 py-1.5">
                     <div
                       className={cn(
-                        "text-[12px]",
+                        "flex items-center gap-1 text-[12px]",
                         row.emphasize ? "font-semibold text-foreground" : "text-foreground/85",
                       )}
                     >
-                      {row.label}
+                      <span>{row.label}</span>
+                      {row.tip ? <InfoTip>{row.tip}</InfoTip> : null}
                     </div>
                     {row.hint ? (
                       <div className="text-[9px] uppercase tracking-wide text-muted-foreground">
