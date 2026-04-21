@@ -1,74 +1,46 @@
 
 
-# Round 2 Implementation: Scenarios, Brand, A11y, Regression Suite, PDF Export
+# Fix broken Step 2 rendering in PDF export
 
-Approved scope. PDF export will use **option (b) — jsPDF-generated branded PDF** for a polished, shareable case file.
+## The bug
 
-## 1. Plain-English scenarios (`src/lib/scenarios.ts`)
+In the exported PDF, **Step 2** of the walkthrough renders with garbled letter-spacing (`S t e p  2 — A Y...`), shows `!'` instead of an arrow, runs off the right edge, and gets cut off mid-sentence ("Reduced annual Sub" → never finishes). Steps 3–5 render correctly.
 
-Rewrite all titles/summaries/expected text. Keep `id`s intact so the regression suite still works. Regroup into:
-- "Common situations"
-- "What if a student changes mid-year?"
-- "Edge cases & overloads"
-- "Regression checks (advanced)" (technical labels retained for QA)
+## Root cause
 
-Each scenario gets: human title, "The student" sentence, "What's special" sentence, conversational "Expected outcome" line. All "v18", "FSA Apr 2026", "ED Scenario #N" references removed from user-facing strings.
+Step 2's string contains the Unicode right-arrow character `→` (U+2192). jsPDF's default `helvetica` font uses WinAnsi encoding, which does not include `→`. When jsPDF hits an unsupported glyph it:
 
-## 2. Brand & visual polish
+1. Falls back to drawing each character individually with broken kerning (the spaced-out look).
+2. Mis-measures the line width, so `splitTextToSize` cannot wrap it.
+3. Substitutes `!'` for the arrow.
+4. Lets the over-wide line overflow the right margin, clipping the rest of the sentence onto a phantom continuation that breaks across pages.
 
-- **Hero badge**: drop gradient → flat `bg-primary/10 text-primary`.
-- **Section letter badges**: tighten to h-7/w-7, `bg-primary/10 text-primary`.
-- **Background**: soften `--gradient-subtle` to near-flat near-white.
-- **Toggle bar → real segmented control**: View and Distribution become `role="radiogroup"` with arrow-key nav, `aria-checked`, single shared border, soft inset shadow on selected segment. The 3 on/off switches (`Sub→Unsub shift`, `Double-reduction`, `Count LTHT in AY%`) move to a lighter "Advanced rules" sub-row.
-- **Computed baselines → single inline summary**: replace the 4-pill cluster with one sentence: `Sub baseline $2,000 · Unsub baseline $3,500 · from $3,500 / $2,000 statutory caps`. PLUS-denial appends in accent color when active. One InfoTip at the end covers the formula.
+Steps 3–5 only use characters in WinAnsi (`÷`, `×`, `—`, `½`), which is why they render fine.
 
-## 3. Accessibility
+## The fix
 
-- `role="radiogroup"`/`role="radio"`/`aria-checked` + arrow-key nav on segmented controls.
-- `aria-live="polite"` on `ResultsPanel` so screen readers announce total changes.
-- `aria-describedby` linking InfoTip content to the field it describes.
-- Skip-to-results link (visually hidden, visible on focus) at top of page.
-- Bump `--muted-foreground` one shade darker to clear WCAG AA against zebra rows.
-- `focus-visible:ring-2 focus-visible:ring-ring` on every new interactive element.
+In `src/lib/pdfExport.ts`, replace the unsupported Unicode characters in the step strings with WinAnsi-safe equivalents:
 
-## 4. Automated regression suite
+- `→` → `->` (or `=>`)
+- Audit all other step strings for any non-WinAnsi characters and swap them too (defensive — `½` in the matrix `"Below ½-time"` IS WinAnsi-safe, so that stays).
 
-- Add `vitest` to `devDependencies`.
-- Add `"test": "vitest"` and `"test:run": "vitest run"` scripts to `package.json`.
-- Create `src/lib/sor.test.ts`:
-  - Iterate every scenario with `expectedTerms`/`expectedTotals`, assert engine output matches.
-  - Invariant tests: history anchoring (paid terms unchanged), totals ≤ reduced annual cap, COA caps respected, intensity carry-over math.
-- Backfill `expectedTotals` on rewritten scenarios where math is stable.
-- Add brief comment block at top of `src/lib/sor.ts`: "Run `bun run test:run`".
+Specifically Step 2 becomes:
+```
+Step 2 — AY enrollment %: 24 ÷ 36 = 75.00% -> rounded to 75%. Reduced annual Sub $1,500, Unsub $2,625.
+```
 
-## 5. PDF export — branded jsPDF (approved option b)
+This keeps the visual meaning intact while staying within the encoding the default font supports — no font-embedding overhead needed.
 
-- Add `jspdf` + `jspdf-autotable` to dependencies.
-- New file: `src/lib/pdfExport.ts` exporting `exportSORCaseFile(results, inputs)`.
-- New "Export PDF" button in `ResultsPanel` header (next to Table/Cards tabs).
-- PDF contents:
-  - **Header band**: app title + flat primary color bar, generation timestamp, scenario name (if loaded).
-  - **Section 1 — Student & Loan Period**: grade, dependency, need, AY FT credits, calendar/AY type, override flags.
-  - **Section 2 — Computed baselines**: sentence-form summary.
-  - **Section 3 — Per-term enrollment** (autoTable): term, FT, enrolled, paid S/U, refund S/U, COA caps.
-  - **Section 4 — Results matrix** (autoTable): Term %, Intensity %, Share S/U, Final S/U, Net Paid, status.
-  - **Section 5 — Annual totals**: Final Sub, Final Unsub, AY %, reduced caps.
-  - **Section 6 — Step walkthrough**: numbered narrative of the 5 SOR steps with the values used.
-  - **Footer**: "Generated by Schedule of Reductions Calculator · Page X of Y".
-- Filename: `SOR-case-file-<scenario-id-or-custom>-<YYYYMMDD>.pdf`. Triggers browser download.
+## Optional hardening (small, recommended)
 
-## Files
+Add a tiny `safe()` helper in `pdfExport.ts` that strips/replaces any non-WinAnsi characters before passing strings to `doc.text()` / `autoTable`. One-pass map covers the common offenders (`→ ⇒ ⟶ ✓ ✗ • → ←`) so this class of bug can't reappear if someone later adds emoji or another arrow elsewhere in the PDF body.
 
-- **New**: `src/lib/sor.test.ts`, `src/lib/pdfExport.ts`
-- **Edit**: `src/lib/scenarios.ts`, `src/styles.css`, `package.json`
-- **Edit**: `src/routes/index.tsx` (segmented control, baselines summary, hero badge, skip link)
-- **Edit**: `src/components/sor/Section.tsx` (lighter letter badge)
-- **Edit**: `src/components/sor/ResultsPanel.tsx` (`aria-live`, Export PDF button)
+## Files to edit
 
-## Out of scope this round
+- **Edit**: `src/lib/pdfExport.ts` — replace `→` with `->` in the Step 2 string; add the optional `safe()` helper and route all `doc.text()` calls through it.
 
-- Onboarding tour / coach marks
-- i18n
-- Mobile per-term grid full redesign (cards-on-mobile fallback only)
-- Diff-mode beyond a subtle changed-row accent
+## Out of scope
+
+- Embedding a Unicode TTF font in the PDF (would let arrows render natively but adds ~200KB to the bundle and isn't worth it for one arrow).
+- Restyling the walkthrough layout — current rendering is correct once the encoding issue is fixed.
 
