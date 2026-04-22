@@ -44,9 +44,9 @@ const ROWS: RowDef[] = [
     total: () => null,
   },
   {
-    label: "Intensity %",
-    hint: "Enrollment intensity after carried below-half-time credits",
-    tip: "(Enrolled + lapsed credits from prior below-half-time terms) ÷ FT. Can exceed 100% (balloon). Capped to 100% in the actual COD export.",
+    label: "Enrollment Intensity (EI) %",
+    hint: "EI: (enrolled + carried below-half-time credits) ÷ FT",
+    tip: "Enrollment Intensity (EI) = (Enrolled + lapsed credits from prior below-half-time terms) ÷ FT. May exceed 100% (balloon). Capped to 100% in the COD export. Distinct from Term enrollment %, which counts only this term's enrolled credits.",
     format: "pct",
     get: (t) => t.intensityPct,
     total: () => null,
@@ -216,7 +216,7 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
                     const v = row.get(t);
                     const overload =
                       (row.label === "Term %" && t.termPct > 1) ||
-                      (row.label === "Intensity %" && t.intensityPct > 1);
+                      (row.label === "Enrollment Intensity (EI) %" && t.intensityPct > 1);
                     const subCapped =
                       row.label === "Final Sub" && t.coaCapSub > 0 && t.calcSub > t.coaCapSub;
                     const unsubCapped =
