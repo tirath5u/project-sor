@@ -81,7 +81,18 @@ function SORCalculatorPage() {
     setInputs((p) => ({ ...p, terms: { ...p.terms, [key]: { ...p.terms[key], ...patch } } }));
   };
   const loadScenario = (s: Scenario) => {
-    setInputs(s.build());
+    const built = s.build();
+    // Normalize statutory caps from the lookup table whenever the scenario
+    // does NOT explicitly use overrideLimits, so a stale or omitted scenario
+    // value can never desync from the grade-level lookup. The engine also
+    // resolves caps internally, but this keeps the displayed Sub/Unsub
+    // statutory inputs honest.
+    if (!built.overrideLimits) {
+      const lim = lookupLimits(built.gradeLevel, built.dependency, built.parentPlusDenied);
+      built.subStatutory = lim.sub;
+      built.unsubStatutory = lim.unsub;
+    }
+    setInputs(built);
     setActiveScenario(s.id);
   };
 
