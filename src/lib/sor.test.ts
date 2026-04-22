@@ -117,3 +117,68 @@ describe("SOR engine — invariants", () => {
     expect(spring.finalUnsub).toBe(0);
   });
 });
+
+describe("SOR engine — Combined Limit Shifting Rule (regression)", () => {
+  function depFreshman(need: number): ReturnType<typeof defaultInputs> {
+    const inp = defaultInputs();
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.overrideLimits = false;
+    inp.annualNeed = need;
+    // Lookup says g1/dep = $3,500 / $2,000 (combined $5,500). The engine must
+    // resolve these from the lookup, NOT trust whatever subStatutory /
+    // unsubStatutory the inputs object happens to carry.
+    inp.subStatutory = 3500;
+    inp.unsubStatutory = 2000;
+    inp.terms.term1 = {
+      ...inp.terms.term1,
+      enabled: true,
+      ftCredits: 12,
+      enrolledCredits: 12,
+    };
+    inp.terms.term2 = {
+      ...inp.terms.term2,
+      enabled: true,
+      ftCredits: 12,
+      enrolledCredits: 12,
+    };
+    return inp;
+  }
+
+  it("Need $5,000 -> Sub $3,500 / Unsub $2,000 baselines", () => {
+    const r = calculateSOR(depFreshman(5000));
+    expect(r.subBaseline).toBe(3500);
+    expect(r.unsubBaseline).toBe(2000);
+    expect(r.effectiveCombinedLimit).toBe(5500);
+  });
+
+  it("Need $2,000 -> Sub $2,000 / Unsub $3,500 baselines (shifting)", () => {
+    const r = calculateSOR(depFreshman(2000));
+    expect(r.subBaseline).toBe(2000);
+    expect(r.unsubBaseline).toBe(3500);
+    expect(r.effectiveCombinedLimit).toBe(5500);
+  });
+
+  it("Stale unsubStatutory=0 in state is ignored when overrideLimits is false", () => {
+    const inp = depFreshman(5000);
+    // Simulate stale scenario state.
+    inp.subStatutory = 3500;
+    inp.unsubStatutory = 0;
+    const r = calculateSOR(inp);
+    expect(r.effectiveUnsubStatutory).toBe(2000);
+    expect(r.unsubBaseline).toBe(2000);
+  });
+
+  it("overrideLimits=true honors the manually-typed caps", () => {
+    const inp = depFreshman(5000);
+    inp.overrideLimits = true;
+    inp.subStatutory = 1000;
+    inp.unsubStatutory = 0;
+    const r = calculateSOR(inp);
+    expect(r.effectiveSubStatutory).toBe(1000);
+    expect(r.effectiveUnsubStatutory).toBe(0);
+    expect(r.effectiveCombinedLimit).toBe(1000);
+    expect(r.subBaseline).toBe(1000);
+    expect(r.unsubBaseline).toBe(0);
+  });
+});
