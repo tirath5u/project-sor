@@ -101,29 +101,29 @@ export function StepWalkthrough({
       <section className="border-b border-border py-4">
         <StepHeader
           n={2}
-          title="AY Enrollment % → Annual Loan Limit"
+          title="Academic Year Enrollment % → Annual Loan Limit"
           tip="Σ enrolled credits across eligible terms ÷ AY FT credits. This is the SOR % applied to baselines."
         />
         <Eq>
-          AY % = ({enrolledExpr}) ÷ {ftExpr}
+          Academic Year enrollment % = ({enrolledExpr}) ÷ {ftExpr}
           <br />={" "}
           <span className="font-semibold text-primary">
             {(results.enrollmentFractionRaw * 100).toFixed(2)}%
           </span>{" "}
           → rounded ={" "}
           <span className="font-semibold text-primary">
-            {Math.round(results.sorPctRounded * 100)}%
+            {ayPctRoundedPct}%
           </span>
         </Eq>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <Eq>
             <div className="text-muted-foreground">Annual Sub limit:</div>
-            {fmtCurrency(results.subBaseline)} × {Math.round(results.sorPctRounded * 100)}% ={" "}
+            {fmtCurrency(results.subBaseline)} × {ayPctRoundedPct}% ={" "}
             <span className="font-semibold text-primary">{fmtCurrency(results.reducedSub)}</span>
           </Eq>
           <Eq>
             <div className="text-muted-foreground">Annual Unsub limit:</div>
-            {fmtCurrency(results.unsubBaseline)} × {Math.round(results.sorPctRounded * 100)}%
+            {fmtCurrency(results.unsubBaseline)} × {ayPctRoundedPct}%
             {results.shiftedToUnsub > 0
               ? ` + ${fmtCurrency(results.shiftedToUnsub)} shift`
               : ""}{" "}
