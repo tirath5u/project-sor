@@ -65,10 +65,15 @@ export interface TermInput {
   /** Disbursement mode: actual credits enrolled at the time of this disbursement.
    * Replaces enrolledCredits in AY-pct math for past terms. */
   actualCredits: number;
-  paidSub: number;
-  paidUnsub: number;
-  refundSub: number;
-  refundUnsub: number;
+  /** Net-paid Sub. `null` = user has not entered a value yet (do NOT anchor).
+   *  `0` = explicit zero (anchor at $0). Any positive number anchors that amount. */
+  paidSub: number | null;
+  /** Net-paid Unsub. Same null/zero semantics as paidSub. */
+  paidUnsub: number | null;
+  /** Refunded Sub. Null = blank, 0 = explicit zero. */
+  refundSub: number | null;
+  /** Refunded Unsub. Null = blank, 0 = explicit zero. */
+  refundUnsub: number | null;
   coaCapSub: number;
   coaCapUnsub: number;
 }
@@ -240,10 +245,10 @@ export function defaultTerm(key: TermKey): TermInput {
     enrolledCredits: 0,
     disbursed: false,
     actualCredits: 0,
-    paidSub: 0,
-    paidUnsub: 0,
-    refundSub: 0,
-    refundUnsub: 0,
+    paidSub: null,
+    paidUnsub: null,
+    refundSub: null,
+    refundUnsub: null,
     coaCapSub: 0,
     coaCapUnsub: 0,
   };
@@ -287,16 +292,24 @@ export function defaultInputs(): SORInputs {
 }
 
 const round = (n: number) => Math.round(n);
-const netAmount = (paid: number, refund: number) => Math.max(0, (paid || 0) - (refund || 0));
+const netAmount = (paid: number | null, refund: number | null) =>
+  Math.max(0, (paid ?? 0) - (refund ?? 0));
 
+/** True if the user has explicitly entered a Sub paid/refund value for this term.
+ *  `null` = blank (not entered) and is intentionally NOT treated as activity. */
+function hasSubHistory(term: TermInput) {
+  return term.paidSub !== null || term.refundSub !== null;
+}
+
+/** True if the user has explicitly entered an Unsub paid/refund value for this term. */
+function hasUnsubHistory(term: TermInput) {
+  return term.paidUnsub !== null || term.refundUnsub !== null;
+}
+
+/** Term has any historical activity at all (either bucket entered or marked disbursed).
+ *  Used for credit-history (actualCredits vs. enrolledCredits) only. */
 function hasHistoricalActivity(term: TermInput) {
-  return (
-    term.disbursed ||
-    term.paidSub !== 0 ||
-    term.paidUnsub !== 0 ||
-    term.refundSub !== 0 ||
-    term.refundUnsub !== 0
-  );
+  return term.disbursed || hasSubHistory(term) || hasUnsubHistory(term);
 }
 
 function historicalCredits(term: TermInput) {
@@ -738,12 +751,15 @@ export function calculateSOR(inp: SORInputs): SORResults {
     if (!hasHistoricalActivity(t)) continue;
 
     const newSnap = runSnapshot(creditModeAt(i)).snap;
-      const lockedSub = ordered.map((term, idx) =>
-        hasHistoricalActivity(term) && idx <= i ? netAmount(term.paidSub, term.refundSub) : null,
-      );
-      const lockedUnsub = ordered.map((term, idx) =>
-        hasHistoricalActivity(term) && idx <= i ? netAmount(term.paidUnsub, term.refundUnsub) : null,
-      );
+    // CRITICAL: lock Sub and Unsub INDEPENDENTLY. Entering Paid Sub must NOT
+    // anchor Unsub at $0 just because the Unsub field is still blank, and vice
+    // versa. A bucket is only locked if THAT bucket has explicit user input.
+    const lockedSub = ordered.map((term, idx) =>
+      hasSubHistory(term) && idx <= i ? netAmount(term.paidSub, term.refundSub) : null,
+    );
+    const lockedUnsub = ordered.map((term, idx) =>
+      hasUnsubHistory(term) && idx <= i ? netAmount(term.paidUnsub, term.refundUnsub) : null,
+    );
     const distributedSub = distributeRemainingPool(
       newSnap.annualSub,
       ordered,
@@ -811,10 +827,10 @@ export function calculateSOR(inp: SORInputs): SORResults {
     hasHistoricalActivity(t) ? historicalCredits(t) : t.enrolledCredits,
   ).snap;
   const finalLockedSub = ordered.map((t) =>
-    hasHistoricalActivity(t) ? netAmount(t.paidSub, t.refundSub) : null,
+    hasSubHistory(t) ? netAmount(t.paidSub, t.refundSub) : null,
   );
   const finalLockedUnsub = ordered.map((t) =>
-    hasHistoricalActivity(t) ? netAmount(t.paidUnsub, t.refundUnsub) : null,
+    hasUnsubHistory(t) ? netAmount(t.paidUnsub, t.refundUnsub) : null,
   );
   const finalDistributedSub = distributeRemainingPool(
     finalSnap.annualSub,
@@ -932,11 +948,13 @@ function assemble(args: {
 
   const effectiveCredits = ordered.map((t) => effectiveCreditsBy(t));
   const intensityPct = computeIntensityPct(ordered, effectiveCredits);
+  // Display lock: same independent rule. Sub anchors only if Sub was entered;
+  // Unsub anchors only if Unsub was entered.
   const lockedSubDisplay = ordered.map((t) =>
-    hasHistoricalActivity(t) ? netAmount(t.paidSub, t.refundSub) : null,
+    hasSubHistory(t) ? netAmount(t.paidSub, t.refundSub) : null,
   );
   const lockedUnsubDisplay = ordered.map((t) =>
-    hasHistoricalActivity(t) ? netAmount(t.paidUnsub, t.refundUnsub) : null,
+    hasUnsubHistory(t) ? netAmount(t.paidUnsub, t.refundUnsub) : null,
   );
   const weights = ordered.map((t) => t.ftCredits || 0);
   const displaySub = computeDisplayRows({
@@ -985,10 +1003,10 @@ function assemble(args: {
       eligible,
       status: !t.enabled ? "off" : eligible ? "eligible" : "below_half_time",
       disbursed: t.disbursed,
-      paidSub: t.paidSub,
-      paidUnsub: t.paidUnsub,
-      refundSub: t.refundSub,
-      refundUnsub: t.refundUnsub,
+      paidSub: t.paidSub ?? 0,
+      paidUnsub: t.paidUnsub ?? 0,
+      refundSub: t.refundSub ?? 0,
+      refundUnsub: t.refundUnsub ?? 0,
       netPaidSub,
       netPaidUnsub,
       calcSub,

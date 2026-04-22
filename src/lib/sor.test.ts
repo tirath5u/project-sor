@@ -202,3 +202,83 @@ describe("SOR engine — Combined Limit Shifting Rule (regression)", () => {
     expect(snapped.unsubBaseline).toBe(2000);
   });
 });
+
+describe("SOR engine — partial-entry disbursement bug (regression)", () => {
+  function threeTermDep(): ReturnType<typeof defaultInputs> {
+    const inp = defaultInputs();
+    inp.viewMode = "disbursement";
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.overrideLimits = false;
+    inp.annualNeed = 2000;
+    inp.numStandardTerms = 3;
+    inp.ayFtCredits = 36;
+    (["term1", "term2", "term3"] as TermKey[]).forEach((k) => {
+      inp.terms[k] = {
+        ...inp.terms[k],
+        enabled: true,
+        ftCredits: 12,
+        enrolledCredits: 12,
+      };
+    });
+    return inp;
+  }
+
+  it("Paid Sub entered first does NOT force Unsub to 0 in the same term", () => {
+    const inp = threeTermDep();
+    // User has typed Paid Sub for Fall but has NOT touched Paid Unsub yet
+    // (still null = blank). The engine must not interpret blank as $0.
+    inp.terms.term1 = { ...inp.terms.term1, paidSub: 666 };
+    const r = calculateSOR(inp);
+    const fall = r.termResults.find((t) => t.key === "term1")!;
+    const spring = r.termResults.find((t) => t.key === "term2")!;
+    const t3 = r.termResults.find((t) => t.key === "term3")!;
+    // Fall Sub is anchored at 666
+    expect(fall.finalSub).toBe(666);
+    // Fall Unsub must keep its planned share — NOT zero
+    expect(fall.finalUnsub).toBeGreaterThan(0);
+    // The Unsub pool must NOT have been entirely pushed into Spring + Term3
+    // (the bug symptom was 0 / 1750 / 1750 for a $3,500 Unsub pool).
+    expect(spring.finalUnsub).toBeLessThan(1750);
+    expect(t3.finalUnsub).toBeLessThan(1750);
+  });
+
+  it("Explicit Paid Unsub = 0 (not blank) DOES anchor and redistribute", () => {
+    const inp = threeTermDep();
+    inp.terms.term1 = {
+      ...inp.terms.term1,
+      paidSub: 666,
+      paidUnsub: 0, // EXPLICIT zero — user committed to no Unsub this term
+    };
+    const r = calculateSOR(inp);
+    const fall = r.termResults.find((t) => t.key === "term1")!;
+    const spring = r.termResults.find((t) => t.key === "term2")!;
+    const t3 = r.termResults.find((t) => t.key === "term3")!;
+    expect(fall.finalSub).toBe(666);
+    expect(fall.finalUnsub).toBe(0);
+    // The full Unsub pool now flows to Spring + Term3
+    expect(spring.finalUnsub + t3.finalUnsub).toBe(r.reducedUnsub);
+  });
+
+  it("Symmetry: Paid Unsub entered first does NOT force Sub to 0", () => {
+    const inp = threeTermDep();
+    inp.terms.term1 = { ...inp.terms.term1, paidUnsub: 1166 };
+    const r = calculateSOR(inp);
+    const fall = r.termResults.find((t) => t.key === "term1")!;
+    expect(fall.finalUnsub).toBe(1166);
+    expect(fall.finalSub).toBeGreaterThan(0);
+  });
+
+  it("Both buckets explicitly committed: term anchors as expected", () => {
+    const inp = threeTermDep();
+    inp.terms.term1 = {
+      ...inp.terms.term1,
+      paidSub: 666,
+      paidUnsub: 1166,
+    };
+    const r = calculateSOR(inp);
+    const fall = r.termResults.find((t) => t.key === "term1")!;
+    expect(fall.finalSub).toBe(666);
+    expect(fall.finalUnsub).toBe(1166);
+  });
+});
