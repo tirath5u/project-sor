@@ -575,6 +575,32 @@ export function splitNeed(
   return { subNeed, unsubNeed };
 }
 
+/**
+ * Resolve the statutory caps the engine should actually use.
+ *
+ * - When `overrideLimits` is false, ALWAYS derive caps from the lookup table
+ *   (grade level, dependency, optional PLUS-denial uplift) — never trust
+ *   stale `inp.subStatutory` / `inp.unsubStatutory` values that may have
+ *   been left over from a prior scenario load.
+ * - When `overrideLimits` is true, honor the manual caps the user typed in.
+ *
+ * This is the single source of truth for Step 1 baselines and the combined
+ * limit (Combined Limit Shifting Rule, 34 CFR 685.203).
+ */
+export function resolveCaps(inp: SORInputs): {
+  sub: number;
+  unsub: number;
+  combined: number;
+} {
+  if (inp.overrideLimits) {
+    const sub = Math.max(0, inp.subStatutory);
+    const unsub = Math.max(0, inp.unsubStatutory);
+    return { sub, unsub, combined: sub + unsub };
+  }
+  const lim = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied);
+  return { sub: lim.sub, unsub: lim.unsub, combined: lim.sub + lim.unsub };
+}
+
 export function calculateSOR(inp: SORInputs): SORResults {
   const warnings: string[] = [];
   if (inp.calType === 3 || inp.calType === 4) {
