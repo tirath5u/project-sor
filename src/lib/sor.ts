@@ -899,8 +899,8 @@ function assemble(args: {
 
   const pct = finalSnap.ayPctRounded;
 
-  const subStatBaseline = inp.subStatutory;
-  const unsubStatBaseline = inp.unsubStatutory;
+  const subStatBaseline = caps.sub;
+  const unsubStatBaseline = caps.unsub;
   const subNeedAdjusted = inp.applyDoubleReduction
     ? Math.min(subNeed, Math.round(subNeed * pct))
     : subNeed;
@@ -918,8 +918,8 @@ function assemble(args: {
   let reducedUnsub = reducedUnsubRaw;
   let shiftedToUnsub = 0;
   if (inp.applySubUnsubShift) {
-    const subStatCeiling = round(inp.subStatutory * pct);
-    const unsubStatCeiling = round(inp.unsubStatutory * pct);
+    const subStatCeiling = round(caps.sub * pct);
+    const unsubStatCeiling = round(caps.unsub * pct);
     const subUnused = Math.max(0, subStatCeiling - reducedSubRaw);
     const unsubHeadroom = Math.max(0, unsubStatCeiling - reducedUnsubRaw);
     shiftedToUnsub = Math.min(subUnused, unsubHeadroom);
@@ -1026,6 +1026,9 @@ function assemble(args: {
     enrollmentFractionRaw: finalSnap.ayPctRaw,
     sorPctRounded: pct,
     noReduction: pct >= 1,
+    effectiveSubStatutory: caps.sub,
+    effectiveUnsubStatutory: caps.unsub,
+    effectiveCombinedLimit: caps.combined,
     subNeed,
     unsubNeed,
     subBaseline,
