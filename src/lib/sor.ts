@@ -622,15 +622,17 @@ export function calculateSOR(inp: SORInputs): SORResults {
   //   B. Actual_Sub_Initial   = MIN(Annual_Need, Subsidized_Max)        (need-based)
   //   C. Actual_Unsub_Initial = Total_Combined_Limit - Actual_Sub_Initial (NON-need-based;
   //      the unsub bucket absorbs whatever sub did not consume of the combined cap).
-  const { subNeed, unsubNeed } = splitNeed(
-    inp.annualNeed,
-    inp.subStatutory,
-    inp.unsubStatutory,
-  );
-  const combinedLimit = Math.max(0, inp.subStatutory) + Math.max(0, inp.unsubStatutory);
-  const subBaseline = Math.min(inp.subStatutory, subNeed);
+  //
+  // CRITICAL: use resolveCaps() so we always honor the lookup table when
+  // `overrideLimits` is false — never trust raw inp.subStatutory/unsubStatutory
+  // (those may be stale from a prior scenario load and hide the combined-limit
+  // shifting rule).
+  const caps = resolveCaps(inp);
+  const { subNeed, unsubNeed } = splitNeed(inp.annualNeed, caps.sub, caps.unsub);
+  const combinedLimit = caps.combined;
+  const subBaseline = Math.min(caps.sub, subNeed);
   // Unsub baseline = the remainder of the combined cap after Subsidized consumes
-  // its need-based share. `inp.unsubStatutory` already includes any PLUS-denial
+  // its need-based share. `caps.unsub` already includes any PLUS-denial
   // uplift coming from the lookup, so do not add it a second time downstream.
   const unsubBaseline = Math.max(0, combinedLimit - subBaseline);
   const lookup = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied);
