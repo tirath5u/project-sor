@@ -35,8 +35,10 @@ export function StepWalkthrough({
   results: SORResults;
 }) {
   const eligible = results.termResults.filter((t) => t.eligible);
+  const enabled = results.termResults.filter((t) => t.enabled);
   const enrolledExpr = eligible.map((t) => t.effectiveCredits).join(" + ") || "0";
   const ftExpr = inputs.ayFtCredits > 0 ? String(inputs.ayFtCredits) : "-";
+  const ayPctRoundedPct = Math.round(results.sorPctRounded * 100);
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
