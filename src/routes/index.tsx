@@ -66,6 +66,65 @@ const OPTIONAL_KEYS: { key: TermKey; toggle: keyof SORInputs }[] = [
   { key: "summer2", toggle: "includeSummer2" },
 ];
 
+function OverrideCapsBlock({
+  inputs,
+  update,
+}: {
+  inputs: SORInputs;
+  update: (patch: Partial<SORInputs>) => void;
+}) {
+  const lim = lookupLimits(
+    inputs.gradeLevel,
+    inputs.dependency,
+    inputs.parentPlusDenied,
+  );
+  const drift =
+    inputs.subStatutory !== lim.sub || inputs.unsubStatutory !== lim.unsub;
+  return (
+    <>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <NumberField
+          label="Sub statutory cap"
+          prefix="$"
+          value={inputs.subStatutory}
+          onChange={(v) => update({ subStatutory: v })}
+        />
+        <NumberField
+          label="Unsub statutory cap"
+          prefix="$"
+          value={inputs.unsubStatutory}
+          onChange={(v) => update({ unsubStatutory: v })}
+        />
+      </div>
+      {drift ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-[11px] text-warning-foreground">
+          <span className="font-semibold uppercase tracking-wide">Override active</span>
+          <span className="flex-1 min-w-[200px]">
+            Manual caps differ from the {GRADE_LABELS[inputs.gradeLevel]} lookup
+            ({fmtCurrency(lim.sub)} Sub / {fmtCurrency(lim.unsub)} Unsub). The
+            Combined Limit Shifting Rule will use your manual values, not the
+            statutory table.
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 rounded-md text-[11px]"
+            onClick={() =>
+              update({
+                overrideLimits: false,
+                subStatutory: lim.sub,
+                unsubStatutory: lim.unsub,
+              })
+            }
+          >
+            Snap back to lookup
+          </Button>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
 function SORCalculatorPage() {
   const [inputs, setInputs] = React.useState<SORInputs>(() => defaultInputs());
   const [activeScenario, setActiveScenario] = React.useState<string>("");
