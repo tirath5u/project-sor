@@ -147,8 +147,20 @@ export function StepWalkthrough({
         />
         <p className="mb-2 text-xs text-muted-foreground">
           {inputs.distributionModel === "equal"
-            ? "Equal model: annual ÷ N eligible terms (whole-dollar; last term absorbs remainder)."
-            : "Proportional model: annual × (term FT credits ÷ Σ term FT credits)."}
+            ? `Equal model: ${fmtCurrency(results.reducedSub)} Sub split across ${results.eligibleTermsCount} eligible term${results.eligibleTermsCount === 1 ? "" : "s"} (whole-dollar; last term absorbs remainder).`
+            : `Proportional model: ${fmtCurrency(results.reducedSub)} Sub weighted by each term's FT credits.`}
+          {eligible.length > 0 ? (
+            <>
+              {" "}
+              Resulting Sub split:{" "}
+              <span className="font-medium text-foreground">
+                {eligible
+                  .map((t) => `${t.label} ${fmtCurrency(t.shareSub)}`)
+                  .join(" · ")}
+              </span>
+              .
+            </>
+          ) : null}
         </p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[320px] text-[11px] tabular-nums">
