@@ -1,53 +1,152 @@
 
+# Fix the partial-entry disbursement bug
 
-# Quick clarifications + targeted Step 3 polish + acronym pass
+## The issue to correct
 
-## What I found vs what was reported
+Yes — the bug is real, and the behavior you described is consistent with the current engine logic.
 
-**1. The "Combined Limit Shifting" engine bug — already fixed in the current code.**
-- `src/lib/sor.ts` line 637: `unsubBaseline = Math.max(0, combinedLimit - subBaseline)` — exactly the formula you specified.
-- `resolveCaps()` (line 590) forces the lookup table whenever `overrideLimits` is false, so stale scenario state cannot leak in.
-- `src/lib/sor.test.ts` already asserts both your test cases and they pass:
-  - Need $5,000 → Sub $3,500 / Unsub $2,000
-  - Need $2,000 → Sub $2,000 / Unsub $3,500
-- `loadScenario()` in `src/routes/index.tsx` re-normalizes caps from the lookup on every scenario load.
+What is happening now:
+- You enter **Paid Sub = 666** for term 1.
+- The engine immediately treats term 1 as having historical activity.
+- Because **Paid Unsub** is still sitting at its default `0`, the engine interprets that as **“Unsub for this term is locked at $0”** instead of **“user has not entered Unsub yet.”**
+- It then redistributes the full remaining Unsub pool to future eligible terms, which is why you see **0** in term 1 and **1,750 / 1,750** pushed into terms 2 and 3.
 
-If you are still seeing `Sub $3,500 / Unsub $0` for Need $5,000 in the live preview, the most likely cause is the **"Override statutory limits"** toggle being ON with `Unsub statutory cap = $0` left over from an earlier session. As a safety net I will:
-- Add a visible warning chip in the inputs panel whenever `overrideLimits=true` AND the manual caps differ from the lookup, so the override state can never silently break Step 1.
-- Add one more regression test: `overrideLimits=true` honors manual caps, and toggling it off snaps back to the lookup.
+So the app is currently confusing:
+- **blank / not entered yet**
+with
+- **explicitly entered zero**
 
-If you can reproduce the wrong baseline with **Override OFF**, please share a screenshot of the inputs panel — that would be a real regression and I would fix it immediately. Based on current source, it does not exist.
+That is the core bug.
 
-**2. "EI" acronym — does not appear anywhere in the source.**
-A repo-wide search for `\bEI\b` returns zero matches. The labels actually rendered are `Term enrollment %` and `Intensity %`. I'll still:
-- Rename `Intensity %` → `Enrollment Intensity (EI) %` everywhere it appears (matrix header, cards, walkthrough table, PDF, tooltips) so the carry-over meaning is explicit and the term "EI" is defined in-product for stakeholders who do use the acronym.
-- Keep `Term enrollment %` as-is (it is already plain English) but add a one-line tooltip distinguishing it from EI.
+## Root cause in code
 
-**3. Step 3-5 walkthrough numbers — Steps 4 and 5 already show real values per term; Step 3 does not.**
-Currently Step 3 prints:
-> "Equal model: $2,205 Sub split across 2 eligible terms ... Resulting Sub split: Fall $1,102 · Spring $1,103."
+The current disbursement walker in `src/lib/sor.ts` uses term-level history, not loan-type-specific history:
 
-That has the inputs and outputs but not the formula proof you asked for. I will rewrite Step 3 (on-screen and PDF) to show the math like:
+- `hasHistoricalActivity(term)` becomes true as soon as **either** Paid Sub **or** Paid Unsub is non-zero.
+- Then both of these are computed:
+  - `lockedSub`
+  - `lockedUnsub`
+- Since `paidUnsub` is still `0`, `lockedUnsub` becomes `0` instead of `null`.
+- `distributeRemainingPool(...)` then assumes term 1 already consumed **zero Unsub**, so it moves the whole Unsub pool forward.
 
-> Payout per term = $1,500 ÷ 3 = $500
-> Sub: $2,205 ÷ 2 = $1,102 → Fall $1,102, Spring $1,103 (last term absorbs +$1)
-> Unsub: $1,260 ÷ 2 = $630 → Fall $630, Spring $630
+That is why the screen “acts like you already decided Unsub = 0” before you have finished typing.
 
-For the proportional model the proof becomes `share = $2,205 × (12 ÷ 24) = $1,102` per term.
+## What Lovable should change
 
-Steps 4 and 5 already render `Fall: 9 ÷ 12 = 75%; Sub $1,102 × 75% = $827; Final $827 Sub` — I'll leave that intact and only tighten the wording slightly.
+### 1. Separate Sub history from Unsub history
+**Edit:** `src/lib/sor.ts`
+
+Replace the single term-level locking behavior with separate checks:
+
+- `hasSubHistory(term)` → true only when Sub has actually been entered/refunded/committed
+- `hasUnsubHistory(term)` → true only when Unsub has actually been entered/refunded/committed
+
+Then use them separately:
+- `lockedSub` should only lock Sub
+- `lockedUnsub` should only lock Unsub
+
+In other words:
+- entering **Paid Sub** must **not** automatically lock **Unsub**
+- entering **Paid Unsub** must **not** automatically lock **Sub**
+
+### 2. Stop treating an unfilled Paid Unsub field as a real zero
+**Edit:** `src/routes/index.tsx`
+**Edit:** `src/lib/sor.ts`
+
+Right now the numeric inputs coerce empty to `0` immediately:
+- `CompactNum` converts `""` to `0`
+- so the engine cannot distinguish “not entered yet” from “intentionally zero”
+
+Fix this by making the paid/refund inputs support a pending blank state:
+- use `number | null` for paid/refund fields, or
+- keep local draft strings and only commit numeric values when the field is actually entered/confirmed
+
+Required behavior:
+- **blank** = not yet entered, do not anchor this loan type
+- **0** = explicit user decision, do anchor at zero if confirmed
+
+This is the most important usability fix.
+
+### 3. Use Disbursed only for term-level credit history, not for both loan buckets
+**Edit:** `src/lib/sor.ts`
+
+Keep these concepts separate:
+
+- **Term disbursed / actual credits** → affects historical credits and AY% recalculation
+- **Paid Sub entered** → anchors only Sub for that term
+- **Paid Unsub entered** → anchors only Unsub for that term
+
+Do not let one bucket’s entry force the other bucket to zero.
+
+### 4. Add UI guardrails in the disbursement grid
+**Edit:** `src/routes/index.tsx`
+
+Add a short helper note near the Paid Sub / Paid Unsub columns:
+
+- “Entering Paid Sub does not zero Paid Unsub. Each loan type is anchored separately.”
+
+Optionally:
+- disable paid/refund inputs until **Disbursed** is checked, or
+- show a subtle “pending entry” state until both values are intentionally committed
+
+That will make the behavior understandable for users while they type.
+
+### 5. Add regression tests for the exact bug
+**Edit:** `src/lib/sor.test.ts`
+
+Add these tests:
+
+1. **Partial-entry bug repro**
+   - 3 standard terms
+   - dependent grade 1
+   - annual need = 2000
+   - full-time 12/12/12
+   - disbursement view
+   - enter `Paid Sub = 666` for term 1
+   - leave `Paid Unsub` unentered
+   - expect term 1 **Unsub is NOT forced to 0**
+   - expect terms 2 and 3 **do NOT jump to 1750 / 1750**
+
+2. **Explicit zero still works**
+   - same scenario
+   - explicitly commit `Paid Unsub = 0`
+   - expect Unsub to redistribute to future eligible terms
+
+3. **Symmetry test**
+   - enter `Paid Unsub` first
+   - confirm Sub is not zeroed or redistributed incorrectly
+
+4. **Final committed pair**
+   - `Paid Sub = 666`, `Paid Unsub = 1166`
+   - term 1 anchors correctly
+   - future terms remain correct
+
+## Acceptance criteria
+
+After the fix:
+
+- If the user types **Paid Sub = 666** and has **not yet entered Paid Unsub**, the app should still show term 1 as having its planned Unsub eligibility, not zero.
+- The app should **not** immediately push the whole Unsub pool into later terms.
+- Only after the user explicitly enters or confirms **Paid Unsub = 0** should the engine treat term 1 Unsub as zero and redistribute the remainder.
+- Sub and Unsub must anchor independently.
+
+## Exact message to give Lovable
+
+Tell Lovable:
+
+- “The disbursement engine is anchoring both loan buckets from a single partial edit. When I type Paid Sub first, the app treats blank Paid Unsub as an explicit zero and redistributes all Unsub to future terms.”
+- “Fix this by separating Sub history from Unsub history in `src/lib/sor.ts`. Entering Paid Sub must not lock Unsub, and entering Paid Unsub must not lock Sub.”
+- “Do not coerce blank paid/refund inputs to `0` while the user is still typing. Blank must mean ‘not entered yet’; explicit `0` must mean ‘intentionally zero.’”
+- “Add regression tests for the exact case: 3 terms, dependent grade 1, annual need 2000, term 1 Paid Sub 666 entered before Paid Unsub. The app must not show term 1 Unsub as 0 or move all Unsub to terms 2 and 3.”
 
 ## Files to change
 
-- **Edit** `src/components/sor/StepWalkthrough.tsx` — Step 3 formula proof; rename Intensity column header.
-- **Edit** `src/lib/pdfExport.ts` — mirror Step 3 formula in the exported PDF; rename Intensity column.
-- **Edit** `src/components/sor/TermsMatrix.tsx`, `src/components/sor/TermsCards.tsx` — rename `Intensity %` to `Enrollment Intensity (EI) %` with updated tooltip.
-- **Edit** `src/routes/index.tsx` — add the "Override active — caps differ from lookup" warning chip near the override toggle.
-- **Edit** `src/lib/sor.test.ts` — add the override on/off snap-back regression test.
+- **Edit:** `src/lib/sor.ts`
+- **Edit:** `src/routes/index.tsx`
+- **Edit:** `src/lib/sor.test.ts`
 
-## Out of scope (call out if you want them)
+## Small recommended polish while in there
 
-- Changing any Step 1 / baseline math — current implementation already matches your spec and is test-covered.
-- Renaming `Term enrollment %` (already plain English).
-- Touching PDF layout beyond the Step 3 paragraph and one column header.
-
+If Lovable wants to make this extra clear in the UI:
+- add a “pending / not yet entered” state for paid amounts
+- add helper copy in disbursement mode explaining that Sub and Unsub are anchored independently
