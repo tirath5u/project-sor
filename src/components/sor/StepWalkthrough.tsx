@@ -57,8 +57,12 @@ export function StepWalkthrough({
           tip="Combined Limit Shifting Rule (34 CFR 685.203): Sub = MIN(stat cap, need). Unsub fills the remaining Combined Limit headroom, NOT remaining need."
         />
         <p className="mb-2 text-xs text-muted-foreground">
-          Annual Need {fmtCurrency(inputs.annualNeed)} is split: Sub takes the lesser of need
-          and the Sub statutory cap; Unsub gets the remainder up to the Unsub cap.
+          Annual Need {fmtCurrency(inputs.annualNeed)} is split using the effective
+          statutory caps (Sub {fmtCurrency(results.effectiveSubStatutory)} + Unsub{" "}
+          {fmtCurrency(results.effectiveUnsubStatutory)} = Combined{" "}
+          {fmtCurrency(results.effectiveCombinedLimit)}). Sub takes the lesser of
+          need and the Sub cap; Unsub fills the remaining combined-limit headroom
+          (NOT remaining need).
           {results.additionalUnsubBase > 0
             ? " Additional Unsub headroom (PLUS denial) is added to the Unsub ceiling."
             : ""}
@@ -69,7 +73,7 @@ export function StepWalkthrough({
         <div className="grid grid-cols-2 gap-2">
           <Eq>
             <div className="text-muted-foreground">Sub:</div>
-            min({fmtCurrency(inputs.subStatutory)},{" "}
+            min({fmtCurrency(results.effectiveSubStatutory)},{" "}
             {fmtCurrency(
               results.doubleReductionApplied ? results.subNeedAdjusted : results.subNeed,
             )}
@@ -80,11 +84,8 @@ export function StepWalkthrough({
             <div className="text-muted-foreground">
               Unsub{results.additionalUnsubBase > 0 ? " (+ Addl Unsub)" : ""}:
             </div>
-            min({fmtCurrency(inputs.unsubStatutory)},{" "}
-            {fmtCurrency(
-              results.doubleReductionApplied ? results.unsubNeedAdjusted : results.unsubNeed,
-            )}
-            )
+            {fmtCurrency(results.effectiveCombinedLimit)} -{" "}
+            {fmtCurrency(results.subBaseline)}
             {results.additionalUnsubBase > 0
               ? ` + ${fmtCurrency(results.additionalUnsubBase)}`
               : ""}{" "}
