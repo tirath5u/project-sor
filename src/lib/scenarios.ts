@@ -179,8 +179,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
         },
         {
           term1: {
@@ -220,8 +218,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
         },
         {
           term1: {
@@ -262,8 +258,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
         },
         {
           term1: {
@@ -306,8 +300,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
@@ -334,8 +326,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 15 },
@@ -362,8 +352,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 2000,
-          subStatutory: 2000,
-          unsubStatutory: 0,
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
