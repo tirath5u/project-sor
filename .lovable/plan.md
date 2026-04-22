@@ -1,152 +1,91 @@
+# Finalize SOR setup + README + next steps for the hub
 
-# Fix the partial-entry disbursement bug
+## What you're keeping vs changing
 
-## The issue to correct
+You said: **do not rename** "SOR Calculator - Schedule of Reductions" in the app. That stays as-is. "Project SOR" is just the GitHub/Lovable project name. The user-facing brand on this tool remains **SOR Calculator – Schedule of Reductions**, served at `sor.myproduct.life`.
 
-Yes — the bug is real, and the behavior you described is consistent with the current engine logic.
+So this turn, the app code stays exactly as it is. No rename to `__root.tsx`, `index.tsx`, `lifecycle.tsx`, or `pdfExport.ts`.
 
-What is happening now:
-- You enter **Paid Sub = 666** for term 1.
-- The engine immediately treats term 1 as having historical activity.
-- Because **Paid Unsub** is still sitting at its default `0`, the engine interprets that as **“Unsub for this term is locked at $0”** instead of **“user has not entered Unsub yet.”**
-- It then redistributes the full remaining Unsub pool to future eligible terms, which is why you see **0** in term 1 and **1,750 / 1,750** pushed into terms 2 and 3.
+## What I'll actually do
 
-So the app is currently confusing:
-- **blank / not entered yet**
-with
-- **explicitly entered zero**
+### 1. Create `README.md` at the project root
 
-That is the core bug.
+Tool-focused README for the GitHub repo. Sections:
 
-## Root cause in code
+1. Tagline + **Try it now** link to `https://sor.myproduct.life`
+2. Screenshot placeholder (`docs/screenshot.png`) you can drop an image into
+3. What it does (5 bullets: reduced Sub/Unsub baselines, per-term disbursements, history-anchored disbursement view, PDF case-file export, 12 ED scenarios)
+4. Who it's for (FAA, devs, QA, PMs)
+5. The 5-step SOR formula (compressed)
+6. Hard rules teams miss (lifted from your Claude draft)
+7. How to use the tool (pick scenario → adjust inputs → 6-step walkthrough → export PDF)
+8. Sources & confidence (Confirmed / Inferred / Pending labels)
+9. Local development: `bun install`, `bun dev`, `bun test` — TanStack Start + Vite + Tailwind v4
+10. Contributing & issues
+11. Disclaimer (not an ED publication, not an Anthology product, not a substitute for the COD Tech Ref)
+12. Author + links to `myproduct.life` and LinkedIn placeholder
 
-The current disbursement walker in `src/lib/sor.ts` uses term-level history, not loan-type-specific history:
+Drops from your Claude draft (those belong on the hub site, not this repo): full 5-tag table, LLE grandfathering matrix, Workforce Pell section, product-strategy section, status table.
 
-- `hasHistoricalActivity(term)` becomes true as soon as **either** Paid Sub **or** Paid Unsub is non-zero.
-- Then both of these are computed:
-  - `lockedSub`
-  - `lockedUnsub`
-- Since `paidUnsub` is still `0`, `lockedUnsub` becomes `0` instead of `null`.
-- `distributeRemainingPool(...)` then assumes term 1 already consumed **zero Unsub**, so it moves the whole Unsub pool forward.
+### 2. Quick fix for the React #418 hydration error
 
-That is why the screen “acts like you already decided Unsub = 0” before you have finished typing.
+You're hitting a hydration mismatch in production (minified React error 418). I'll do a quick SSR-safety pass on any client-only `Date.now()` / `new Date()` / `Math.random()` rendering in `src/routes/index.tsx` and `pdfExport.ts` so the preview stops crashing.
 
-## What Lovable should change
+---
 
-### 1. Separate Sub history from Unsub history
-**Edit:** `src/lib/sor.ts`
+## Answers to your blockers (no code, just guidance)
 
-Replace the single term-level locking behavior with separate checks:
+### Your DNS is already done — you're not stuck, you're just one step away
 
-- `hasSubHistory(term)` → true only when Sub has actually been entered/refunded/committed
-- `hasUnsubHistory(term)` → true only when Unsub has actually been entered/refunded/committed
+Looking at the records you pasted, DNS is **fully configured correctly**:
 
-Then use them separately:
-- `lockedSub` should only lock Sub
-- `lockedUnsub` should only lock Unsub
+- `A @ → 185.158.133.1` ✅ root domain
+- `A sor → 185.158.133.1` ✅ subdomain for this project
+- `A www → 185.158.133.1` ✅ www
+- `TXT _lovable` ✅ root verification
+- `TXT _lovable.sor` ✅ subdomain verification
+- `TXT _lovable.www` ✅ www verification
 
-In other words:
-- entering **Paid Sub** must **not** automatically lock **Unsub**
-- entering **Paid Unsub** must **not** automatically lock **Sub**
+**Custom Domain URL already shows `https://sor.myproduct.life` as Active for this project.** That means Step 3 is done. Nothing left to do in the DNS Manager dialog — you can close it.
 
-### 2. Stop treating an unfilled Paid Unsub field as a real zero
-**Edit:** `src/routes/index.tsx`
-**Edit:** `src/lib/sor.ts`
+To confirm: open `https://sor.myproduct.life` in a new browser tab. If the SOR calculator loads, you're live. If it shows "Verifying" or "Setting up", give it 5–60 minutes for SSL provisioning. - this shows Publish or update your Lovable project for it to appear here.
 
-Right now the numeric inputs coerce empty to `0` immediately:
-- `CompactNum` converts `""` to `0`
-- so the engine cannot distinguish “not entered yet” from “intentionally zero”
+### GitHub repo is still named `reduction-ray`
 
-Fix this by making the paid/refund inputs support a pending blank state:
-- use `number | null` for paid/refund fields, or
-- keep local draft strings and only commit numeric values when the field is actually entered/confirmed
+The clone URL `https://github.com/tirath5u/reduction-ray.git` means the repo on GitHub.com was never renamed. Fix it manually on GitHub (this is a 30-second operation Lovable cannot do for you):
 
-Required behavior:
-- **blank** = not yet entered, do not anchor this loan type
-- **0** = explicit user decision, do anchor at zero if confirmed
+1. Go to `https://github.com/tirath5u/reduction-ray - when i open this - it opens to` [tirath5u/project-sor](https://github.com/tirath5u/project-sor)
+2. **Settings** tab (top of repo) → scroll to **Repository name**
+3. Change `reduction-ray` → `project-sor` → **Rename - its already project-sor**
+4. GitHub auto-redirects the old URL, so the Lovable ↔ GitHub sync keeps working without reconnecting
+5. New clone URL becomes `https://github.com/tirath5u/project-sor.git`
 
-This is the most important usability fix.
+### Move the root domain `myproduct.life` to the hub project
 
-### 3. Use Disbursed only for term-level credit history, not for both loan buckets
-**Edit:** `src/lib/sor.ts`
+Right now `myproduct.life` (apex) and `www.myproduct.life` are pointing at THIS project (the SOR calculator). You want them pointing at `myproduct-hub` instead. Do this in Lovable's UI:
 
-Keep these concepts separate:
+1. Open this project (Project SOR) → **Project Settings → Domains**
+2. Find `myproduct.life` (the apex, not `sor.myproduct.life`) → **⋯ → Remove**. Do the same for `www.myproduct.life`. **Keep** `sor.myproduct.life` connected. - they are already removed - its only [sor.myproduct.life](http://sor.myproduct.life) now - changed this before you wrote this. 
+3. Open the `myproduct-hub` project → **Project Settings → Domains → Connect Domain**
+4. Add `myproduct.life`, then add `www.myproduct.life` separately. Set apex as **Primary** so www redirects to it.
+5. The DNS records already exist (`A @`, `A www`), so Lovable will verify in minutes, not hours.
 
-- **Term disbursed / actual credits** → affects historical credits and AY% recalculation
-- **Paid Sub entered** → anchors only Sub for that term
-- **Paid Unsub entered** → anchors only Unsub for that term
+**While the apex is being moved**, `myproduct.life` may briefly 404 or show the SOR app — that's normal during the swap. `sor.myproduct.life` keeps working the whole time. - pleasecheck if htings look ok now. 
 
-Do not let one bucket’s entry force the other bucket to zero.
+### Build the hub site (separate task, not this turn)
 
-### 4. Add UI guardrails in the disbursement grid
-**Edit:** `src/routes/index.tsx`
+Once the domain is moved to `myproduct-hub`, that project needs actual content — white + light-maroon landing page with a tile linking to `sor.myproduct.life`. That's a separate prompt in the `myproduct-hub` Lovable project, not here.
 
-Add a short helper note near the Paid Sub / Paid Unsub columns:
+---
 
-- “Entering Paid Sub does not zero Paid Unsub. Each loan type is anchored separately.”
+## Files to change (this turn)
 
-Optionally:
-- disable paid/refund inputs until **Disbursed** is checked, or
-- show a subtle “pending entry” state until both values are intentionally committed
+- **Create** `README.md` at project root
+- **Edit** `src/routes/index.tsx` — SSR-safe any client-only date/random rendering (hydration fix)
 
-That will make the behavior understandable for users while they type.
+## Out of scope (you do these yourself, outside this project)
 
-### 5. Add regression tests for the exact bug
-**Edit:** `src/lib/sor.test.ts`
-
-Add these tests:
-
-1. **Partial-entry bug repro**
-   - 3 standard terms
-   - dependent grade 1
-   - annual need = 2000
-   - full-time 12/12/12
-   - disbursement view
-   - enter `Paid Sub = 666` for term 1
-   - leave `Paid Unsub` unentered
-   - expect term 1 **Unsub is NOT forced to 0**
-   - expect terms 2 and 3 **do NOT jump to 1750 / 1750**
-
-2. **Explicit zero still works**
-   - same scenario
-   - explicitly commit `Paid Unsub = 0`
-   - expect Unsub to redistribute to future eligible terms
-
-3. **Symmetry test**
-   - enter `Paid Unsub` first
-   - confirm Sub is not zeroed or redistributed incorrectly
-
-4. **Final committed pair**
-   - `Paid Sub = 666`, `Paid Unsub = 1166`
-   - term 1 anchors correctly
-   - future terms remain correct
-
-## Acceptance criteria
-
-After the fix:
-
-- If the user types **Paid Sub = 666** and has **not yet entered Paid Unsub**, the app should still show term 1 as having its planned Unsub eligibility, not zero.
-- The app should **not** immediately push the whole Unsub pool into later terms.
-- Only after the user explicitly enters or confirms **Paid Unsub = 0** should the engine treat term 1 Unsub as zero and redistribute the remainder.
-- Sub and Unsub must anchor independently.
-
-## Exact message to give Lovable
-
-Tell Lovable:
-
-- “The disbursement engine is anchoring both loan buckets from a single partial edit. When I type Paid Sub first, the app treats blank Paid Unsub as an explicit zero and redistributes all Unsub to future terms.”
-- “Fix this by separating Sub history from Unsub history in `src/lib/sor.ts`. Entering Paid Sub must not lock Unsub, and entering Paid Unsub must not lock Sub.”
-- “Do not coerce blank paid/refund inputs to `0` while the user is still typing. Blank must mean ‘not entered yet’; explicit `0` must mean ‘intentionally zero.’”
-- “Add regression tests for the exact case: 3 terms, dependent grade 1, annual need 2000, term 1 Paid Sub 666 entered before Paid Unsub. The app must not show term 1 Unsub as 0 or move all Unsub to terms 2 and 3.”
-
-## Files to change
-
-- **Edit:** `src/lib/sor.ts`
-- **Edit:** `src/routes/index.tsx`
-- **Edit:** `src/lib/sor.test.ts`
-
-## Small recommended polish while in there
-
-If Lovable wants to make this extra clear in the UI:
-- add a “pending / not yet entered” state for paid amounts
-- add helper copy in disbursement mode explaining that Sub and Unsub are anchored independently
+- Renaming the GitHub repo `reduction-ray` → `project-sor` (do it on GitHub.com)
+- Moving `myproduct.life` apex from SOR to hub (do it in Lovable Project Settings)
+- Building the `myproduct-hub` landing page (separate Lovable project)
+- Renaming the user-facing app title (you said keep it)
