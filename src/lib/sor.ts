@@ -709,6 +709,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
       subBaseline,
       unsubBaseline,
       additionalUnsubBase,
+      caps,
       finalSubByKey,
       finalUnsubByKey,
       adjustmentSubByKey,
@@ -845,6 +846,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     subBaseline,
     unsubBaseline,
     additionalUnsubBase,
+    caps,
     finalSubByKey,
     finalUnsubByKey,
     adjustmentSubByKey,
@@ -865,6 +867,7 @@ function assemble(args: {
   subBaseline: number;
   unsubBaseline: number;
   additionalUnsubBase: number;
+  caps: { sub: number; unsub: number; combined: number };
   finalSubByKey: Record<string, number>;
   finalUnsubByKey: Record<string, number>;
   adjustmentSubByKey: Record<string, number>;
@@ -883,6 +886,7 @@ function assemble(args: {
     subBaseline,
     unsubBaseline,
     additionalUnsubBase,
+    caps,
     finalSubByKey,
     finalUnsubByKey,
     adjustmentSubByKey,
