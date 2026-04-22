@@ -59,6 +59,9 @@ export const Route = createRootRoute({
           "Free calculator for OBBBA Schedule of Reductions. Compute reduced Sub/Unsub loan limits for less-than-full-time students, 2026–27 award year.",
       },
       { name: "twitter:image", content: "https://sor.myproduct.life/og-image.png" },
+      { name: "description", content: "Project FAIS is a web application that calculates student financial aid based on enrollment and financial need." },
+      { property: "og:description", content: "Project FAIS is a web application that calculates student financial aid based on enrollment and financial need." },
+      { name: "twitter:description", content: "Project FAIS is a web application that calculates student financial aid based on enrollment and financial need." },
     ],
     links: [
       {
