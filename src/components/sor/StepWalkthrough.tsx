@@ -40,6 +40,14 @@ export function StepWalkthrough({
   const ftExpr = inputs.ayFtCredits > 0 ? String(inputs.ayFtCredits) : "-";
   const ayPctRoundedPct = Math.round(results.sorPctRounded * 100);
 
+  // Step 3 formula proof — for "equal" model, payout = pool ÷ N eligible terms.
+  const N = results.eligibleTermsCount;
+  const equalSubPer = N > 0 ? Math.floor(results.reducedSub / N) : 0;
+  const equalUnsubPer = N > 0 ? Math.floor(results.reducedUnsub / N) : 0;
+  // Proportional model — sum of FT credits across eligible terms is the
+  // weighting denominator.
+  const eligibleFtSum = eligible.reduce((s, t) => s + t.ftCredits, 0);
+
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
       <div className="mb-4 flex items-center justify-between">
@@ -147,21 +155,67 @@ export function StepWalkthrough({
         />
         <p className="mb-2 text-xs text-muted-foreground">
           {inputs.distributionModel === "equal"
-            ? `Equal model: ${fmtCurrency(results.reducedSub)} Sub split across ${results.eligibleTermsCount} eligible term${results.eligibleTermsCount === 1 ? "" : "s"} (whole-dollar; last term absorbs remainder).`
-            : `Proportional model: ${fmtCurrency(results.reducedSub)} Sub weighted by each term's FT credits.`}
-          {eligible.length > 0 ? (
-            <>
-              {" "}
-              Resulting Sub split:{" "}
-              <span className="font-medium text-foreground">
-                {eligible
-                  .map((t) => `${t.label} ${fmtCurrency(t.shareSub)}`)
-                  .join(" · ")}
-              </span>
-              .
-            </>
-          ) : null}
+            ? `Equal model: pool ÷ N eligible terms. Whole dollars; the last term absorbs any remainder.`
+            : `Proportional model: each term's share = pool × (term FT ÷ Σ eligible-term FT).`}
         </p>
+        {N > 0 ? (
+          <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {inputs.distributionModel === "equal" ? (
+              <>
+                <Eq>
+                  <div className="text-muted-foreground">Sub payout per term:</div>
+                  {fmtCurrency(results.reducedSub)} ÷ {N} ={" "}
+                  <span className="font-semibold text-primary">
+                    {fmtCurrency(equalSubPer)}
+                  </span>
+                  {results.reducedSub % N !== 0 ? (
+                    <span className="text-muted-foreground">
+                      {" "}
+                      (last term absorbs +{fmtCurrency(results.reducedSub - equalSubPer * N)})
+                    </span>
+                  ) : null}
+                </Eq>
+                <Eq>
+                  <div className="text-muted-foreground">Unsub payout per term:</div>
+                  {fmtCurrency(results.reducedUnsub)} ÷ {N} ={" "}
+                  <span className="font-semibold text-primary">
+                    {fmtCurrency(equalUnsubPer)}
+                  </span>
+                  {results.reducedUnsub % N !== 0 ? (
+                    <span className="text-muted-foreground">
+                      {" "}
+                      (last term absorbs +{fmtCurrency(results.reducedUnsub - equalUnsubPer * N)})
+                    </span>
+                  ) : null}
+                </Eq>
+              </>
+            ) : (
+              eligible.map((t) => (
+                <Eq key={t.key}>
+                  <div className="text-muted-foreground">{t.label} Sub share:</div>
+                  {fmtCurrency(results.reducedSub)} × ({t.ftCredits} ÷ {eligibleFtSum}) ={" "}
+                  <span className="font-semibold text-primary">
+                    {fmtCurrency(t.shareSub)}
+                  </span>
+                </Eq>
+              ))
+            )}
+          </div>
+        ) : null}
+        {eligible.length > 0 ? (
+          <p className="mb-2 text-xs text-foreground">
+            Resulting split:{" "}
+            <span className="font-medium">
+              {eligible
+                .map(
+                  (t) =>
+                    `${t.label} Sub ${fmtCurrency(t.shareSub)} / Unsub ${fmtCurrency(t.shareUnsub)}`,
+                )
+                .join(" · ")}
+            </span>
+            .
+          </p>
+        ) : null}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[320px] text-[11px] tabular-nums">
             <thead>
@@ -242,7 +296,7 @@ export function StepWalkthrough({
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="px-2 py-1.5 font-medium">Term</th>
                  <th className="px-2 py-1.5 text-right font-medium">Term enrollment %</th>
-                 <th className="px-2 py-1.5 text-right font-medium">Intensity %</th>
+                 <th className="px-2 py-1.5 text-right font-medium">Enrollment Intensity (EI) %</th>
                 <th className="px-2 py-1.5 text-right font-medium">Calc Sub</th>
                 <th className="px-2 py-1.5 text-right font-medium">Calc Unsub</th>
                 <th className="px-2 py-1.5 text-right font-medium">Final Sub</th>

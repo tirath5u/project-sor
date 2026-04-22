@@ -209,7 +209,7 @@ export function exportSORCaseFile({
       [
         "Term",
         "Term %",
-        "Intensity %",
+        "Enrollment Intensity (EI) %",
         "Share Sub",
         "Share Unsub",
         "Final Sub",
@@ -261,6 +261,35 @@ export function exportSORCaseFile({
     .map((t) => `${t.label} ${fmtCurrency(t.shareUnsub)}`)
     .join(", ");
 
+  // Step 3 formula proof — equal vs proportional
+  const N = results.eligibleTermsCount;
+  const equalSubPer = N > 0 ? Math.floor(results.reducedSub / N) : 0;
+  const equalUnsubPer = N > 0 ? Math.floor(results.reducedUnsub / N) : 0;
+  const eligibleFtSum = eligibleTerms.reduce((s, t) => s + t.ftCredits, 0);
+  let step3Formula = "";
+  if (N > 0) {
+    if (inputs.distributionModel === "equal") {
+      const subRem = results.reducedSub - equalSubPer * N;
+      const unsubRem = results.reducedUnsub - equalUnsubPer * N;
+      step3Formula =
+        ` Equal model: Sub ${fmtCurrency(results.reducedSub)} / ${N} = ${fmtCurrency(equalSubPer)} per term` +
+        (subRem !== 0 ? ` (last term absorbs +${fmtCurrency(subRem)})` : "") +
+        `; Unsub ${fmtCurrency(results.reducedUnsub)} / ${N} = ${fmtCurrency(equalUnsubPer)} per term` +
+        (unsubRem !== 0 ? ` (last term absorbs +${fmtCurrency(unsubRem)})` : "") +
+        ".";
+    } else {
+      step3Formula =
+        ` Proportional model: each term's share = pool x (term FT / ${eligibleFtSum} eligible-term FT). ` +
+        eligibleTerms
+          .map(
+            (t) =>
+              `${t.label} Sub = ${fmtCurrency(results.reducedSub)} x (${t.ftCredits}/${eligibleFtSum}) = ${fmtCurrency(t.shareSub)}`,
+          )
+          .join("; ") +
+        ".";
+    }
+  }
+
   const steps: string[] = [
     `Step 1 — Initial maxima (Combined Limit Shifting Rule): Sub = MIN(Annual Need ${fmtCurrency(
       inputs.annualNeed,
@@ -278,7 +307,7 @@ export function exportSORCaseFile({
     )}; Unsub ${fmtCurrency(results.unsubBaseline)} x ${ayPctRoundedPct}% = ${fmtCurrency(
       results.reducedUnsub,
     )}.`,
-    `Step 3 — Per-term share via "${inputs.distributionModel}" model across ${results.eligibleTermsCount} eligible term(s). Sub split: ${shareSubLine || "n/a"}. Unsub split: ${shareUnsubLine || "n/a"}.`,
+    `Step 3 — Per-term share via "${inputs.distributionModel}" model across ${results.eligibleTermsCount} eligible term(s).${step3Formula} Resulting Sub split: ${shareSubLine || "n/a"}. Unsub split: ${shareUnsubLine || "n/a"}.`,
     `Step 4 — Term enrollment % (term enrolled / term FT): ${enabledTerms
       .map(
         (t) =>

@@ -59,8 +59,8 @@ export function TermsCards({ results }: { results: SORResults }) {
                 {Math.round(t.termPct * 100)}%
               </dd>
               <dt className="flex items-center gap-1 text-muted-foreground">
-                Intensity %
-                <InfoTip>(Enrolled + lapsed credits from prior below-half-time terms) ÷ FT. May exceed 100% (balloon).</InfoTip>
+                Enrollment Intensity (EI) %
+                <InfoTip>EI = (Enrolled + lapsed credits from prior below-half-time terms) ÷ FT. May exceed 100% (balloon). Distinct from Term enrollment %, which counts only this term's enrolled credits.</InfoTip>
               </dt>
               <dd
                 className={cn(

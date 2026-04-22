@@ -181,4 +181,24 @@ describe("SOR engine — Combined Limit Shifting Rule (regression)", () => {
     expect(r.subBaseline).toBe(1000);
     expect(r.unsubBaseline).toBe(0);
   });
+
+  it("override snap-back: toggling overrideLimits off re-derives caps from lookup", () => {
+    const inp = depFreshman(5000);
+    // User had override on with arbitrary manual caps...
+    inp.overrideLimits = true;
+    inp.subStatutory = 1234;
+    inp.unsubStatutory = 0;
+    const overridden = calculateSOR(inp);
+    expect(overridden.effectiveSubStatutory).toBe(1234);
+    expect(overridden.effectiveUnsubStatutory).toBe(0);
+    // ...then turns it off. Manual caps stay in inputs (UI doesn't auto-clear)
+    // but the engine MUST ignore them and use the lookup table.
+    inp.overrideLimits = false;
+    const snapped = calculateSOR(inp);
+    expect(snapped.effectiveSubStatutory).toBe(3500);
+    expect(snapped.effectiveUnsubStatutory).toBe(2000);
+    expect(snapped.effectiveCombinedLimit).toBe(5500);
+    expect(snapped.subBaseline).toBe(3500);
+    expect(snapped.unsubBaseline).toBe(2000);
+  });
 });
