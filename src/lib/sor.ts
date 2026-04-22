@@ -948,11 +948,13 @@ function assemble(args: {
 
   const effectiveCredits = ordered.map((t) => effectiveCreditsBy(t));
   const intensityPct = computeIntensityPct(ordered, effectiveCredits);
+  // Display lock: same independent rule. Sub anchors only if Sub was entered;
+  // Unsub anchors only if Unsub was entered.
   const lockedSubDisplay = ordered.map((t) =>
-    hasHistoricalActivity(t) ? netAmount(t.paidSub, t.refundSub) : null,
+    hasSubHistory(t) ? netAmount(t.paidSub, t.refundSub) : null,
   );
   const lockedUnsubDisplay = ordered.map((t) =>
-    hasHistoricalActivity(t) ? netAmount(t.paidUnsub, t.refundUnsub) : null,
+    hasUnsubHistory(t) ? netAmount(t.paidUnsub, t.refundUnsub) : null,
   );
   const weights = ordered.map((t) => t.ftCredits || 0);
   const displaySub = computeDisplayRows({
