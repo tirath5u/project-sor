@@ -34,23 +34,38 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Dynamic Schedule of Reductions calculator for Title IV loan disbursements. Compute SOR %, reduced annual limits, and per-term payouts instantly.",
+          "Free calculator for OBBBA Schedule of Reductions. Compute reduced Sub/Unsub loan limits for less-than-full-time students, 2026–27 award year.",
       },
       { name: "author", content: "Tirath Chhatriwala" },
+      { name: "robots", content: "index, follow" },
       { property: "og:title", content: "SOR Calculator - Schedule of Reductions" },
       {
         property: "og:description",
-        content: "Calculate Title IV Schedule of Reductions per-term disbursements live in your browser.",
+        content:
+          "Free calculator for OBBBA Schedule of Reductions. Compute reduced Sub/Unsub loan limits for less-than-full-time students, 2026–27 award year.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { property: "og:url", content: "https://sor.myproduct.life" },
+      { property: "og:site_name", content: "SOR Calculator" },
+      { property: "og:image", content: "https://sor.myproduct.life/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "SOR Calculator — Schedule of Reductions for OBBBA 2026–27" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "SOR Calculator - Schedule of Reductions" },
+      {
+        name: "twitter:description",
+        content:
+          "Free calculator for OBBBA Schedule of Reductions. Compute reduced Sub/Unsub loan limits for less-than-full-time students, 2026–27 award year.",
+      },
+      { name: "twitter:image", content: "https://sor.myproduct.life/og-image.png" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "canonical", href: "https://sor.myproduct.life/" },
     ],
   }),
   shellComponent: RootShell,
