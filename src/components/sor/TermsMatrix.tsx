@@ -37,15 +37,15 @@ const ROWS: RowDef[] = [
   },
   {
     label: "Term %",
-    hint: "Enrolled ÷ FT (informational only; SOR uses Annual %)",
-    tip: "Enrolled ÷ FT for this single term. Informational only — the SOR engine drives reductions from the Annual %.",
+    hint: "Term enrollment %: enrolled ÷ FT (informational only; SOR uses the Academic Year %).",
+    tip: "Term enrollment % = enrolled credits ÷ term full-time credits. Informational — the engine drives reductions from the Academic Year enrollment %.",
     format: "pct",
     get: (t) => t.termPct,
     total: () => null,
   },
   {
     label: "Intensity %",
-    hint: "Display intensity including carried LTHT credits",
+    hint: "Enrollment intensity after carried below-half-time credits",
     tip: "(Enrolled + lapsed credits from prior below-half-time terms) ÷ FT. Can exceed 100% (balloon). Capped to 100% in the actual COD export.",
     format: "pct",
     get: (t) => t.intensityPct,
@@ -145,7 +145,7 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
         </div>
         <div className="flex items-center gap-2 text-[10px]">
           <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold uppercase tracking-wide text-primary">
-            AY {Math.round(results.sorPctRounded * 100)}%
+            Academic Year {Math.round(results.sorPctRounded * 100)}%
           </span>
           <span className="rounded-full bg-accent/30 px-2 py-0.5 font-semibold uppercase tracking-wide text-accent-foreground">
             {results.eligibleTermsCount} eligible
