@@ -136,15 +136,33 @@ export function exportSORCaseFile({
 
   // ---------- 2. COMPUTED BASELINES ----------
   sectionHeading("2. Computed baselines");
-  doc.text(
-    safe(`Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(
-      results.unsubBaseline,
-    )} · derived from $${inputs.subStatutory.toLocaleString()} / $${inputs.unsubStatutory.toLocaleString()} statutory caps via the Combined Limit Shifting Rule.`),
-    margin,
-    y,
-    { maxWidth: pageWidth - margin * 2 },
-  );
-  y += 30;
+  {
+    const baselineText = safe(
+      `Effective statutory caps: Sub ${fmtCurrency(
+        results.effectiveSubStatutory,
+      )} + Unsub ${fmtCurrency(
+        results.effectiveUnsubStatutory,
+      )} = Combined annual limit ${fmtCurrency(results.effectiveCombinedLimit)}.`,
+    );
+    const split1 = doc.splitTextToSize(baselineText, pageWidth - margin * 2);
+    doc.text(split1, margin, y);
+    y += split1.length * 11 + 4;
+
+    const ruleText = safe(
+      `Combined Limit Shifting Rule: Sub baseline = MIN(Annual Need ${fmtCurrency(
+        inputs.annualNeed,
+      )}, Sub cap ${fmtCurrency(results.effectiveSubStatutory)}) = ${fmtCurrency(
+        results.subBaseline,
+      )}. Unsub baseline = Combined limit ${fmtCurrency(
+        results.effectiveCombinedLimit,
+      )} - Sub baseline ${fmtCurrency(results.subBaseline)} = ${fmtCurrency(
+        results.unsubBaseline,
+      )}.`,
+    );
+    const split2 = doc.splitTextToSize(ruleText, pageWidth - margin * 2);
+    doc.text(split2, margin, y);
+    y += split2.length * 11 + 6;
+  }
   if (results.additionalUnsubBase > 0) {
     doc.setTextColor(...COLOR_PRIMARY);
     doc.text(
