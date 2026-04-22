@@ -547,7 +547,9 @@ function SORCalculatorPage() {
                   Unsub baseline {fmtCurrency(results.unsubBaseline)}
                 </span>
                 <span className="text-muted-foreground/70">
-                  · from {fmtCurrency(inputs.subStatutory)} / {fmtCurrency(inputs.unsubStatutory)} statutory caps
+                  · from {fmtCurrency(results.effectiveSubStatutory)} Sub +{" "}
+                  {fmtCurrency(results.effectiveUnsubStatutory)} Unsub ={" "}
+                  {fmtCurrency(results.effectiveCombinedLimit)} combined limit
                 </span>
                 {results.additionalUnsubBase > 0 ? (
                   <span className="font-semibold text-accent-foreground">
