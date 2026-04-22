@@ -58,7 +58,7 @@ export const SCENARIOS: Scenario[] = [
       "Both terms are below full-time, so the annual loan limit is reduced (AY % = 63%).",
     summary: "Sub $3,500 · Fall 6 / Spring 9 · 24 AY FT.",
     expected:
-      "Sub annual cap reduces to $2,205 for the year. Paid as $551 in Fall and $827 in Spring.",
+      "Sub annual cap reduces to $2,205 for the year. Paid as $551 in Fall and $827 in Spring. Unsub headroom from the combined limit also reduces by 63%.",
     expectedTotals: { sub: 2205 },
     build: () =>
       mk(
@@ -68,8 +68,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
@@ -96,8 +94,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 5500,
-          subStatutory: 3500,
-          unsubStatutory: 2000,
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
@@ -115,7 +111,7 @@ export const SCENARIOS: Scenario[] = [
       "Total credits add up to a full academic year, so there's no AY-% reduction. The summer term carries an overload.",
     summary: "Sub $2,000 · Fall 9 / Spring 12 / Summer 15 · 36 AY FT.",
     expected:
-      "Annual stays at $2,000. Per-term shares of about $666 / $667 / $667. Disbursements: $500 / $667 / $833.",
+      "Sub stays at $2,000 (need < cap). Combined-limit shifting fills Unsub from the $5,500 ceiling — Unsub baseline = $3,500. AY % = 100% so neither is reduced.",
     expectedTotals: { sub: 2000 },
     build: () =>
       mk(
@@ -126,8 +122,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 2000,
-          subStatutory: 2000,
-          unsubStatutory: 0,
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
@@ -156,8 +150,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 5500,
-          subStatutory: 3500,
-          unsubStatutory: 2000,
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
@@ -187,8 +179,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
         },
         {
           term1: {
@@ -228,8 +218,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
         },
         {
           term1: {
@@ -270,8 +258,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
         },
         {
           term1: {
@@ -314,8 +300,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
@@ -342,8 +326,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 3500,
-          subStatutory: 3500,
-          unsubStatutory: 0,
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 15 },
@@ -370,8 +352,6 @@ export const SCENARIOS: Scenario[] = [
           gradeLevel: "g1",
           dependency: "dependent",
           annualNeed: 2000,
-          subStatutory: 2000,
-          unsubStatutory: 0,
         },
         {
           term1: { enabled: true, ftCredits: 12, enrolledCredits: 9 },

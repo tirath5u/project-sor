@@ -35,8 +35,10 @@ export function StepWalkthrough({
   results: SORResults;
 }) {
   const eligible = results.termResults.filter((t) => t.eligible);
+  const enabled = results.termResults.filter((t) => t.enabled);
   const enrolledExpr = eligible.map((t) => t.effectiveCredits).join(" + ") || "0";
   const ftExpr = inputs.ayFtCredits > 0 ? String(inputs.ayFtCredits) : "-";
+  const ayPctRoundedPct = Math.round(results.sorPctRounded * 100);
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
@@ -55,8 +57,12 @@ export function StepWalkthrough({
           tip="Combined Limit Shifting Rule (34 CFR 685.203): Sub = MIN(stat cap, need). Unsub fills the remaining Combined Limit headroom, NOT remaining need."
         />
         <p className="mb-2 text-xs text-muted-foreground">
-          Annual Need {fmtCurrency(inputs.annualNeed)} is split: Sub takes the lesser of need
-          and the Sub statutory cap; Unsub gets the remainder up to the Unsub cap.
+          Annual Need {fmtCurrency(inputs.annualNeed)} is split using the effective
+          statutory caps (Sub {fmtCurrency(results.effectiveSubStatutory)} + Unsub{" "}
+          {fmtCurrency(results.effectiveUnsubStatutory)} = Combined{" "}
+          {fmtCurrency(results.effectiveCombinedLimit)}). Sub takes the lesser of
+          need and the Sub cap; Unsub fills the remaining combined-limit headroom
+          (NOT remaining need).
           {results.additionalUnsubBase > 0
             ? " Additional Unsub headroom (PLUS denial) is added to the Unsub ceiling."
             : ""}
@@ -67,7 +73,7 @@ export function StepWalkthrough({
         <div className="grid grid-cols-2 gap-2">
           <Eq>
             <div className="text-muted-foreground">Sub:</div>
-            min({fmtCurrency(inputs.subStatutory)},{" "}
+            min({fmtCurrency(results.effectiveSubStatutory)},{" "}
             {fmtCurrency(
               results.doubleReductionApplied ? results.subNeedAdjusted : results.subNeed,
             )}
@@ -78,11 +84,8 @@ export function StepWalkthrough({
             <div className="text-muted-foreground">
               Unsub{results.additionalUnsubBase > 0 ? " (+ Addl Unsub)" : ""}:
             </div>
-            min({fmtCurrency(inputs.unsubStatutory)},{" "}
-            {fmtCurrency(
-              results.doubleReductionApplied ? results.unsubNeedAdjusted : results.unsubNeed,
-            )}
-            )
+            {fmtCurrency(results.effectiveCombinedLimit)} -{" "}
+            {fmtCurrency(results.subBaseline)}
             {results.additionalUnsubBase > 0
               ? ` + ${fmtCurrency(results.additionalUnsubBase)}`
               : ""}{" "}
@@ -98,29 +101,29 @@ export function StepWalkthrough({
       <section className="border-b border-border py-4">
         <StepHeader
           n={2}
-          title="AY Enrollment % → Annual Loan Limit"
+          title="Academic Year Enrollment % → Annual Loan Limit"
           tip="Σ enrolled credits across eligible terms ÷ AY FT credits. This is the SOR % applied to baselines."
         />
         <Eq>
-          AY % = ({enrolledExpr}) ÷ {ftExpr}
+          Academic Year enrollment % = ({enrolledExpr}) ÷ {ftExpr}
           <br />={" "}
           <span className="font-semibold text-primary">
             {(results.enrollmentFractionRaw * 100).toFixed(2)}%
           </span>{" "}
           → rounded ={" "}
           <span className="font-semibold text-primary">
-            {Math.round(results.sorPctRounded * 100)}%
+            {ayPctRoundedPct}%
           </span>
         </Eq>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <Eq>
             <div className="text-muted-foreground">Annual Sub limit:</div>
-            {fmtCurrency(results.subBaseline)} × {Math.round(results.sorPctRounded * 100)}% ={" "}
+            {fmtCurrency(results.subBaseline)} × {ayPctRoundedPct}% ={" "}
             <span className="font-semibold text-primary">{fmtCurrency(results.reducedSub)}</span>
           </Eq>
           <Eq>
             <div className="text-muted-foreground">Annual Unsub limit:</div>
-            {fmtCurrency(results.unsubBaseline)} × {Math.round(results.sorPctRounded * 100)}%
+            {fmtCurrency(results.unsubBaseline)} × {ayPctRoundedPct}%
             {results.shiftedToUnsub > 0
               ? ` + ${fmtCurrency(results.shiftedToUnsub)} shift`
               : ""}{" "}
@@ -144,8 +147,20 @@ export function StepWalkthrough({
         />
         <p className="mb-2 text-xs text-muted-foreground">
           {inputs.distributionModel === "equal"
-            ? "Equal model: annual ÷ N eligible terms (whole-dollar; last term absorbs remainder)."
-            : "Proportional model: annual × (term FT credits ÷ Σ term FT credits)."}
+            ? `Equal model: ${fmtCurrency(results.reducedSub)} Sub split across ${results.eligibleTermsCount} eligible term${results.eligibleTermsCount === 1 ? "" : "s"} (whole-dollar; last term absorbs remainder).`
+            : `Proportional model: ${fmtCurrency(results.reducedSub)} Sub weighted by each term's FT credits.`}
+          {eligible.length > 0 ? (
+            <>
+              {" "}
+              Resulting Sub split:{" "}
+              <span className="font-medium text-foreground">
+                {eligible
+                  .map((t) => `${t.label} ${fmtCurrency(t.shareSub)}`)
+                  .join(" · ")}
+              </span>
+              .
+            </>
+          ) : null}
         </p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[320px] text-[11px] tabular-nums">
@@ -179,22 +194,59 @@ export function StepWalkthrough({
       <section className="pt-4">
         <StepHeader
           n={4}
-          title="Per-term % × Share = Disbursement"
+          title="Per-term Enrollment % × Share = Disbursement"
           tip="Step 5 caps each share by min(term %, 100%). Excess + lapsed credits forward (balance-forward) to remaining eligible terms with headroom."
         />
         <p className="mb-2 text-xs text-muted-foreground">
-          Term % = enrolled ÷ term FT (can exceed 100%). Disbursement = share × min(%, 100%);
-          overflow + lapsed shares forward to remaining eligible terms with headroom (v18 § H).
+          Term enrollment % = enrolled ÷ term full-time credits (can exceed 100%).
+          Disbursement = share × min(term %, 100%); any overflow or lapsed share
+          carries forward to remaining eligible terms with headroom.
         </p>
+        {enabled.length > 0 ? (
+          <ul className="mb-3 space-y-1 rounded-lg bg-muted/40 px-3 py-2 text-[11px] leading-snug text-foreground">
+            {enabled.map((t) => {
+              if (!t.eligible) {
+                return (
+                  <li key={t.key} className="text-muted-foreground">
+                    <span className="font-semibold text-foreground">{t.label}:</span>{" "}
+                    Below half-time ({t.effectiveCredits}/{t.ftCredits}). Ineligible —
+                    share forwards to next eligible term.
+                  </li>
+                );
+              }
+              const pctRaw = Math.round(t.termPct * 100);
+              const pctCapped = Math.min(100, pctRaw);
+              return (
+                <li key={t.key}>
+                  <span className="font-semibold text-foreground">{t.label}:</span>{" "}
+                  {t.effectiveCredits} ÷ {t.ftCredits} = {pctRaw}% ({pctCapped}% used).
+                  Sub {fmtCurrency(t.shareSub)} × {pctCapped}% ={" "}
+                  <span className="font-semibold">{fmtCurrency(t.calcSub)}</span>
+                  {t.coaCapSub > 0 && t.calcSub > t.coaCapSub
+                    ? ` → COA-capped to ${fmtCurrency(t.finalSub)}`
+                    : ""}
+                  {t.shareUnsub > 0 || t.calcUnsub > 0
+                    ? `; Unsub ${fmtCurrency(t.shareUnsub)} × ${pctCapped}% = ${fmtCurrency(t.calcUnsub)}${t.coaCapUnsub > 0 && t.calcUnsub > t.coaCapUnsub ? ` → ${fmtCurrency(t.finalUnsub)}` : ""}`
+                    : ""}
+                  . Final: <span className="font-semibold text-primary">
+                    {fmtCurrency(t.finalSub)} Sub / {fmtCurrency(t.finalUnsub)} Unsub
+                  </span>.
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[420px] text-[11px] tabular-nums">
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="px-2 py-1.5 font-medium">Term</th>
-                 <th className="px-2 py-1.5 text-right font-medium">Term %</th>
+                 <th className="px-2 py-1.5 text-right font-medium">Term enrollment %</th>
                  <th className="px-2 py-1.5 text-right font-medium">Intensity %</th>
                 <th className="px-2 py-1.5 text-right font-medium">Calc Sub</th>
                 <th className="px-2 py-1.5 text-right font-medium">Calc Unsub</th>
+                <th className="px-2 py-1.5 text-right font-medium">Final Sub</th>
+                <th className="px-2 py-1.5 text-right font-medium">Final Unsub</th>
               </tr>
             </thead>
             <tbody>
@@ -220,6 +272,12 @@ export function StepWalkthrough({
                       </td>
                       <td className="px-2 py-1.5 text-right">
                         {fmtCurrency(t.calcUnsub)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-semibold text-primary">
+                        {fmtCurrency(t.finalSub)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-semibold text-primary">
+                        {fmtCurrency(t.finalUnsub)}
                       </td>
                     </tr>
                   );

@@ -164,6 +164,10 @@ export interface SORResults {
   enrollmentFractionRaw: number;
   sorPctRounded: number; // = min(1, round(ayPct*100)/100)
   noReduction: boolean;
+  /** Effective statutory caps actually used by the engine (lookup or override). */
+  effectiveSubStatutory: number;
+  effectiveUnsubStatutory: number;
+  effectiveCombinedLimit: number;
   /** Derived Sub need (= min(annualNeed, subStatutory)). */
   subNeed: number;
   /** Derived Unsub need (= min(annualNeed − subNeed, unsubStatutory)). */
@@ -571,6 +575,32 @@ export function splitNeed(
   return { subNeed, unsubNeed };
 }
 
+/**
+ * Resolve the statutory caps the engine should actually use.
+ *
+ * - When `overrideLimits` is false, ALWAYS derive caps from the lookup table
+ *   (grade level, dependency, optional PLUS-denial uplift) — never trust
+ *   stale `inp.subStatutory` / `inp.unsubStatutory` values that may have
+ *   been left over from a prior scenario load.
+ * - When `overrideLimits` is true, honor the manual caps the user typed in.
+ *
+ * This is the single source of truth for Step 1 baselines and the combined
+ * limit (Combined Limit Shifting Rule, 34 CFR 685.203).
+ */
+export function resolveCaps(inp: SORInputs): {
+  sub: number;
+  unsub: number;
+  combined: number;
+} {
+  if (inp.overrideLimits) {
+    const sub = Math.max(0, inp.subStatutory);
+    const unsub = Math.max(0, inp.unsubStatutory);
+    return { sub, unsub, combined: sub + unsub };
+  }
+  const lim = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied);
+  return { sub: lim.sub, unsub: lim.unsub, combined: lim.sub + lim.unsub };
+}
+
 export function calculateSOR(inp: SORInputs): SORResults {
   const warnings: string[] = [];
   if (inp.calType === 3 || inp.calType === 4) {
@@ -592,15 +622,17 @@ export function calculateSOR(inp: SORInputs): SORResults {
   //   B. Actual_Sub_Initial   = MIN(Annual_Need, Subsidized_Max)        (need-based)
   //   C. Actual_Unsub_Initial = Total_Combined_Limit - Actual_Sub_Initial (NON-need-based;
   //      the unsub bucket absorbs whatever sub did not consume of the combined cap).
-  const { subNeed, unsubNeed } = splitNeed(
-    inp.annualNeed,
-    inp.subStatutory,
-    inp.unsubStatutory,
-  );
-  const combinedLimit = Math.max(0, inp.subStatutory) + Math.max(0, inp.unsubStatutory);
-  const subBaseline = Math.min(inp.subStatutory, subNeed);
+  //
+  // CRITICAL: use resolveCaps() so we always honor the lookup table when
+  // `overrideLimits` is false — never trust raw inp.subStatutory/unsubStatutory
+  // (those may be stale from a prior scenario load and hide the combined-limit
+  // shifting rule).
+  const caps = resolveCaps(inp);
+  const { subNeed, unsubNeed } = splitNeed(inp.annualNeed, caps.sub, caps.unsub);
+  const combinedLimit = caps.combined;
+  const subBaseline = Math.min(caps.sub, subNeed);
   // Unsub baseline = the remainder of the combined cap after Subsidized consumes
-  // its need-based share. `inp.unsubStatutory` already includes any PLUS-denial
+  // its need-based share. `caps.unsub` already includes any PLUS-denial
   // uplift coming from the lookup, so do not add it a second time downstream.
   const unsubBaseline = Math.max(0, combinedLimit - subBaseline);
   const lookup = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied);
@@ -644,7 +676,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     const pct = first.ayPctRounded;
     const subNeedReduced = Math.min(subNeed, Math.round(subNeed * pct));
     const unsubNeedReduced = Math.min(unsubNeed, Math.round(unsubNeed * pct));
-    const subBaseline2 = Math.min(inp.subStatutory, subNeedReduced);
+    const subBaseline2 = Math.min(caps.sub, subNeedReduced);
     const unsubBaseline2 = Math.max(0, combinedLimit - subBaseline2);
     if (subBaseline2 === subBaseline && unsubBaseline2 === unsubBaselineEff) {
       return { snap: first, reduced: false };
@@ -677,6 +709,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
       subBaseline,
       unsubBaseline,
       additionalUnsubBase,
+      caps,
       finalSubByKey,
       finalUnsubByKey,
       adjustmentSubByKey,
@@ -813,6 +846,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     subBaseline,
     unsubBaseline,
     additionalUnsubBase,
+    caps,
     finalSubByKey,
     finalUnsubByKey,
     adjustmentSubByKey,
@@ -833,6 +867,7 @@ function assemble(args: {
   subBaseline: number;
   unsubBaseline: number;
   additionalUnsubBase: number;
+  caps: { sub: number; unsub: number; combined: number };
   finalSubByKey: Record<string, number>;
   finalUnsubByKey: Record<string, number>;
   adjustmentSubByKey: Record<string, number>;
@@ -851,6 +886,7 @@ function assemble(args: {
     subBaseline,
     unsubBaseline,
     additionalUnsubBase,
+    caps,
     finalSubByKey,
     finalUnsubByKey,
     adjustmentSubByKey,
@@ -863,8 +899,8 @@ function assemble(args: {
 
   const pct = finalSnap.ayPctRounded;
 
-  const subStatBaseline = inp.subStatutory;
-  const unsubStatBaseline = inp.unsubStatutory;
+  const subStatBaseline = caps.sub;
+  const unsubStatBaseline = caps.unsub;
   const subNeedAdjusted = inp.applyDoubleReduction
     ? Math.min(subNeed, Math.round(subNeed * pct))
     : subNeed;
@@ -882,8 +918,8 @@ function assemble(args: {
   let reducedUnsub = reducedUnsubRaw;
   let shiftedToUnsub = 0;
   if (inp.applySubUnsubShift) {
-    const subStatCeiling = round(inp.subStatutory * pct);
-    const unsubStatCeiling = round(inp.unsubStatutory * pct);
+    const subStatCeiling = round(caps.sub * pct);
+    const unsubStatCeiling = round(caps.unsub * pct);
     const subUnused = Math.max(0, subStatCeiling - reducedSubRaw);
     const unsubHeadroom = Math.max(0, unsubStatCeiling - reducedUnsubRaw);
     shiftedToUnsub = Math.min(subUnused, unsubHeadroom);
@@ -990,6 +1026,9 @@ function assemble(args: {
     enrollmentFractionRaw: finalSnap.ayPctRaw,
     sorPctRounded: pct,
     noReduction: pct >= 1,
+    effectiveSubStatutory: caps.sub,
+    effectiveUnsubStatutory: caps.unsub,
+    effectiveCombinedLimit: caps.combined,
     subNeed,
     unsubNeed,
     subBaseline,

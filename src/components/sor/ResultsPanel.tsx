@@ -79,7 +79,7 @@ export function ResultsPanel({
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-white/10 p-3">
             <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-80">
-              AY %
+              Academic Year %
               <InfoTip>Sum of enrolled credits across eligible terms ÷ AY full-time credits, rounded.</InfoTip>
             </div>
             <div className="mt-1 text-2xl font-bold tabular-nums">

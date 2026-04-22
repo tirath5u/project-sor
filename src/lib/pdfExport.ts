@@ -136,15 +136,33 @@ export function exportSORCaseFile({
 
   // ---------- 2. COMPUTED BASELINES ----------
   sectionHeading("2. Computed baselines");
-  doc.text(
-    safe(`Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(
-      results.unsubBaseline,
-    )} · derived from $${inputs.subStatutory.toLocaleString()} / $${inputs.unsubStatutory.toLocaleString()} statutory caps via the Combined Limit Shifting Rule.`),
-    margin,
-    y,
-    { maxWidth: pageWidth - margin * 2 },
-  );
-  y += 30;
+  {
+    const baselineText = safe(
+      `Effective statutory caps: Sub ${fmtCurrency(
+        results.effectiveSubStatutory,
+      )} + Unsub ${fmtCurrency(
+        results.effectiveUnsubStatutory,
+      )} = Combined annual limit ${fmtCurrency(results.effectiveCombinedLimit)}.`,
+    );
+    const split1 = doc.splitTextToSize(baselineText, pageWidth - margin * 2);
+    doc.text(split1, margin, y);
+    y += split1.length * 11 + 4;
+
+    const ruleText = safe(
+      `Combined Limit Shifting Rule: Sub baseline = MIN(Annual Need ${fmtCurrency(
+        inputs.annualNeed,
+      )}, Sub cap ${fmtCurrency(results.effectiveSubStatutory)}) = ${fmtCurrency(
+        results.subBaseline,
+      )}. Unsub baseline = Combined limit ${fmtCurrency(
+        results.effectiveCombinedLimit,
+      )} - Sub baseline ${fmtCurrency(results.subBaseline)} = ${fmtCurrency(
+        results.unsubBaseline,
+      )}.`,
+    );
+    const split2 = doc.splitTextToSize(ruleText, pageWidth - margin * 2);
+    doc.text(split2, margin, y);
+    y += split2.length * 11 + 6;
+  }
   if (results.additionalUnsubBase > 0) {
     doc.setTextColor(...COLOR_PRIMARY);
     doc.text(
@@ -222,7 +240,7 @@ export function exportSORCaseFile({
   // ---------- 5. ANNUAL TOTALS ----------
   sectionHeading("5. Annual totals");
   writeKV([
-    ["AY %", pct(results.sorPctRounded)],
+    ["Academic Year enrollment %", pct(results.sorPctRounded)],
     ["Annual Sub limit (reduced)", fmtCurrency(results.reducedSub)],
     ["Annual Unsub limit (reduced)", fmtCurrency(results.reducedUnsub)],
     ["Final Sub disbursed (sum)", fmtCurrency(results.totalFinalSub)],
@@ -233,18 +251,54 @@ export function exportSORCaseFile({
 
   // ---------- 6. STEP WALKTHROUGH ----------
   sectionHeading("6. Step walkthrough");
+  const eligibleTerms = results.termResults.filter((t) => t.eligible);
+  const enabledTerms = results.termResults.filter((t) => t.enabled);
+  const ayPctRoundedPct = Math.round(results.sorPctRounded * 100);
+  const shareSubLine = eligibleTerms
+    .map((t) => `${t.label} ${fmtCurrency(t.shareSub)}`)
+    .join(", ");
+  const shareUnsubLine = eligibleTerms
+    .map((t) => `${t.label} ${fmtCurrency(t.shareUnsub)}`)
+    .join(", ");
+
   const steps: string[] = [
-    `Step 1 — Initial maxima: Sub baseline ${fmtCurrency(
+    `Step 1 — Initial maxima (Combined Limit Shifting Rule): Sub = MIN(Annual Need ${fmtCurrency(
+      inputs.annualNeed,
+    )}, Sub cap ${fmtCurrency(results.effectiveSubStatutory)}) = ${fmtCurrency(
       results.subBaseline,
-    )}, Unsub baseline ${fmtCurrency(results.unsubBaseline)} (statutory caps $${inputs.subStatutory.toLocaleString()} / $${inputs.unsubStatutory.toLocaleString()}).`,
-    `Step 2 — AY enrollment %: ${results.enrolledSumAll} / ${results.ftSumAll} = ${(
+    )}. Unsub = Combined limit ${fmtCurrency(
+      results.effectiveCombinedLimit,
+    )} - ${fmtCurrency(results.subBaseline)} = ${fmtCurrency(results.unsubBaseline)}.`,
+    `Step 2 — Academic Year enrollment %: ${results.enrolledSumAll} / ${results.ftSumAll} = ${(
       results.enrollmentFractionRaw * 100
-    ).toFixed(2)}% -> rounded to ${pct(results.sorPctRounded)}. Reduced annual Sub ${fmtCurrency(
+    ).toFixed(2)}% -> rounded to ${ayPctRoundedPct}%. Reduced annual Sub ${fmtCurrency(
+      results.subBaseline,
+    )} x ${ayPctRoundedPct}% = ${fmtCurrency(
       results.reducedSub,
-    )}, Unsub ${fmtCurrency(results.reducedUnsub)}.`,
-    `Step 3 — Per-term share via "${inputs.distributionModel}" model across ${results.eligibleTermsCount} eligible term(s).`,
-    `Step 4 — Per-term enrollment intensity (term enrolled / term FT). Capped to 100% for disbursement math.`,
-    `Step 5 — Disbursement = share x min(intensity, 100%). Unspent share carries forward to remaining eligible terms; finals are clamped to per-term COA caps.`,
+    )}; Unsub ${fmtCurrency(results.unsubBaseline)} x ${ayPctRoundedPct}% = ${fmtCurrency(
+      results.reducedUnsub,
+    )}.`,
+    `Step 3 — Per-term share via "${inputs.distributionModel}" model across ${results.eligibleTermsCount} eligible term(s). Sub split: ${shareSubLine || "n/a"}. Unsub split: ${shareUnsubLine || "n/a"}.`,
+    `Step 4 — Term enrollment % (term enrolled / term FT): ${enabledTerms
+      .map(
+        (t) =>
+          `${t.label} ${t.effectiveCredits}/${t.ftCredits} = ${Math.round(
+            t.termPct * 100,
+          )}%${t.eligible ? "" : " (ineligible, below half-time)"}`,
+      )
+      .join("; ")}.`,
+    `Step 5 — Disbursement = share x min(term %, 100%); over/underflow carries forward; finals clamped to per-term COA caps. ${enabledTerms
+      .filter((t) => t.eligible)
+      .map((t) => {
+        const pctCapped = Math.min(100, Math.round(t.termPct * 100));
+        const subPart = `Sub ${fmtCurrency(t.shareSub)} x ${pctCapped}% = ${fmtCurrency(t.calcSub)}${t.coaCapSub > 0 && t.calcSub > t.coaCapSub ? ` -> COA-capped to ${fmtCurrency(t.finalSub)}` : ""}`;
+        const unsubPart =
+          t.shareUnsub > 0 || t.calcUnsub > 0
+            ? `; Unsub ${fmtCurrency(t.shareUnsub)} x ${pctCapped}% = ${fmtCurrency(t.calcUnsub)}${t.coaCapUnsub > 0 && t.calcUnsub > t.coaCapUnsub ? ` -> ${fmtCurrency(t.finalUnsub)}` : ""}`
+            : "";
+        return `${t.label}: ${subPart}${unsubPart}. Final ${fmtCurrency(t.finalSub)} Sub / ${fmtCurrency(t.finalUnsub)} Unsub.`;
+      })
+      .join(" ")}`,
   ];
   steps.forEach((s) => {
     if (y > 720) {
