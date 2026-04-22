@@ -751,12 +751,15 @@ export function calculateSOR(inp: SORInputs): SORResults {
     if (!hasHistoricalActivity(t)) continue;
 
     const newSnap = runSnapshot(creditModeAt(i)).snap;
-      const lockedSub = ordered.map((term, idx) =>
-        hasHistoricalActivity(term) && idx <= i ? netAmount(term.paidSub, term.refundSub) : null,
-      );
-      const lockedUnsub = ordered.map((term, idx) =>
-        hasHistoricalActivity(term) && idx <= i ? netAmount(term.paidUnsub, term.refundUnsub) : null,
-      );
+    // CRITICAL: lock Sub and Unsub INDEPENDENTLY. Entering Paid Sub must NOT
+    // anchor Unsub at $0 just because the Unsub field is still blank, and vice
+    // versa. A bucket is only locked if THAT bucket has explicit user input.
+    const lockedSub = ordered.map((term, idx) =>
+      hasSubHistory(term) && idx <= i ? netAmount(term.paidSub, term.refundSub) : null,
+    );
+    const lockedUnsub = ordered.map((term, idx) =>
+      hasUnsubHistory(term) && idx <= i ? netAmount(term.paidUnsub, term.refundUnsub) : null,
+    );
     const distributedSub = distributeRemainingPool(
       newSnap.annualSub,
       ordered,
@@ -824,10 +827,10 @@ export function calculateSOR(inp: SORInputs): SORResults {
     hasHistoricalActivity(t) ? historicalCredits(t) : t.enrolledCredits,
   ).snap;
   const finalLockedSub = ordered.map((t) =>
-    hasHistoricalActivity(t) ? netAmount(t.paidSub, t.refundSub) : null,
+    hasSubHistory(t) ? netAmount(t.paidSub, t.refundSub) : null,
   );
   const finalLockedUnsub = ordered.map((t) =>
-    hasHistoricalActivity(t) ? netAmount(t.paidUnsub, t.refundUnsub) : null,
+    hasUnsubHistory(t) ? netAmount(t.paidUnsub, t.refundUnsub) : null,
   );
   const finalDistributedSub = distributeRemainingPool(
     finalSnap.annualSub,
