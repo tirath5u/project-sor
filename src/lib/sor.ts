@@ -676,7 +676,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     const pct = first.ayPctRounded;
     const subNeedReduced = Math.min(subNeed, Math.round(subNeed * pct));
     const unsubNeedReduced = Math.min(unsubNeed, Math.round(unsubNeed * pct));
-    const subBaseline2 = Math.min(inp.subStatutory, subNeedReduced);
+    const subBaseline2 = Math.min(caps.sub, subNeedReduced);
     const unsubBaseline2 = Math.max(0, combinedLimit - subBaseline2);
     if (subBaseline2 === subBaseline && unsubBaseline2 === unsubBaselineEff) {
       return { snap: first, reduced: false };
