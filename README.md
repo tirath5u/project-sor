@@ -1,4 +1,4 @@
-# Project SOR — Schedule of Reductions Calculator
+# Project SOR - Schedule of Reductions Calculator
 
 **An interactive calculator for the OBBBA Less-Than-Full-Time Reduction (Schedule of Reductions) for Direct Subsidized and Unsubsidized loans, 2026–27 award year.**
 
