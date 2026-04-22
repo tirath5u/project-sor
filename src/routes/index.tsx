@@ -519,20 +519,7 @@ function SORCalculatorPage() {
           </div>
 
           {inputs.overrideLimits ? (
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <NumberField
-                label="Sub statutory cap"
-                prefix="$"
-                value={inputs.subStatutory}
-                onChange={(v) => update({ subStatutory: v })}
-              />
-              <NumberField
-                label="Unsub statutory cap"
-                prefix="$"
-                value={inputs.unsubStatutory}
-                onChange={(v) => update({ unsubStatutory: v })}
-              />
-            </div>
+            <OverrideCapsBlock inputs={inputs} update={update} />
           ) : (
             <div className="mt-3 border-t border-border/60 pt-3">
               <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] leading-relaxed text-foreground">
