@@ -730,14 +730,14 @@ function SORCalculatorPage() {
                           </>
                         ) : null}
                         <td className="px-2 py-1.5">
-                          <CompactNum
+                          <CompactNumNullable
                             value={t.paidSub}
                             onChange={(v) => updateTerm(key, { paidSub: v })}
                             wide
                           />
                         </td>
                         <td className="px-2 py-1.5">
-                          <CompactNum
+                          <CompactNumNullable
                             value={t.paidUnsub}
                             onChange={(v) => updateTerm(key, { paidUnsub: v })}
                             wide
@@ -745,11 +745,11 @@ function SORCalculatorPage() {
                         </td>
                         <td className="px-2 py-1.5">
                           <div className="flex gap-1">
-                            <CompactNum
+                            <CompactNumNullable
                               value={t.refundSub}
                               onChange={(v) => updateTerm(key, { refundSub: v })}
                             />
-                            <CompactNum
+                            <CompactNumNullable
                               value={t.refundUnsub}
                               onChange={(v) => updateTerm(key, { refundUnsub: v })}
                             />
