@@ -65,10 +65,15 @@ export interface TermInput {
   /** Disbursement mode: actual credits enrolled at the time of this disbursement.
    * Replaces enrolledCredits in AY-pct math for past terms. */
   actualCredits: number;
-  paidSub: number;
-  paidUnsub: number;
-  refundSub: number;
-  refundUnsub: number;
+  /** Net-paid Sub. `null` = user has not entered a value yet (do NOT anchor).
+   *  `0` = explicit zero (anchor at $0). Any positive number anchors that amount. */
+  paidSub: number | null;
+  /** Net-paid Unsub. Same null/zero semantics as paidSub. */
+  paidUnsub: number | null;
+  /** Refunded Sub. Null = blank, 0 = explicit zero. */
+  refundSub: number | null;
+  /** Refunded Unsub. Null = blank, 0 = explicit zero. */
+  refundUnsub: number | null;
   coaCapSub: number;
   coaCapUnsub: number;
 }
