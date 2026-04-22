@@ -662,13 +662,13 @@ function SORCalculatorPage() {
                     <th className="px-2 py-2 font-medium">
                       <span className="inline-flex items-center gap-1">
                         Paid Sub
-                        <InfoTip>Sub amount already disbursed. Locks this term's Final value (history anchoring).</InfoTip>
+                        <InfoTip>Sub amount already disbursed. Locks ONLY the Sub bucket for this term. Leave blank if you have not entered Sub yet — blank ≠ $0. Enter 0 explicitly to anchor at zero.</InfoTip>
                       </span>
                     </th>
                     <th className="px-2 py-2 font-medium">
                       <span className="inline-flex items-center gap-1">
                         Paid Unsub
-                        <InfoTip>Unsub amount already disbursed. Locks this term's Final value (history anchoring).</InfoTip>
+                        <InfoTip>Unsub amount already disbursed. Locks ONLY the Unsub bucket for this term. Sub and Unsub are anchored independently — entering one does not zero the other.</InfoTip>
                       </span>
                     </th>
                     <th className="px-2 py-2 font-medium">
@@ -776,6 +776,16 @@ function SORCalculatorPage() {
               </table>
             </div>
           )}
+
+          {isDisbursementMode && activeTermKeys.length > 0 ? (
+            <p className="mt-2 rounded-md border border-border/40 bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
+              <span className="font-semibold text-foreground">Tip:</span>{" "}
+              Sub and Unsub are anchored <em>independently</em>. Entering Paid
+              Sub does not zero Paid Unsub — leave a field blank until you have
+              committed that loan type. Type <code className="rounded bg-background px-1">0</code>{" "}
+              explicitly only if you intend to anchor the bucket at $0.
+            </p>
+          ) : null}
 
           {/* Distribution + view-mode toggles */}
           <div className="mt-4 border-t border-border/60 pt-3">
@@ -924,6 +934,52 @@ function CompactNum({
       className={`h-8 rounded-md border border-border bg-background px-1.5 text-right text-[11px] tabular-nums focus:outline-none focus:ring-2 focus:ring-ring ${
         wide ? "w-20" : "w-14"
       }`}
+    />
+  );
+}
+
+/**
+ * Nullable variant for paid/refund inputs.
+ *
+ * - Empty string → `null` (NOT $0). The engine treats null as "not entered yet"
+ *   so it will not anchor the bucket. This is what lets the user type Paid Sub
+ *   first without immediately zero-anchoring Paid Unsub.
+ * - "0" → `0`. Explicit zero anchor.
+ * - Otherwise → the parsed number.
+ */
+function CompactNumNullable({
+  value,
+  onChange,
+  wide,
+}: {
+  value: number | null;
+  onChange: (v: number | null) => void;
+  wide?: boolean;
+}) {
+  const display = value === null ? "" : String(value);
+  const isPending = value === null;
+  return (
+    <input
+      type="number"
+      value={display}
+      min={0}
+      placeholder="—"
+      onFocus={(e) => e.target.select()}
+      onChange={(e) => {
+        const raw = e.target.value;
+        if (raw === "") {
+          onChange(null);
+          return;
+        }
+        const n = Number(raw);
+        onChange(Number.isFinite(n) ? n : null);
+      }}
+      className={`h-8 rounded-md border bg-background px-1.5 text-right text-[11px] tabular-nums focus:outline-none focus:ring-2 focus:ring-ring ${
+        isPending
+          ? "border-dashed border-border/60 text-muted-foreground/70"
+          : "border-border"
+      } ${wide ? "w-20" : "w-14"}`}
+      title={isPending ? "Not entered — bucket is not anchored" : undefined}
     />
   );
 }
