@@ -164,6 +164,10 @@ export interface SORResults {
   enrollmentFractionRaw: number;
   sorPctRounded: number; // = min(1, round(ayPct*100)/100)
   noReduction: boolean;
+  /** Effective statutory caps actually used by the engine (lookup or override). */
+  effectiveSubStatutory: number;
+  effectiveUnsubStatutory: number;
+  effectiveCombinedLimit: number;
   /** Derived Sub need (= min(annualNeed, subStatutory)). */
   subNeed: number;
   /** Derived Unsub need (= min(annualNeed − subNeed, unsubStatutory)). */
