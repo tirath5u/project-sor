@@ -292,16 +292,24 @@ export function defaultInputs(): SORInputs {
 }
 
 const round = (n: number) => Math.round(n);
-const netAmount = (paid: number, refund: number) => Math.max(0, (paid || 0) - (refund || 0));
+const netAmount = (paid: number | null, refund: number | null) =>
+  Math.max(0, (paid ?? 0) - (refund ?? 0));
 
+/** True if the user has explicitly entered a Sub paid/refund value for this term.
+ *  `null` = blank (not entered) and is intentionally NOT treated as activity. */
+function hasSubHistory(term: TermInput) {
+  return term.paidSub !== null || term.refundSub !== null;
+}
+
+/** True if the user has explicitly entered an Unsub paid/refund value for this term. */
+function hasUnsubHistory(term: TermInput) {
+  return term.paidUnsub !== null || term.refundUnsub !== null;
+}
+
+/** Term has any historical activity at all (either bucket entered or marked disbursed).
+ *  Used for credit-history (actualCredits vs. enrolledCredits) only. */
 function hasHistoricalActivity(term: TermInput) {
-  return (
-    term.disbursed ||
-    term.paidSub !== 0 ||
-    term.paidUnsub !== 0 ||
-    term.refundSub !== 0 ||
-    term.refundUnsub !== 0
-  );
+  return term.disbursed || hasSubHistory(term) || hasUnsubHistory(term);
 }
 
 function historicalCredits(term: TermInput) {
