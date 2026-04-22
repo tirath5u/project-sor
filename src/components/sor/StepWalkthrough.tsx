@@ -194,22 +194,59 @@ export function StepWalkthrough({
       <section className="pt-4">
         <StepHeader
           n={4}
-          title="Per-term % × Share = Disbursement"
+          title="Per-term Enrollment % × Share = Disbursement"
           tip="Step 5 caps each share by min(term %, 100%). Excess + lapsed credits forward (balance-forward) to remaining eligible terms with headroom."
         />
         <p className="mb-2 text-xs text-muted-foreground">
-          Term % = enrolled ÷ term FT (can exceed 100%). Disbursement = share × min(%, 100%);
-          overflow + lapsed shares forward to remaining eligible terms with headroom (v18 § H).
+          Term enrollment % = enrolled ÷ term full-time credits (can exceed 100%).
+          Disbursement = share × min(term %, 100%); any overflow or lapsed share
+          carries forward to remaining eligible terms with headroom.
         </p>
+        {enabled.length > 0 ? (
+          <ul className="mb-3 space-y-1 rounded-lg bg-muted/40 px-3 py-2 text-[11px] leading-snug text-foreground">
+            {enabled.map((t) => {
+              if (!t.eligible) {
+                return (
+                  <li key={t.key} className="text-muted-foreground">
+                    <span className="font-semibold text-foreground">{t.label}:</span>{" "}
+                    Below half-time ({t.effectiveCredits}/{t.ftCredits}). Ineligible —
+                    share forwards to next eligible term.
+                  </li>
+                );
+              }
+              const pctRaw = Math.round(t.termPct * 100);
+              const pctCapped = Math.min(100, pctRaw);
+              return (
+                <li key={t.key}>
+                  <span className="font-semibold text-foreground">{t.label}:</span>{" "}
+                  {t.effectiveCredits} ÷ {t.ftCredits} = {pctRaw}% ({pctCapped}% used).
+                  Sub {fmtCurrency(t.shareSub)} × {pctCapped}% ={" "}
+                  <span className="font-semibold">{fmtCurrency(t.calcSub)}</span>
+                  {t.coaCapSub > 0 && t.calcSub > t.coaCapSub
+                    ? ` → COA-capped to ${fmtCurrency(t.finalSub)}`
+                    : ""}
+                  {t.shareUnsub > 0 || t.calcUnsub > 0
+                    ? `; Unsub ${fmtCurrency(t.shareUnsub)} × ${pctCapped}% = ${fmtCurrency(t.calcUnsub)}${t.coaCapUnsub > 0 && t.calcUnsub > t.coaCapUnsub ? ` → ${fmtCurrency(t.finalUnsub)}` : ""}`
+                    : ""}
+                  . Final: <span className="font-semibold text-primary">
+                    {fmtCurrency(t.finalSub)} Sub / {fmtCurrency(t.finalUnsub)} Unsub
+                  </span>.
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[420px] text-[11px] tabular-nums">
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="px-2 py-1.5 font-medium">Term</th>
-                 <th className="px-2 py-1.5 text-right font-medium">Term %</th>
+                 <th className="px-2 py-1.5 text-right font-medium">Term enrollment %</th>
                  <th className="px-2 py-1.5 text-right font-medium">Intensity %</th>
                 <th className="px-2 py-1.5 text-right font-medium">Calc Sub</th>
                 <th className="px-2 py-1.5 text-right font-medium">Calc Unsub</th>
+                <th className="px-2 py-1.5 text-right font-medium">Final Sub</th>
+                <th className="px-2 py-1.5 text-right font-medium">Final Unsub</th>
               </tr>
             </thead>
             <tbody>
@@ -235,6 +272,12 @@ export function StepWalkthrough({
                       </td>
                       <td className="px-2 py-1.5 text-right">
                         {fmtCurrency(t.calcUnsub)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-semibold text-primary">
+                        {fmtCurrency(t.finalSub)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right font-semibold text-primary">
+                        {fmtCurrency(t.finalUnsub)}
                       </td>
                     </tr>
                   );
