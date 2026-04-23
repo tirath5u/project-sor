@@ -736,7 +736,8 @@ export function calculateSOR(inp: SORInputs): SORResults {
   }
 
   // ----- Disbursement mode walker -----
-  const weights = ordered.map((t) => t.ftCredits || 0);
+  const weightsFor = (creditsFn: (t: TermInput) => number) =>
+    ordered.map((t) => Math.max(0, creditsFn(t) || 0));
   const creditModeAt = (lockedThrough: number) => (term: TermInput) => {
     const idx = ordered.findIndex((x) => x.key === term.key);
     return idx <= lockedThrough && hasHistoricalActivity(ordered[idx])
@@ -767,7 +768,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
       newSnap.eligible,
       lockedSub,
       inp.distributionModel,
-      weights,
+      weightsFor(creditModeAt(i)),
     );
     const distributedUnsub = distributeRemainingPool(
       newSnap.annualUnsub,
@@ -775,7 +776,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
       newSnap.eligible,
       lockedUnsub,
       inp.distributionModel,
-      weights,
+      weightsFor(creditModeAt(i)),
     );
 
     ordered.forEach((term, idx) => {
@@ -839,7 +840,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     finalSnap.eligible,
     finalLockedSub,
     inp.distributionModel,
-    weights,
+    weightsFor((t) => (hasHistoricalActivity(t) ? historicalCredits(t) : t.enrolledCredits)),
   );
   const finalDistributedUnsub = distributeRemainingPool(
     finalSnap.annualUnsub,
@@ -847,7 +848,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     finalSnap.eligible,
     finalLockedUnsub,
     inp.distributionModel,
-    weights,
+    weightsFor((t) => (hasHistoricalActivity(t) ? historicalCredits(t) : t.enrolledCredits)),
   );
   ordered.forEach((t, i) => {
     finalSubByKey[t.key] = finalDistributedSub[i];
