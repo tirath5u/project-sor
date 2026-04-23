@@ -146,7 +146,7 @@ function LifecyclePage() {
                   href="https://www.linkedin.com/in/tirath-c-7228b814/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-medium not-italic text-foreground/90 underline-offset-2 hover:underline"
+                  className="font-medium not-italic text-credit-maroon underline-offset-2 hover:underline"
                 >
                   Tirath Chhatriwala
                 </a>
