@@ -139,9 +139,6 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-gradient-to-r from-primary/5 to-transparent px-4 py-3">
         <div>
           <h3 className="text-sm font-semibold text-foreground">Per-term Calculation Matrix</h3>
-          <p className="text-[11px] text-muted-foreground">
-            Spreadsheet-style view mirroring v18 master sections B-J.
-          </p>
         </div>
         <div className="flex items-center gap-2 text-[10px]">
           <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold uppercase tracking-wide text-primary">
