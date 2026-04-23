@@ -84,8 +84,8 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
           </Button>
         </form>
         <div className="mt-6 border-t border-border/60 pt-4 text-center">
-          <p className="text-[11px] text-muted-foreground [font-variant-caps:all-small-caps]">
-            Built by{" "}
+          <p className="text-[11px] text-muted-foreground">
+            built by{" "}
             <a
               href={LINKEDIN_URL}
               target="_blank"
@@ -93,7 +93,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
               className="inline-flex items-center gap-1 font-medium text-credit-maroon underline-offset-2 hover:underline"
             >
               <Bird className="h-3 w-3" aria-hidden="true" />
-              Tirath Chhatriwala
+              tirath chhatriwala
             </a>
           </p>
         </div>
