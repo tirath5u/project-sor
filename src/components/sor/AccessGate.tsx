@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Calculator, Lock } from "lucide-react";
+import { Bird, Calculator, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,14 +84,15 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
           </Button>
         </form>
         <div className="mt-6 border-t border-border/60 pt-4 text-center">
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground [font-variant-caps:all-small-caps]">
             Built by{" "}
             <a
               href={LINKEDIN_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-credit-maroon underline-offset-2 hover:underline"
+              className="inline-flex items-center gap-1 font-medium text-credit-maroon underline-offset-2 hover:underline"
             >
+              <Bird className="h-3 w-3" aria-hidden="true" />
               Tirath Chhatriwala
             </a>
           </p>
