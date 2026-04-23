@@ -241,13 +241,13 @@ function SORCalculatorPage() {
                   The Schedule of Reductions (SOR) calculates how Direct Loan annual limits are reduced for less-than-full-time enrollment under the One Big Beautiful Bill Act. This tool computes the AY %, the reduced Sub/Unsub annual pools, and the per-term disbursements per 34 CFR 685.203.
                 </InfoTip>
               </h1>
-              <p className="text-[10px] text-muted-foreground/80 sm:text-[11px]">
+              <p className="text-[10px] italic text-muted-foreground/80 sm:text-[11px]">
                 built by{" "}
                 <a
                   href="https://www.linkedin.com/in/tirath-c-7228b814/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-medium text-credit-maroon underline-offset-2 hover:underline"
+                  className="text-credit-maroon underline-offset-2 hover:underline"
                 >
                   tirath chhatriwala
                 </a>

@@ -84,13 +84,13 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
           </Button>
         </form>
         <div className="mt-6 border-t border-border/60 pt-4 text-center">
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[11px] italic text-muted-foreground">
             built by{" "}
             <a
               href={LINKEDIN_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-credit-maroon underline-offset-2 hover:underline"
+              className="text-credit-maroon underline-offset-2 hover:underline"
             >
               tirath chhatriwala
             </a>
