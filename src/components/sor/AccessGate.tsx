@@ -90,7 +90,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
               href={LINKEDIN_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-foreground underline-offset-2 hover:underline"
+              className="font-medium text-credit-maroon underline-offset-2 hover:underline"
             >
               Tirath Chhatriwala
             </a>
