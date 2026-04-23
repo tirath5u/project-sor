@@ -958,7 +958,7 @@ function assemble(args: {
   const lockedUnsubDisplay = ordered.map((t) =>
     hasUnsubHistory(t) ? netAmount(t.paidUnsub, t.refundUnsub) : null,
   );
-  const weights = ordered.map((t) => t.ftCredits || 0);
+  const weights = ordered.map((t) => Math.max(0, effectiveCreditsBy(t) || 0));
   const displaySub = computeDisplayRows({
     annual: reducedSub,
     termsInOrder: ordered,
