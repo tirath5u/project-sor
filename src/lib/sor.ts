@@ -13,8 +13,9 @@
  *            Loan annual limit = initialMax × min(ayPct, 100%).
  *   STEP 3 — Per-term SHARE of the annual loan limit. Two models (v18 § G):
  *              · "equal"        → annual ÷ N eligible terms
- *              · "proportional" → annual × (term FT credits ÷ Σ term FT credits)
- *            Whole-dollar; last term absorbs the rounding remainder.
+ *              · "proportional" → remaining dollars × (current enrolled credits ÷
+ *                remaining eligible enrolled credits)
+ *            Whole-dollar; remaining terms are rebalanced after each term.
  *   STEP 4 — Per-term ENROLLMENT % = term enrolled ÷ term FT (can exceed 100%).
  *   STEP 5 — Disbursement = termShare × min(termPct, 100%). Plus v18 § H
  *            balance-forward: any unspent share (term % < 100%, ineligible
@@ -403,7 +404,7 @@ function distributeRunningPoolDetailed(
       payout =
         isLast || totalWeight <= 0
           ? remainingPool
-          : Math.floor((remainingPool * currentWeight) / totalWeight);
+          : Math.round((remainingPool * currentWeight) / totalWeight);
     } else {
       payout =
         isLast ? remainingPool : Math.floor(remainingPool / remainingEligibleIdx.length);
@@ -542,7 +543,7 @@ function computeSnapshot(
   const termPctRaw = termsInOrder.map((t) =>
     t.ftCredits > 0 ? effectiveCreditsBy(t) / t.ftCredits : 0,
   );
-  const weights = termsInOrder.map((t) => t.ftCredits || 0);
+  const weights = termsInOrder.map((t) => Math.max(0, effectiveCreditsBy(t) || 0));
   const unlocked = new Array<number | null>(termsInOrder.length).fill(null);
   const subDistribution = distributeRunningPoolDetailed(
     annualSub,
