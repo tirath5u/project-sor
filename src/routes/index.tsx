@@ -8,7 +8,6 @@ import {
   LayoutGrid,
   Table as TableIcon,
   GraduationCap,
-  Bird,
 } from "lucide-react";
 import {
   calculateSOR,
@@ -248,9 +247,8 @@ function SORCalculatorPage() {
                   href="https://www.linkedin.com/in/tirath-c-7228b814/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 font-medium text-credit-maroon underline-offset-2 hover:underline"
+                  className="font-medium text-credit-maroon underline-offset-2 hover:underline"
                 >
-                  <Bird className="h-3 w-3" aria-hidden="true" />
                   tirath chhatriwala
                 </a>
               </p>
