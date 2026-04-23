@@ -2,6 +2,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 
 import appCss from "../styles.css?url";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AccessGate } from "@/components/sor/AccessGate";
 
 function NotFoundComponent() {
   return (
@@ -93,7 +94,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <TooltipProvider delayDuration={200} skipDelayDuration={100}>
-      <Outlet />
+      <AccessGate>
+        <Outlet />
+      </AccessGate>
     </TooltipProvider>
   );
 }

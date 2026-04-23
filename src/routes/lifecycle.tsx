@@ -140,6 +140,17 @@ function LifecyclePage() {
               <p className="text-[11px] text-muted-foreground sm:text-xs">
                 Cumulative Sub/Unsub vs OBBBA aggregate caps · saved locally.
               </p>
+              <p className="text-[10px] italic text-muted-foreground/80 sm:text-[11px]">
+                Built by{" "}
+                <a
+                  href="https://www.linkedin.com/in/tirath-c-7228b814/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium not-italic text-foreground/90 underline-offset-2 hover:underline"
+                >
+                  Tirath Chhatriwala
+                </a>
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
