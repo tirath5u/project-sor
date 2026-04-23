@@ -35,6 +35,30 @@ describe("SOR engine — scenario regression", () => {
 });
 
 describe("SOR engine — invariants", () => {
+  it("proportional distribution uses a balance-forward remaining-credit denominator", () => {
+    const inp = defaultInputs();
+    inp.overrideLimits = true;
+    inp.annualNeed = 1840;
+    inp.subStatutory = 1840;
+    inp.unsubStatutory = 0;
+    inp.distributionModel = "proportional";
+    inp.numStandardTerms = 3;
+    inp.ayFtCredits = 33;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 6 };
+    inp.terms.term3 = { ...inp.terms.term3, enabled: true, ftCredits: 12, enrolledCredits: 15 };
+
+    const r = calculateSOR(inp);
+    const fall = r.termResults.find((t) => t.key === "term1")!;
+    const spring = r.termResults.find((t) => t.key === "term2")!;
+    const t3 = r.termResults.find((t) => t.key === "term3")!;
+
+    expect(fall.finalSub).toBe(669);
+    expect(spring.finalSub).toBe(335);
+    expect(t3.finalSub).toBe(836);
+    expect(r.totalFinalSub).toBe(1840);
+  });
+
   it("annual Sub never exceeds the reduced annual cap", () => {
     for (const s of SCENARIOS) {
       const r = calculateSOR(s.build());
