@@ -208,7 +208,7 @@ MIT. See [`LICENSE`](LICENSE).
 
 - Hub: [myproduct.life](https://myproduct.life)
 - This tool: [sor.myproduct.life](https://sor.myproduct.life)
-- LinkedIn: [Tirath Chhatriwala]<https://www.linkedin.com/in/tirath-c-7228b814/>
+- LinkedIn: [Tirath Chhatriwala](https://www.linkedin.com/in/tirath-c-7228b814/)
 - More projects: <https://github.com/tirath5u>
 
 Project SOR is the first tool in the **myproduct.life** umbrella, a small and growing collection of practitioner-built tools, strategy notes, and product-thinking writing.
