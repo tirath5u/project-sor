@@ -394,7 +394,7 @@ function SORCalculatorPage() {
               <div className="flex items-center gap-1.5">
                 <Label className="text-xs font-medium">Award Year</Label>
                 <InfoTip>
-                  SOR is tied to the 2026-27 award year. A 2025-26 loan disbursed after 7/1/2026 is NOT subject to SOR.
+                  SOR is tied to the 2026-27 award year. A 2025-26 loan disbursed after 7/1/2026 is NOT subject to SOR. The available Grade Levels also depend on the Award Year.
                 </InfoTip>
               </div>
               <RadioGroup
@@ -480,7 +480,7 @@ function SORCalculatorPage() {
               <div className="flex items-center gap-1.5">
                 <Label className="text-xs font-medium">Grade Level</Label>
                 <InfoTip>
-                  Student Level Code (SLC). Determines the statutory Sub/Unsub annual maximums per 34 CFR 685.203, and gates Grad PLUS eligibility (codes 8 and above are graduate / professional).
+                  Student Level Code (SLC). Determines the statutory Sub/Unsub annual maximums per 34 CFR 685.203. Available Grade Levels depend on the selected Award Year - confirm with current ED guidance before production use.
                 </InfoTip>
               </div>
               <Select
@@ -537,13 +537,6 @@ function SORCalculatorPage() {
               tooltip="Student-requested Grad PLUS amount. Eligibility is COA minus all other estimated aid. Only available for graduate/professional Grade Levels."
             />
           </div>
-
-          {!inputs.loanLimitException && results.obbbTableIsPlaceholder ? (
-            <div className="mt-3 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-[11px] text-warning-foreground">
-              <span className="font-semibold uppercase tracking-wide">Heads up:</span>{" "}
-              OBBB 2026-27 limits for non-grandfathered students currently mirror the Legacy values pending the final ED rule. Verify before production use.
-            </div>
-          ) : null}
 
           {!results.sorApplicable ? (
             <div className="mt-2 rounded-lg border border-muted bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">

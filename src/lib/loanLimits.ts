@@ -17,6 +17,8 @@ export type GradeLevel =
   | "g3"
   | "g4"
   | "g5"
+  | "g6"
+  | "g7"
   | "g8"
   | "g9"
   | "g10"
@@ -25,7 +27,7 @@ export type GradeLevel =
   | "g13";
 
 // Backwards-compat aliases (used by older callers).
-export type LegacyGradeLevel = "g0_1" | "g3plus" | "g6" | "g7" | "graduate" | "professional";
+export type LegacyGradeLevel = "g0_1" | "g3plus";
 
 export type Dependency = "dependent" | "independent";
 
@@ -70,6 +72,16 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
     dependent: { sub: 5500, combined: 7500 },
     independent: { sub: 5500, combined: 12500 },
   },
+  // 2025-26 ONLY graduate/professional codes (retired for 2026-27 per COD Edit 208).
+  g6: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g7: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  // 2026-27 ONLY graduate/professional codes (new per OBBB).
   g8: {
     dependent: { sub: 0, combined: 20500 },
     independent: { sub: 0, combined: 20500 },
@@ -97,31 +109,29 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
 };
 
 /**
- * v19 — Two parallel limit tables.
- *
- * `LEGACY_LIMITS` mirrors the v18 values used for grandfathered students
- * (Loan Limit Exception = Yes). `OBBB_LIMITS` is the post-OBBB 2026-27 table
- * used for non-grandfathered students. Per the v19 plan §3.2, the OBBB table
- * currently MIRRORS the Legacy values as a working placeholder pending the
- * final ED rule. Update OBBB_LIMITS in place when the final values land.
+ * Two parallel limit tables. `LEGACY_LIMITS` is used for grandfathered
+ * students (Loan Limit Exception = Yes). `OBBB_LIMITS` is used for
+ * non-grandfathered students under the post-OBBB 2026-27 rules.
  */
 export const LEGACY_LIMITS = LIMITS;
 export const OBBB_LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = LIMITS;
 
-/** True until ED publishes the final OBBB 2026-27 limit table. Drives the UI banner. */
-export const OBBB_TABLE_IS_PLACEHOLDER = true;
+/** Reserved for any future UI banner about the OBBB limit table. */
+export const OBBB_TABLE_IS_PLACEHOLDER = false;
 
 export const GRADE_LABELS: Record<GradeLevel, string> = {
-  g0: "0 - 1st-Year Undergrad",
-  g1: "1 - 1st-Year Undergrad",
-  g2: "2 - 2nd-Year Undergrad",
-  g3: "3 - 3rd-Year Undergrad",
-  g4: "4 - 4th-Year Undergrad",
-  g5: "5 - 5th-Year Undergrad",
-  g8: "8 - Graduate, Never Professional",
+  g0: "0 - 1st Year Undergrad (no prior postsecondary)",
+  g1: "1 - 1st Year Undergrad (with prior postsecondary)",
+  g2: "2 - 2nd Year Undergrad",
+  g3: "3 - 3rd Year Undergrad",
+  g4: "4 - 4th Year Undergrad",
+  g5: "5 - 5th Year / Other Undergrad",
+  g6: "6 - Graduate/Professional (Continuing)",
+  g7: "7 - 1st Year Graduate/Professional",
+  g8: "8 - Graduate Never Professional",
   g9: "9 - Graduate (Independent only)",
   g10: "10 - Professional (Independent only)",
-  g11: "11 - Professional, Was Graduate",
+  g11: "11 - Professional Was Graduate",
   g12: "12 - Graduate Concurrent",
   g13: "13 - Professional Concurrent",
 };
@@ -132,21 +142,39 @@ export const GRADE_GROUPS: { label: string; codes: GradeLevel[] }[] = [
     codes: ["g0", "g1", "g2", "g3", "g4", "g5"],
   },
   {
-    label: "Graduate / Professional",
+    label: "Graduate / Professional (2025-26 only)",
+    codes: ["g6", "g7"],
+  },
+  {
+    label: "Graduate / Professional (2026-27 only)",
     codes: ["g8", "g9", "g10", "g11", "g12", "g13"],
   },
 ];
 
 /**
- * Which Grade Levels are valid for which Award Year.
+ * Which Grade Levels are valid for which Award Year, per COD Edit 208.
  *
- * Per the V19 spec, the same numeric Anthology/COD Grade Level mapping
- * applies to BOTH Award Years. The Loan Limit Exception (grandfathered)
- * toggle - not the Award Year - drives which limit table is used.
+ * - 2025-26: undergraduate codes 0-5 plus the legacy graduate/professional
+ *   codes 6 and 7. Codes 8-13 are invalid for 2025-26.
+ * - 2026-27: undergraduate codes 0-5 plus the new graduate/professional
+ *   codes 8-13 introduced by OBBB. Codes 6 and 7 are retired for 2026-27.
  */
 export const GRADE_LEVELS_BY_AWARD_YEAR: Record<"2025-26" | "2026-27", GradeLevel[]> = {
-  "2025-26": ["g0", "g1", "g2", "g3", "g4", "g5", "g8", "g9", "g10", "g11", "g12", "g13"],
-  "2026-27": ["g0", "g1", "g2", "g3", "g4", "g5", "g8", "g9", "g10", "g11", "g12", "g13"],
+  "2025-26": ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7"],
+  "2026-27": [
+    "g0",
+    "g1",
+    "g2",
+    "g3",
+    "g4",
+    "g5",
+    "g8",
+    "g9",
+    "g10",
+    "g11",
+    "g12",
+    "g13",
+  ],
 };
 
 /** Returns the Grade Levels available for a given Award Year. */
@@ -176,21 +204,21 @@ export function lookupLimits(
   /** Portion of unsub that comes from the PLUS-denial uplift (Independent − Dependent). */
   additionalUnsub: number;
 } {
-  // Defensive: map legacy/unknown grade keys to a sane default so a stale
-  // saved scenario can't blank-screen the app.
+  // Defensive: map legacy/unknown grade keys to a sane current code so a
+  // stale saved scenario can't blank-screen the app.
+  const legacyMap: Record<string, GradeLevel> = {
+    g0_1: "g1",
+    g3plus: "g3",
+    graduate: "g8",
+    professional: "g10",
+    g10_teacher_cert: "g5",
+    g11_prep_undergrad: "g1",
+    g12_prep_teacher: "g5",
+    g13_prep_grad: "g8",
+  };
   const safeGrade: GradeLevel = (LIMITS as Record<string, unknown>)[grade]
     ? grade
-    : grade === ("g0_1" as string)
-      ? "g1"
-      : grade === ("g3plus" as string)
-        ? "g3"
-        : grade === ("g6" as string) || grade === ("g7" as string)
-          ? "g5"
-          : grade === ("graduate" as string)
-            ? "g8"
-            : grade === ("professional" as string)
-              ? "g10"
-              : "g1";
+    : (legacyMap[grade as string] ?? "g1");
   const isGP = isGradOrProf(safeGrade);
   // Grad/Prof are independent by definition; PLUS denial doesn't apply.
   const effectiveDep: Dependency =
@@ -209,6 +237,8 @@ export function lookupLimits(
 
 export function isGradOrProf(grade: GradeLevel): boolean {
   return (
+    grade === "g6" ||
+    grade === "g7" ||
     grade === "g8" ||
     grade === "g9" ||
     grade === "g10" ||
