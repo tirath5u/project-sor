@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicV1ScenariosRouteImport } from './routes/api/public/v1/scenarios'
 import { Route as ApiPublicV1HealthRouteImport } from './routes/api/public/v1/health'
 
 const LifecycleRoute = LifecycleRouteImport.update({
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1ScenariosRoute = ApiPublicV1ScenariosRouteImport.update({
+  id: '/api/public/v1/scenarios',
+  path: '/api/public/v1/scenarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1HealthRoute = ApiPublicV1HealthRouteImport.update({
   id: '/api/public/v1/health',
   path: '/api/public/v1/health',
@@ -33,30 +39,43 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/lifecycle': typeof LifecycleRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
+  '/api/public/v1/scenarios': typeof ApiPublicV1ScenariosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/lifecycle': typeof LifecycleRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
+  '/api/public/v1/scenarios': typeof ApiPublicV1ScenariosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/lifecycle': typeof LifecycleRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
+  '/api/public/v1/scenarios': typeof ApiPublicV1ScenariosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lifecycle' | '/api/public/v1/health'
+  fullPaths:
+    | '/'
+    | '/lifecycle'
+    | '/api/public/v1/health'
+    | '/api/public/v1/scenarios'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lifecycle' | '/api/public/v1/health'
-  id: '__root__' | '/' | '/lifecycle' | '/api/public/v1/health'
+  to: '/' | '/lifecycle' | '/api/public/v1/health' | '/api/public/v1/scenarios'
+  id:
+    | '__root__'
+    | '/'
+    | '/lifecycle'
+    | '/api/public/v1/health'
+    | '/api/public/v1/scenarios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LifecycleRoute: typeof LifecycleRoute
   ApiPublicV1HealthRoute: typeof ApiPublicV1HealthRoute
+  ApiPublicV1ScenariosRoute: typeof ApiPublicV1ScenariosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,6 +94,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/scenarios': {
+      id: '/api/public/v1/scenarios'
+      path: '/api/public/v1/scenarios'
+      fullPath: '/api/public/v1/scenarios'
+      preLoaderRoute: typeof ApiPublicV1ScenariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/health': {
       id: '/api/public/v1/health'
       path: '/api/public/v1/health'
@@ -89,6 +115,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LifecycleRoute: LifecycleRoute,
   ApiPublicV1HealthRoute: ApiPublicV1HealthRoute,
+  ApiPublicV1ScenariosRoute: ApiPublicV1ScenariosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
