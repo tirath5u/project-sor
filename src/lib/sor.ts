@@ -1141,10 +1141,19 @@ function assemble(args: {
       netPaidGradPlus,
       coaCapGradPlus,
       adjustmentGradPlus: 0,
-      exceedsPerTermCapSub: perTermCapSub > 0 && cappedSub > perTermCapSub + 0.005,
-      exceedsPerTermCapUnsub: perTermCapUnsub > 0 && cappedUnsub > perTermCapUnsub + 0.005,
+      // Per-term cap is informational (§4.8). Both values display as whole
+      // dollars, and natural division remainders (e.g. $2,000 / 3 = $666.67
+      // → terms of $666/$667/$667) inevitably produce sub-dollar overages.
+      // Only flag when the rounded final EXCEEDS the rounded cap by more
+      // than a dollar, so the red shading reflects a real audit concern
+      // and not a rounding artifact the user can't see.
+      exceedsPerTermCapSub:
+        perTermCapSub > 0 && Math.round(cappedSub) > Math.round(perTermCapSub) + 1,
+      exceedsPerTermCapUnsub:
+        perTermCapUnsub > 0 && Math.round(cappedUnsub) > Math.round(perTermCapUnsub) + 1,
       exceedsPerTermCapGradPlus:
-        perTermCapGradPlus > 0 && cappedGradPlus > perTermCapGradPlus + 0.005,
+        perTermCapGradPlus > 0 &&
+        Math.round(cappedGradPlus) > Math.round(perTermCapGradPlus) + 1,
     };
   });
 
