@@ -293,7 +293,7 @@ function RegressionStrip({
       )}
     >
       <span className="font-semibold">
-        {allOk ? "✓ Matches v18 to the dollar" : "⚠ v18 regression diff"}:
+        {allOk ? "✓ Matches expected scenario values" : "⚠ Scenario regression diff"}:
       </span>{" "}
       {checks.map((c, i) => {
         const sub = c.exp?.sub;
