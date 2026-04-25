@@ -56,10 +56,18 @@ export function QuickTermCalc() {
 
   return (
     <div className="rounded-2xl border border-accent/40 bg-card shadow-[var(--shadow-card)]">
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((o) => !o);
+          }
+        }}
+        className="flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-3 text-left"
       >
         <div className="flex items-center gap-2">
           <span
@@ -85,7 +93,7 @@ export function QuickTermCalc() {
         <ChevronDown
           className={`h-4 w-4 text-muted-foreground transition ${open ? "rotate-180" : ""}`}
         />
-      </button>
+      </div>
       {open ? (
         <div className="border-t border-border px-4 py-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
