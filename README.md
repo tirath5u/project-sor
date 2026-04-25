@@ -80,6 +80,14 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 
 ---
 
+## Operations
+
+- **[Load test report](docs/load-test.md)** — measured throughput and tail latency against the live production deployment. Headline: ~16,700 requests across the three public endpoints, zero 5xx, p99 under 175 ms.
+- **[Incident runbook](docs/runbook.md)** — health check, triage matrix, fixture-replay smoke test, and rollback procedure.
+- **[Security policy](SECURITY.md)** — how to report a vulnerability privately.
+
+---
+
 ## Verify the math
 
 ```bash
