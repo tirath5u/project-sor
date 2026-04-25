@@ -538,13 +538,6 @@ function SORCalculatorPage() {
             />
           </div>
 
-          {!inputs.loanLimitException && results.obbbTableIsPlaceholder ? (
-            <div className="mt-3 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-[11px] text-warning-foreground">
-              <span className="font-semibold uppercase tracking-wide">Heads up:</span>{" "}
-              OBBB 2026-27 limits for non-grandfathered students currently mirror the Legacy values pending the final ED rule. Verify before production use.
-            </div>
-          ) : null}
-
           {!results.sorApplicable ? (
             <div className="mt-2 rounded-lg border border-muted bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
               <span className="font-semibold text-foreground">SOR not applicable</span> for award year {results.awardYear} - pre-OBBB rules in effect, no enrollment-based reduction applied.
