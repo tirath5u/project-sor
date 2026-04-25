@@ -306,3 +306,104 @@ describe("SOR engine — partial-entry disbursement bug (regression)", () => {
     expect(fall.finalUnsub).toBe(1166);
   });
 });
+
+describe("SOR engine — v19 Grad PLUS bucket", () => {
+  function gradTwoTerm(opts: Partial<ReturnType<typeof defaultInputs>> = {}) {
+    const inp = defaultInputs();
+    inp.gradeLevel = "graduate";
+    inp.dependency = "independent";
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 18;
+    inp.annualNeed = 20500;
+    inp.coa = 40000;
+    inp.otherAid = 5000;
+    inp.requestedGradPlus = 15000;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 9, enrolledCredits: 9 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 9, enrolledCredits: 9 };
+    Object.assign(inp, opts);
+    return inp;
+  }
+
+  it("Scenario 6 — Basic Grad PLUS, grandfathered, full-time", () => {
+    const inp = gradTwoTerm({ loanLimitException: true });
+    const r = calculateSOR(inp);
+    expect(r.subBaseline).toBe(0);
+    expect(r.unsubBaseline).toBe(20500);
+    // initialGradPlus = MIN(15000, 40000-5000-0-20500) = MIN(15000, 14500) = 14500
+    expect(r.initialGradPlus).toBe(14500);
+    expect(r.sorPctRounded).toBe(1);
+    expect(r.reducedGradPlus).toBe(14500);
+    // Equal split, two terms
+    const t1 = r.termResults.find((t) => t.key === "term1")!;
+    const t2 = r.termResults.find((t) => t.key === "term2")!;
+    expect(t1.finalGradPlus + t2.finalGradPlus).toBe(14500);
+  });
+
+  it("Scenario 8 — LLE = false (non-grandfathered) does NOT zero Grad PLUS", () => {
+    const grandfathered = calculateSOR(gradTwoTerm({ loanLimitException: true }));
+    const nonGrandfathered = calculateSOR(gradTwoTerm({ loanLimitException: false }));
+    // Placeholder OBBB table mirrors Legacy → identical result
+    expect(nonGrandfathered.initialGradPlus).toBe(grandfathered.initialGradPlus);
+    expect(nonGrandfathered.reducedGradPlus).toBe(grandfathered.reducedGradPlus);
+    expect(nonGrandfathered.initialGradPlus).toBeGreaterThan(0);
+  });
+
+  it("Scenario 9 — Undergrad with Requested Grad PLUS = $5,000 returns 0", () => {
+    const inp = defaultInputs();
+    inp.gradeLevel = "g2";
+    inp.dependency = "dependent";
+    inp.coa = 25000;
+    inp.otherAid = 1000;
+    inp.requestedGradPlus = 5000;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+    const r = calculateSOR(inp);
+    expect(r.initialGradPlus).toBe(0);
+    expect(r.reducedGradPlus).toBe(0);
+  });
+
+  it("Scenario 7 — Grad PLUS with SOR reduction (78%)", () => {
+    const inp = gradTwoTerm({ loanLimitException: true });
+    // Term 2 at 5 credits → AY% = (9+5)/18 = 77.78 → 78
+    inp.terms.term2 = { ...inp.terms.term2, enrolledCredits: 5 };
+    const r = calculateSOR(inp);
+    expect(Math.round(r.sorPctRounded * 100)).toBe(78);
+    // 78% × 14500 = 11310
+    expect(r.reducedGradPlus).toBe(11310);
+  });
+});
+
+describe("SOR engine — v19 Award Year gate", () => {
+  it("AY 2025-26 disables SOR — reduced limits = baselines", () => {
+    const inp = defaultInputs();
+    inp.awardYear = "2025-26";
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.annualNeed = 5500;
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 24;
+    // Half-time enrollment that would normally cause a reduction
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 6 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 9 };
+    const r = calculateSOR(inp);
+    expect(r.sorApplicable).toBe(false);
+    // No SOR reduction → reduced = baseline (3500 / 2000)
+    expect(r.reducedSub).toBe(3500);
+    expect(r.reducedUnsub).toBe(2000);
+  });
+
+  it("AY 2026-27 (default) applies SOR normally", () => {
+    const inp = defaultInputs();
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.annualNeed = 5500;
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 24;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 6 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 9 };
+    const r = calculateSOR(inp);
+    expect(r.sorApplicable).toBe(true);
+    // SOR% = 63 → 3500 × 0.63 = 2205
+    expect(r.reducedSub).toBe(2205);
+  });
+});

@@ -1,5 +1,5 @@
 import { CheckCircle2, AlertTriangle, History, FileDown } from "lucide-react";
-import { fmtCurrency, type SORResults, type SORInputs } from "@/lib/sor";
+import { fmtCurrency, fmtCurrencyCents, type SORResults, type SORInputs } from "@/lib/sor";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "./InfoTip";
 import { exportSORCaseFile } from "@/lib/pdfExport";
@@ -275,6 +275,56 @@ export function ResultsPanel({
           </div>
         ) : null}
       </div>
+
+      {results.initialGradPlus > 0 ? (
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
+          <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+            Grad PLUS (DLGP)
+            <InfoTip label="About Grad PLUS">
+              Third parallel bucket for graduate/professional borrowers. Capped at COA minus all other aid (Pell, grants, scholarships, Sub, Unsub). Subject to SOR for 2026-27+. Grade level is the only access gate — LLE/grandfathering does NOT affect Grad PLUS.
+            </InfoTip>
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            <Stat
+              label="Initial Max DLGP"
+              value={fmtCurrencyCents(results.initialGradPlus)}
+              sub={`COA ${fmtCurrency(results.coa)} − aid ${fmtCurrency(results.otherAid)}`}
+            />
+            <Stat
+              label="Reduced Annual DLGP"
+              value={fmtCurrencyCents(results.reducedGradPlus)}
+              sub={results.sorApplicable ? `× ${Math.round(results.sorPctRounded * 100)}% SOR` : "no SOR (pre-2026-27)"}
+            />
+          </div>
+          <div className="mt-3 -mx-2 overflow-x-auto">
+            <table className="w-full min-w-[360px] text-xs">
+              <thead>
+                <tr className="border-b border-border text-left text-muted-foreground">
+                  <th className="px-2 py-2 font-medium">Term</th>
+                  <th className="px-2 py-2 text-right font-medium">Final Grad PLUS</th>
+                </tr>
+              </thead>
+              <tbody className="tabular-nums">
+                {visibleTerms.map((t) => (
+                  <tr key={t.key} className="border-b border-border/50">
+                    <td className="px-2 py-2 font-medium text-foreground">{t.label}</td>
+                    <td className="px-2 py-2 text-right">{fmtCurrencyCents(t.finalGradPlus)}</td>
+                  </tr>
+                ))}
+                <tr className="bg-muted/40 font-semibold text-foreground">
+                  <td className="px-2 py-2">AY Total</td>
+                  <td className="px-2 py-2 text-right">
+                    {fmtCurrencyCents(results.totalFinalGradPlus)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-2">
+            <VerifyBadge label="Grad PLUS" diff={results.verifyGradPlus} />
+          </div>
+        </div>
+      ) : null}
 
       {results.warnings.length > 0 ? (
         <div className="rounded-2xl border border-warning/40 bg-warning/10 p-4">
