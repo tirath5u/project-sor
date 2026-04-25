@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CalculateInputSchema } from "@/lib/sor.schema";
-import { calculateSOR } from "@/lib/sor";
+import { calculateSOR, type SORInputs } from "@/lib/sor";
 import {
   ENGINE_VERSION,
   POLICY_YEAR,
@@ -77,7 +77,7 @@ export const Route = createFileRoute("/api/public/v1/calculate")({
         // 6) Run engine.
         let results;
         try {
-          results = calculateSOR(parsed.data);
+          results = calculateSOR(parsed.data as unknown as SORInputs);
         } catch (e) {
           return errorResponse(
             "internal_error",
