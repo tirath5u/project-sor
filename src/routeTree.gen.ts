@@ -11,6 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicV1ScenariosRouteImport } from './routes/api/public/v1/scenarios'
+import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
+import { Route as ApiPublicV1HealthRouteImport } from './routes/api/public/v1/health'
+import { Route as ApiPublicV1CalculateRouteImport } from './routes/api/public/v1/calculate'
 
 const LifecycleRoute = LifecycleRouteImport.update({
   id: '/lifecycle',
@@ -22,31 +26,87 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1ScenariosRoute = ApiPublicV1ScenariosRouteImport.update({
+  id: '/api/public/v1/scenarios',
+  path: '/api/public/v1/scenarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1OpenapiDotjsonRoute =
+  ApiPublicV1OpenapiDotjsonRouteImport.update({
+    id: '/api/public/v1/openapi.json',
+    path: '/api/public/v1/openapi.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV1HealthRoute = ApiPublicV1HealthRouteImport.update({
+  id: '/api/public/v1/health',
+  path: '/api/public/v1/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1CalculateRoute = ApiPublicV1CalculateRouteImport.update({
+  id: '/api/public/v1/calculate',
+  path: '/api/public/v1/calculate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/lifecycle': typeof LifecycleRoute
+  '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
+  '/api/public/v1/health': typeof ApiPublicV1HealthRoute
+  '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/scenarios': typeof ApiPublicV1ScenariosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/lifecycle': typeof LifecycleRoute
+  '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
+  '/api/public/v1/health': typeof ApiPublicV1HealthRoute
+  '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/scenarios': typeof ApiPublicV1ScenariosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/lifecycle': typeof LifecycleRoute
+  '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
+  '/api/public/v1/health': typeof ApiPublicV1HealthRoute
+  '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/scenarios': typeof ApiPublicV1ScenariosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lifecycle'
+  fullPaths:
+    | '/'
+    | '/lifecycle'
+    | '/api/public/v1/calculate'
+    | '/api/public/v1/health'
+    | '/api/public/v1/openapi.json'
+    | '/api/public/v1/scenarios'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lifecycle'
-  id: '__root__' | '/' | '/lifecycle'
+  to:
+    | '/'
+    | '/lifecycle'
+    | '/api/public/v1/calculate'
+    | '/api/public/v1/health'
+    | '/api/public/v1/openapi.json'
+    | '/api/public/v1/scenarios'
+  id:
+    | '__root__'
+    | '/'
+    | '/lifecycle'
+    | '/api/public/v1/calculate'
+    | '/api/public/v1/health'
+    | '/api/public/v1/openapi.json'
+    | '/api/public/v1/scenarios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LifecycleRoute: typeof LifecycleRoute
+  ApiPublicV1CalculateRoute: typeof ApiPublicV1CalculateRoute
+  ApiPublicV1HealthRoute: typeof ApiPublicV1HealthRoute
+  ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
+  ApiPublicV1ScenariosRoute: typeof ApiPublicV1ScenariosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +125,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/scenarios': {
+      id: '/api/public/v1/scenarios'
+      path: '/api/public/v1/scenarios'
+      fullPath: '/api/public/v1/scenarios'
+      preLoaderRoute: typeof ApiPublicV1ScenariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/openapi.json': {
+      id: '/api/public/v1/openapi.json'
+      path: '/api/public/v1/openapi.json'
+      fullPath: '/api/public/v1/openapi.json'
+      preLoaderRoute: typeof ApiPublicV1OpenapiDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/health': {
+      id: '/api/public/v1/health'
+      path: '/api/public/v1/health'
+      fullPath: '/api/public/v1/health'
+      preLoaderRoute: typeof ApiPublicV1HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/calculate': {
+      id: '/api/public/v1/calculate'
+      path: '/api/public/v1/calculate'
+      fullPath: '/api/public/v1/calculate'
+      preLoaderRoute: typeof ApiPublicV1CalculateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LifecycleRoute: LifecycleRoute,
+  ApiPublicV1CalculateRoute: ApiPublicV1CalculateRoute,
+  ApiPublicV1HealthRoute: ApiPublicV1HealthRoute,
+  ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
+  ApiPublicV1ScenariosRoute: ApiPublicV1ScenariosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
