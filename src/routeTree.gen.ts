@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicV1HealthRouteImport } from './routes/api/public/v1/health'
 
 const LifecycleRoute = LifecycleRouteImport.update({
   id: '/lifecycle',
@@ -22,31 +23,40 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1HealthRoute = ApiPublicV1HealthRouteImport.update({
+  id: '/api/public/v1/health',
+  path: '/api/public/v1/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/lifecycle': typeof LifecycleRoute
+  '/api/public/v1/health': typeof ApiPublicV1HealthRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/lifecycle': typeof LifecycleRoute
+  '/api/public/v1/health': typeof ApiPublicV1HealthRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/lifecycle': typeof LifecycleRoute
+  '/api/public/v1/health': typeof ApiPublicV1HealthRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lifecycle'
+  fullPaths: '/' | '/lifecycle' | '/api/public/v1/health'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lifecycle'
-  id: '__root__' | '/' | '/lifecycle'
+  to: '/' | '/lifecycle' | '/api/public/v1/health'
+  id: '__root__' | '/' | '/lifecycle' | '/api/public/v1/health'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LifecycleRoute: typeof LifecycleRoute
+  ApiPublicV1HealthRoute: typeof ApiPublicV1HealthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/health': {
+      id: '/api/public/v1/health'
+      path: '/api/public/v1/health'
+      fullPath: '/api/public/v1/health'
+      preLoaderRoute: typeof ApiPublicV1HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LifecycleRoute: LifecycleRoute,
+  ApiPublicV1HealthRoute: ApiPublicV1HealthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
