@@ -11,8 +11,8 @@ import {
   corsPreflightResponse,
   errorResponse,
   jsonResponse,
-} from "@/lib/api-errors";
-import { checkRateLimit } from "@/lib/rate-limit";
+} from "../../../../lib/api-errors";
+import { checkRateLimit } from "../../../../lib/rate-limit";
 
 export const Route = createFileRoute("/api/public/v1/calculate")({
   server: {
