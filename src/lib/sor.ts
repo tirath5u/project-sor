@@ -980,7 +980,11 @@ function assemble(args: {
     finalSnap,
   } = args;
 
-  const pct = finalSnap.ayPctRounded;
+  // v19 — Award Year gate: SOR only applies for "2026-27"+. For 2025-26
+  // the SOR% effectively reverts to 100% so reduced limits = initial max.
+  const awardYear: "2025-26" | "2026-27" = inp.awardYear ?? "2026-27";
+  const sorApplicable = awardYear === "2026-27";
+  const pct = sorApplicable ? finalSnap.ayPctRounded : 1;
 
   const subStatBaseline = caps.sub;
   const unsubStatBaseline = caps.unsub;
@@ -994,20 +998,32 @@ function assemble(args: {
     inp.applyDoubleReduction &&
     (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);
 
-  const reducedSubRaw = round(subBaseline * pct);
-  const reducedUnsubRaw = round(unsubBaseline * pct);
-  const additionalUnsubReduced = round(additionalUnsubBase * pct);
+  const reducedSubRaw = round2(subBaseline * pct);
+  const reducedUnsubRaw = round2(unsubBaseline * pct);
+  const additionalUnsubReduced = round2(additionalUnsubBase * pct);
   let reducedSub = reducedSubRaw;
   let reducedUnsub = reducedUnsubRaw;
   let shiftedToUnsub = 0;
   if (inp.applySubUnsubShift) {
-    const subStatCeiling = round(caps.sub * pct);
-    const unsubStatCeiling = round(caps.unsub * pct);
+    const subStatCeiling = round2(caps.sub * pct);
+    const unsubStatCeiling = round2(caps.unsub * pct);
     const subUnused = Math.max(0, subStatCeiling - reducedSubRaw);
     const unsubHeadroom = Math.max(0, unsubStatCeiling - reducedUnsubRaw);
-    shiftedToUnsub = Math.min(subUnused, unsubHeadroom);
+    shiftedToUnsub = round2(Math.min(subUnused, unsubHeadroom));
     reducedUnsub = reducedUnsubRaw + shiftedToUnsub;
   }
+
+  // v19 — Grad PLUS bucket (DLGP). Third parallel track alongside Sub/Unsub.
+  // Initial Max DLGP = MAX(0, MIN(requested, COA - otherAid - subBaseline - unsubBaseline))
+  // Gated on grade level (SLC >= 8), NOT on LLE/grandfathering (spec §4.3).
+  const coa = Math.max(0, inp.coa ?? 0);
+  const otherAid = Math.max(0, inp.otherAid ?? 0);
+  const requestedGradPlus = Math.max(0, inp.requestedGradPlus ?? 0);
+  const isGP = isGradOrProf(inp.gradeLevel);
+  const initialGradPlus = isGP
+    ? Math.max(0, Math.min(requestedGradPlus, coa - otherAid - subBaseline - unsubBaseline))
+    : 0;
+  const reducedGradPlus = round2(initialGradPlus * pct);
 
   const enrolledSum = ordered.reduce((s, t, i) => {
     return s + (finalSnap.eligible[i] ? effectiveCreditsBy(t) : 0);
@@ -1041,18 +1057,51 @@ function assemble(args: {
     weights,
   });
 
+  // Grad PLUS distribution — same balance-forward distributor as Sub/Unsub.
+  const lockedGradPlusDisplay = ordered.map((t) =>
+    t.paidGradPlus !== null && t.paidGradPlus !== undefined
+      ? netAmount(t.paidGradPlus ?? null, t.refundGradPlus ?? null)
+      : null,
+  );
+  const displayGradPlus = computeDisplayRows({
+    annual: reducedGradPlus,
+    termsInOrder: ordered,
+    eligible: finalSnap.eligible,
+    locked: lockedGradPlusDisplay,
+    distributionModel: inp.distributionModel,
+    weights,
+  });
+
+  // Per-term cap diagnostic (informational, spec §4.8): reduced annual ÷ # active terms.
+  const activeTermCount = ordered.length;
+  const perTermCapSub = activeTermCount > 0 ? round2(reducedSub / activeTermCount) : 0;
+  const perTermCapUnsub = activeTermCount > 0 ? round2(reducedUnsub / activeTermCount) : 0;
+  const perTermCapGradPlus =
+    activeTermCount > 0 ? round2(reducedGradPlus / activeTermCount) : 0;
+
   const termResults: TermResult[] = ordered.map((t, i) => {
     const eff = effectiveCreditsBy(t);
     const half = t.ftCredits / 2;
     const eligible = finalSnap.eligible[i];
     const calcSub = displaySub.calc[i];
     const calcUnsub = displayUnsub.calc[i];
+    const calcGradPlus = displayGradPlus.calc[i];
     // Final = MIN(Step 5 Calc, COA cap). No averaging, no override —
     // Final must rigidly mirror the Step-5 output to preserve history anchoring.
-    const cappedSub = t.coaCapSub > 0 ? Math.min(calcSub, t.coaCapSub) : calcSub;
-    const cappedUnsub = t.coaCapUnsub > 0 ? Math.min(calcUnsub, t.coaCapUnsub) : calcUnsub;
+    const cappedSub = round2(t.coaCapSub > 0 ? Math.min(calcSub, t.coaCapSub) : calcSub);
+    const cappedUnsub = round2(
+      t.coaCapUnsub > 0 ? Math.min(calcUnsub, t.coaCapUnsub) : calcUnsub,
+    );
+    const coaCapGradPlus = t.coaCapGradPlus ?? 0;
+    const cappedGradPlus = round2(
+      coaCapGradPlus > 0 ? Math.min(calcGradPlus, coaCapGradPlus) : calcGradPlus,
+    );
     const netPaidSub = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
     const netPaidUnsub = Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0));
+    const netPaidGradPlus = Math.max(
+      0,
+      (t.paidGradPlus || 0) - (t.refundGradPlus || 0),
+    );
     const termPct = t.ftCredits > 0 ? eff / t.ftCredits : 0;
     return {
       key: t.key,
@@ -1084,6 +1133,18 @@ function assemble(args: {
       coaCapUnsub: t.coaCapUnsub,
       adjustmentSub: adjustmentSubByKey[t.key],
       adjustmentUnsub: adjustmentUnsubByKey[t.key],
+      shareGradPlus: displayGradPlus.share[i],
+      calcGradPlus,
+      finalGradPlus: cappedGradPlus,
+      paidGradPlus: t.paidGradPlus ?? 0,
+      refundGradPlus: t.refundGradPlus ?? 0,
+      netPaidGradPlus,
+      coaCapGradPlus,
+      adjustmentGradPlus: 0,
+      exceedsPerTermCapSub: perTermCapSub > 0 && cappedSub > perTermCapSub + 0.005,
+      exceedsPerTermCapUnsub: perTermCapUnsub > 0 && cappedUnsub > perTermCapUnsub + 0.005,
+      exceedsPerTermCapGradPlus:
+        perTermCapGradPlus > 0 && cappedGradPlus > perTermCapGradPlus + 0.005,
     };
   });
 
@@ -1093,11 +1154,16 @@ function assemble(args: {
   const refundUnsubTotal = ordered.reduce((s, t) => s + (t.refundUnsub || 0), 0);
   const netPaidSubTotal = Math.max(0, paidSubTotal - refundSubTotal);
   const netPaidUnsubTotal = Math.max(0, paidUnsubTotal - refundUnsubTotal);
+  const paidGradPlusTotal = ordered.reduce((s, t) => s + (t.paidGradPlus || 0), 0);
+  const refundGradPlusTotal = ordered.reduce((s, t) => s + (t.refundGradPlus || 0), 0);
+  const netPaidGradPlusTotal = Math.max(0, paidGradPlusTotal - refundGradPlusTotal);
 
   const totalFinalSub = termResults.reduce((s, t) => s + t.finalSub, 0);
   const totalFinalUnsub = termResults.reduce((s, t) => s + t.finalUnsub, 0);
+  const totalFinalGradPlus = termResults.reduce((s, t) => s + t.finalGradPlus, 0);
   const remainingSub = Math.max(0, reducedSub - totalFinalSub);
   const remainingUnsub = Math.max(0, reducedUnsub - totalFinalUnsub);
+  const remainingGradPlus = Math.max(0, reducedGradPlus - totalFinalGradPlus);
 
   const eligibleTermsCount = finalSnap.eligible.filter(Boolean).length;
   const remainingTermsCount = ordered.filter(
@@ -1147,6 +1213,24 @@ function assemble(args: {
     verifyUnsub: reducedUnsub - totalFinalUnsub,
     warnings: Array.from(new Set(warnings)),
     recalcHistory,
+    awardYear,
+    sorApplicable,
+    loanLimitException: inp.loanLimitException ?? false,
+    coa,
+    otherAid,
+    requestedGradPlus,
+    initialGradPlus,
+    reducedGradPlus,
+    paidGradPlusTotal,
+    refundGradPlusTotal,
+    netPaidGradPlusTotal,
+    remainingGradPlus,
+    totalFinalGradPlus,
+    verifyGradPlus: reducedGradPlus - totalFinalGradPlus,
+    perTermCapSub,
+    perTermCapUnsub,
+    perTermCapGradPlus,
+    obbbTableIsPlaceholder: OBBB_TABLE_IS_PLACEHOLDER,
   };
 }
 
@@ -1155,6 +1239,16 @@ export const fmtCurrency = (n: number) =>
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
+    signDisplay: n < 0 ? "always" : "auto",
+  }).format(n);
+
+/** v19 — cent-precision currency formatter for COD SmallCurrencyType cells. */
+export const fmtCurrencyCents = (n: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
     signDisplay: n < 0 ? "always" : "auto",
   }).format(n);
 
