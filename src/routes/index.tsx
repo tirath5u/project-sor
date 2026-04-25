@@ -388,32 +388,52 @@ function SORCalculatorPage() {
           description="Grade, dependency, and the single Annual Financial Need that drives Sub/Unsub split."
           tooltip="Inputs that determine the statutory loan ceilings and baseline Sub/Unsub split per the Combined Limit Shifting Rule (34 CFR 685.203)."
         >
+          {/* Row 1 — Award Year drives which Grade Levels are valid, so it
+              MUST be selected first. */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
-                <Label className="text-xs font-medium">Grade Code</Label>
-                <InfoTip>Determines the statutory Sub/Unsub annual maximums per 34 CFR 685.203.</InfoTip>
+                <Label className="text-xs font-medium">Award Year</Label>
+                <InfoTip>
+                  SOR is tied to the 2026-27 award year. A 2025-26 loan disbursed after 7/1/2026 is NOT subject to SOR. The available Grade Levels also depend on the Award Year.
+                </InfoTip>
               </div>
-              <Select
-                value={inputs.gradeLevel}
-                onValueChange={(v) => update({ gradeLevel: v as GradeLevel })}
+              <RadioGroup
+                value={inputs.awardYear ?? "2026-27"}
+                onValueChange={(v) =>
+                  update({ awardYear: v as "2025-26" | "2026-27" })
+                }
+                className="grid grid-cols-2 gap-1.5"
               >
-                <SelectTrigger className="h-9 rounded-lg">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {GRADE_GROUPS.map((g) => (
-                    <SelectGroup key={g.label}>
-                      <SelectLabel>{g.label}</SelectLabel>
-                      {g.codes.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {GRADE_LABELS[c]}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
+                {(["2025-26", "2026-27"] as const).map((y) => (
+                  <Label
+                    key={y}
+                    htmlFor={`ay-${y}`}
+                    className="flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
+                  >
+                    <RadioGroupItem id={`ay-${y}`} value={y} />
+                    <span className="font-medium">{y}</span>
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">Loan Limit Exception</Label>
+                <InfoTip>
+                  Grandfathered? Switches the Sub/Unsub annual limit table between the legacy (pre-OBBB) values and the OBBB 2026-27 values. Does NOT gate Grad PLUS - Grad PLUS access is determined by Grade Level only.
+                </InfoTip>
+              </div>
+              <Label className="flex h-9 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-xs">
+                <span className="font-medium">
+                  {inputs.loanLimitException ? "Grandfathered (Legacy)" : "Non-grandfathered (OBBB)"}
+                </span>
+                <Switch
+                  checked={Boolean(inputs.loanLimitException)}
+                  onCheckedChange={(v) => update({ loanLimitException: v })}
+                />
+              </Label>
             </div>
 
             <div className="space-y-1.5">
@@ -446,77 +466,61 @@ function SORCalculatorPage() {
             </div>
 
             <NumberField
-              label="Annual Financial Need"
-              prefix="$"
-              value={inputs.annualNeed}
-              onChange={(v) => update({ annualNeed: v })}
-              hint={`→ Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(results.unsubBaseline)}`}
-              tooltip="Cost of Attendance − EFC/SAI − other aid. Drives the Sub baseline. Unsub is NOT need-based — it's calculated from the Combined Limit Shifting Rule."
-            />
-
-            <NumberField
               label="AY Full-Time Credits"
               value={inputs.ayFtCredits}
               step={0.5}
               onChange={(v) => update({ ayFtCredits: v })}
-              hint="Step 2 denominator"
-              tooltip="The denominator for the Academic Year %. Example: 24 FT credits per year for a typical undergrad SAY."
+              hint="SOR % denominator"
+              tooltip="The denominator for the SOR % (Σ AY enrolled credits ÷ AY full-time credits). Example: 24 FT credits per year for a typical undergrad SAY."
             />
           </div>
 
-          {/* v19 — Award Year, LLE, COA, Other Aid, Requested Grad PLUS */}
+          {/* Row 2 — Grade Level (filtered by Award Year) + Need + COA inputs */}
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
-                <Label className="text-xs font-medium">Award Year</Label>
+                <Label className="text-xs font-medium">Grade Level</Label>
                 <InfoTip>
-                  SOR is tied to the 2026-27 award year. A 2025-26 loan disbursed after 7/1/2026 is NOT subject to SOR.
+                  Student Level Code (SLC). Determines the statutory Sub/Unsub annual maximums per 34 CFR 685.203. Available Grade Levels depend on the selected Award Year - confirm with current ED guidance before production use.
                 </InfoTip>
               </div>
-              <RadioGroup
-                value={inputs.awardYear ?? "2026-27"}
-                onValueChange={(v) =>
-                  update({ awardYear: v as "2025-26" | "2026-27" })
-                }
-                className="grid grid-cols-2 gap-1.5"
+              <Select
+                value={inputs.gradeLevel}
+                onValueChange={(v) => update({ gradeLevel: v as GradeLevel })}
               >
-                {(["2025-26", "2026-27"] as const).map((y) => (
-                  <Label
-                    key={y}
-                    htmlFor={`ay-${y}`}
-                    className="flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
-                  >
-                    <RadioGroupItem id={`ay-${y}`} value={y} />
-                    <span className="font-medium">{y}</span>
-                  </Label>
-                ))}
-              </RadioGroup>
+                <SelectTrigger className="h-9 rounded-lg">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {gradeGroupsForAwardYear(inputs.awardYear ?? "2026-27").map((g) => (
+                    <SelectGroup key={g.label}>
+                      <SelectLabel>{g.label}</SelectLabel>
+                      {g.codes.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {GRADE_LABELS[c]}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5">
-                <Label className="text-xs font-medium">Loan Limit Exception</Label>
-                <InfoTip>
-                  Grandfathered? Switches Sub/Unsub limit table between Legacy and OBBB. Does NOT gate Grad PLUS — Grad PLUS access is grade-level only.
-                </InfoTip>
-              </div>
-              <Label className="flex h-9 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-xs">
-                <span className="font-medium">
-                  {inputs.loanLimitException ? "Grandfathered (Legacy)" : "Non-grandfathered (OBBB)"}
-                </span>
-                <Switch
-                  checked={Boolean(inputs.loanLimitException)}
-                  onCheckedChange={(v) => update({ loanLimitException: v })}
-                />
-              </Label>
-            </div>
+            <NumberField
+              label="Annual Financial Need"
+              prefix="$"
+              value={inputs.annualNeed}
+              onChange={(v) => update({ annualNeed: v })}
+              hint={`Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(results.unsubBaseline)}`}
+              tooltip="Cost of Attendance minus EFC/SAI minus other aid. Drives the Sub baseline. Unsub is NOT need-based - it is calculated from the Combined Limit Shifting Rule."
+            />
 
             <NumberField
               label="Cost of Attendance"
               prefix="$"
               value={inputs.coa ?? 0}
               onChange={(v) => update({ coa: v })}
-              tooltip="Total COA for the academic year. Drives the Grad PLUS cap (COA - other aid - Sub - Unsub)."
+              tooltip="Total COA for the academic year. Drives the Grad PLUS cap: COA minus other aid minus Sub minus Unsub."
             />
             <NumberField
               label="Other Non-PLUS Aid"
@@ -531,7 +535,7 @@ function SORCalculatorPage() {
               value={inputs.requestedGradPlus ?? 0}
               onChange={(v) => update({ requestedGradPlus: v })}
               hint={gradLocked ? `Initial Max DLGP: ${fmtCurrency(results.initialGradPlus)}` : "Grad/Professional only"}
-              tooltip="Student-requested Grad PLUS amount. Eligibility is COA minus all other estimated aid. Only available for grad/professional grade levels (SLC ≥ 8)."
+              tooltip="Student-requested Grad PLUS amount. Eligibility is COA minus all other estimated aid. Only available for graduate/professional Grade Levels."
             />
           </div>
 
