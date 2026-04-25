@@ -203,6 +203,17 @@ function SORCalculatorPage() {
     });
   }, [inputs.gradeLevel, inputs.dependency, inputs.parentPlusDenied, inputs.overrideLimits]);
 
+  // If the user toggles Award Year and the current Grade Level is no longer
+  // valid for that AY (e.g. picked Graduate while on 2025-26), snap to the
+  // first allowed code so the dropdown never shows an invalid selection.
+  React.useEffect(() => {
+    const ay = inputs.awardYear ?? "2026-27";
+    const allowed = gradeLevelsForAwardYear(ay);
+    if (!allowed.includes(inputs.gradeLevel) && allowed.length > 0) {
+      setInputs((p) => ({ ...p, gradeLevel: allowed[0] }));
+    }
+  }, [inputs.awardYear, inputs.gradeLevel]);
+
   const activeTermKeys: TermKey[] = TERM_ORDER.filter((k) => {
     const stdIdx = STANDARD_KEYS.indexOf(k);
     if (stdIdx >= 0 && stdIdx < inputs.numStandardTerms) return true;
