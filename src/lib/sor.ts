@@ -77,6 +77,10 @@ export interface TermInput {
   refundUnsub: number | null;
   coaCapSub: number;
   coaCapUnsub: number;
+  /** v19 — Grad PLUS (DLGP) per-term tracking (third parallel bucket). */
+  paidGradPlus?: number | null;
+  refundGradPlus?: number | null;
+  coaCapGradPlus?: number;
 }
 
 export interface SORInputs {
@@ -113,6 +117,18 @@ export interface SORInputs {
   /** Count LTHT (below-half-time) credits in the AY-pct numerator (term still pays $0). */
   countLthtInAyPct: boolean;
   terms: Record<TermKey, TermInput>;
+  /** v19 — Award Year. SOR only applies to "2026-27"+. "2025-26" disables the SOR%. */
+  awardYear?: "2025-26" | "2026-27";
+  /** v19 — Loan Limit Exception (grandfathered). Switches Sub/Unsub limit table only.
+   *  Does NOT gate Grad PLUS access. */
+  loanLimitException?: boolean;
+  /** v19 — Cost of Attendance (Section B). Drives Grad PLUS cap. */
+  coa?: number;
+  /** v19 — Other Non-PLUS Aid (Pell, grants, scholarships, outside loans).
+   *  Excludes Sub/Unsub/PLUS by definition. */
+  otherAid?: number;
+  /** v19 — Student-requested Grad PLUS amount (the borrowing ceiling). */
+  requestedGradPlus?: number;
 }
 
 export interface TermResult {
@@ -146,6 +162,19 @@ export interface TermResult {
   /** Adjustment relative to a prior plan (disbursement mode). */
   adjustmentSub: number;
   adjustmentUnsub: number;
+  /** v19 — Grad PLUS bucket. */
+  shareGradPlus: number;
+  calcGradPlus: number;
+  finalGradPlus: number;
+  paidGradPlus: number;
+  refundGradPlus: number;
+  netPaidGradPlus: number;
+  coaCapGradPlus: number;
+  adjustmentGradPlus: number;
+  /** Per-term cap diagnostic exceedance flags (informational; spec §4.8). */
+  exceedsPerTermCapSub: boolean;
+  exceedsPerTermCapUnsub: boolean;
+  exceedsPerTermCapGradPlus: boolean;
 }
 
 export interface RecalcEvent {
@@ -213,6 +242,28 @@ export interface SORResults {
   verifyUnsub: number;
   warnings: string[];
   recalcHistory: RecalcEvent[];
+  /** v19 — Award Year & SOR applicability. */
+  awardYear: "2025-26" | "2026-27";
+  sorApplicable: boolean;
+  loanLimitException: boolean;
+  /** v19 — Grad PLUS bucket aggregates. */
+  coa: number;
+  otherAid: number;
+  requestedGradPlus: number;
+  initialGradPlus: number;
+  reducedGradPlus: number;
+  paidGradPlusTotal: number;
+  refundGradPlusTotal: number;
+  netPaidGradPlusTotal: number;
+  remainingGradPlus: number;
+  totalFinalGradPlus: number;
+  verifyGradPlus: number;
+  /** Per-term cap diagnostic = reducedAnnual ÷ active term count (spec §4.8). */
+  perTermCapSub: number;
+  perTermCapUnsub: number;
+  perTermCapGradPlus: number;
+  /** True when the OBBB table is still mirroring Legacy values (drives banner). */
+  obbbTableIsPlaceholder: boolean;
 }
 
 export const TERM_ORDER: TermKey[] = [
@@ -252,6 +303,9 @@ export function defaultTerm(key: TermKey): TermInput {
     refundUnsub: null,
     coaCapSub: 0,
     coaCapUnsub: 0,
+    paidGradPlus: null,
+    refundGradPlus: null,
+    coaCapGradPlus: 0,
   };
 }
 
@@ -289,6 +343,11 @@ export function defaultInputs(): SORInputs {
     applyDoubleReduction: false,
     countLthtInAyPct: true,
     terms,
+    awardYear: "2026-27",
+    loanLimitException: false,
+    coa: 0,
+    otherAid: 0,
+    requestedGradPlus: 0,
   };
 }
 
