@@ -23,12 +23,12 @@ Built and maintained by **Tirath Chhatriwala**, Product Manager with over 14 yea
 curl https://sor.myproduct.life/api/public/v1/health
 
 # Published scenario catalog with regulatory citations
-curl https://sor.myproduct.life/api/public/v1/scenarios | jq '.data | length'
+curl https://sor.myproduct.life/api/public/v1/scenarios | jq '.scenarios | length'
 
 # Run the first published scenario through the engine
 curl -X POST https://sor.myproduct.life/api/public/v1/calculate \
   -H 'Content-Type: application/json' \
-  -d "$(curl -s https://sor.myproduct.life/api/public/v1/scenarios | jq '.data[0].input')"
+  -d "$(curl -s https://sor.myproduct.life/api/public/v1/scenarios | jq '.scenarios[0].input')"
 ```
 
 The dollars you get from the API match the dollars you get from the web UI match the dollars in the published fixture catalog. One engine, three views, zero drift.
