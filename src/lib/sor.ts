@@ -1142,18 +1142,16 @@ function assemble(args: {
       coaCapGradPlus,
       adjustmentGradPlus: 0,
       // Per-term cap is informational (§4.8). Both values display as whole
-      // dollars, and natural division remainders (e.g. $2,000 / 3 = $666.67
-      // → terms of $666/$667/$667) inevitably produce sub-dollar overages.
-      // Only flag when the rounded final EXCEEDS the rounded cap by more
-      // than a dollar, so the red shading reflects a real audit concern
-      // and not a rounding artifact the user can't see.
-      exceedsPerTermCapSub:
-        perTermCapSub > 0 && Math.round(cappedSub) > Math.round(perTermCapSub) + 1,
-      exceedsPerTermCapUnsub:
-        perTermCapUnsub > 0 && Math.round(cappedUnsub) > Math.round(perTermCapUnsub) + 1,
-      exceedsPerTermCapGradPlus:
-        perTermCapGradPlus > 0 &&
-        Math.round(cappedGradPlus) > Math.round(perTermCapGradPlus) + 1,
+      // Per-term cap "exceeds" flags are intentionally disabled.
+      // The static per-term cap (reducedAnnual / activeTermCount) does not
+      // account for locked/paid disbursements: when a prior term is paid,
+      // the engine pushes unpaid balance forward into remaining terms via
+      // balance-forward logic, which can legitimately exceed the static
+      // per-term slice. Flagging that as a violation is misleading.
+      // Revisit later with a paid-aware per-term cap calculation.
+      exceedsPerTermCapSub: false,
+      exceedsPerTermCapUnsub: false,
+      exceedsPerTermCapGradPlus: false,
     };
   });
 
