@@ -34,6 +34,7 @@
 import {
   lookupLimits,
   isGradOrProf,
+  OBBB_TABLE_IS_PLACEHOLDER,
   type GradeLevel,
   type Dependency,
 } from "./loanLimits";
@@ -352,6 +353,7 @@ export function defaultInputs(): SORInputs {
 }
 
 const round = (n: number) => Math.round(n);
+const round2 = (n: number) => Math.round(n * 100) / 100;
 const netAmount = (paid: number | null, refund: number | null) =>
   Math.max(0, (paid ?? 0) - (refund ?? 0));
 
@@ -670,7 +672,10 @@ export function resolveCaps(inp: SORInputs): {
     const unsub = Math.max(0, inp.unsubStatutory);
     return { sub, unsub, combined: sub + unsub };
   }
-  const lim = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied);
+  // v19 — Loan Limit Exception (grandfathered) flag selects which table to use.
+  // LLE = true → Legacy table; LLE = false → OBBB table (currently a Legacy mirror).
+  const useLegacy = inp.loanLimitException !== false; // default true (legacy) when undefined
+  const lim = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied, useLegacy);
   return { sub: lim.sub, unsub: lim.unsub, combined: lim.sub + lim.unsub };
 }
 
