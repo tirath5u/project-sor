@@ -27,6 +27,8 @@ import {
   GRADE_LABELS,
   lookupLimits,
   isGradOrProf,
+  gradeGroupsForAwardYear,
+  gradeLevelsForAwardYear,
   type GradeLevel,
   type Dependency,
 } from "@/lib/loanLimits";
