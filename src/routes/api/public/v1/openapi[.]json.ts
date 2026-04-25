@@ -44,10 +44,20 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                 },
                 responses: {
                   "200": { description: "Calculation results" },
-                  "400": { description: "Invalid input" },
+                  "400": { description: "Invalid input (malformed JSON or unreadable body)" },
+                  "405": { description: "Method not allowed (only POST and OPTIONS are supported)" },
+                  "406": { description: "Not acceptable (only application/json responses)" },
+                  "413": { description: "Payload too large (request body exceeds 1 MB)" },
                   "415": { description: "Unsupported media type" },
+                  "422": { description: "Schema validation failed (well-formed JSON, but violates the input contract)" },
                   "429": { description: "Rate limited" },
                   "500": { description: "Internal engine error" },
+                },
+              },
+              get: {
+                summary: "Not allowed — calculate accepts POST only",
+                responses: {
+                  "405": { description: "Method not allowed" },
                 },
               },
             },
@@ -64,6 +74,10 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
             },
           },
           "x-policy-year": POLICY_YEAR,
+          "x-request-id-header":
+            "Every response includes an X-Request-Id header (also echoed in JSON " +
+            "envelope). Clients may pass their own X-Request-Id (alphanumeric, " +
+            "underscore, dash; up to 64 chars) and it will be echoed back.",
         };
         return jsonResponse(spec);
       },
