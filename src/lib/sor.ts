@@ -713,7 +713,8 @@ export function calculateSOR(inp: SORInputs): SORResults {
   // its need-based share. `caps.unsub` already includes any PLUS-denial
   // uplift coming from the lookup, so do not add it a second time downstream.
   const unsubBaseline = Math.max(0, combinedLimit - subBaseline);
-  const lookup = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied);
+  const useLegacy = inp.loanLimitException !== false;
+  const lookup = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied, useLegacy);
   const additionalUnsubBase =
     !inp.overrideLimits && inp.parentPlusDenied && inp.dependency === "dependent"
       ? lookup.additionalUnsub
