@@ -204,7 +204,7 @@ MIT. See [`LICENSE`](LICENSE).
 
 ## Author
 
-**Tirath Chhatriwala**, Principal Product Manager, federal student aid technology.
+**Tirath Chhatriwala**, Product Manager, in EdTech and Higher Education with over 14 years of experience.
 
 - Hub: [myproduct.life](https://myproduct.life)
 - This tool: [sor.myproduct.life](https://sor.myproduct.life)
