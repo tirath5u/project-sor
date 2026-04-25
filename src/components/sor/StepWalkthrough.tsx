@@ -109,11 +109,11 @@ export function StepWalkthrough({
       <section className="border-b border-border py-4">
         <StepHeader
           n={2}
-          title="Academic Year Enrollment % → Annual Loan Limit"
-          tip="Σ enrolled credits across eligible terms ÷ AY FT credits. This is the SOR % applied to baselines."
+          title="SOR % (Academic Year reduction factor) → Annual Loan Limit"
+          tip="SOR % = Σ AY enrolled credits ÷ AY FT credits, rounded. This is the calculation input that reduces the annual baselines. Distinct from per-term Enrollment Intensity (EI), which is the value reported to COD."
         />
         <Eq>
-          Academic Year enrollment % = ({enrolledExpr}) ÷ {ftExpr}
+          SOR % = ({enrolledExpr}) ÷ {ftExpr}
           <br />={" "}
           <span className="font-semibold text-primary">
             {(results.enrollmentFractionRaw * 100).toFixed(2)}%
