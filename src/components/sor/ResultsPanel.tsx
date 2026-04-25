@@ -79,14 +79,18 @@ export function ResultsPanel({
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-white/10 p-3">
             <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-80">
-              Academic Year %
-              <InfoTip>Sum of enrolled credits across eligible terms ÷ AY full-time credits, rounded.</InfoTip>
+              SOR %
+              <InfoTip>
+                Schedule of Reductions percentage. = Σ AY enrolled credits ÷ AY full-time credits, rounded.
+                This is the calculation input that reduces the annual Sub/Unsub (and Grad PLUS) baselines.
+                Distinct from Enrollment Intensity (EI), which is the per-term value reported to COD on disbursement records.
+              </InfoTip>
             </div>
             <div className="mt-1 text-2xl font-bold tabular-nums">
               {Math.round(results.sorPctRounded * 100)}%
             </div>
             <div className="text-[11px] opacity-80">
-              {results.enrolledSumAll} / {results.ftSumAll} credits
+              {results.enrolledSumAll} / {results.ftSumAll} AY credits
             </div>
           </div>
           <div className="rounded-lg bg-white/10 p-3">
@@ -130,7 +134,7 @@ export function ResultsPanel({
         <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
           Per-term Disbursements
           <InfoTip label="About per-term disbursements">
-            How the reduced annual Sub/Unsub pools are sliced across each eligible term using the chosen distribution rule (Equal or Proportional). Disbursed/paid terms are anchored — the engine never retroactively changes them; the remaining pool is redistributed to future eligible terms. Final values are clamped to per-term COA caps.
+            How the reduced annual Sub/Unsub pools are sliced across each eligible term using the chosen distribution rule (Equal or Proportional). Disbursed/paid terms are anchored - the engine never retroactively changes them; the remaining pool is redistributed to future eligible terms. Final values are clamped to per-term COA caps.
           </InfoTip>
         </h3>
         <div className="-mx-2 overflow-x-auto">
@@ -281,7 +285,7 @@ export function ResultsPanel({
           <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
             Grad PLUS (DLGP)
             <InfoTip label="About Grad PLUS">
-              Third parallel bucket for graduate/professional borrowers. Capped at COA minus all other aid (Pell, grants, scholarships, Sub, Unsub). Subject to SOR for 2026-27+. Grade level is the only access gate — LLE/grandfathering does NOT affect Grad PLUS.
+              Third parallel disbursement bucket for graduate / professional borrowers. Capped at Cost of Attendance minus all other aid (Pell, grants, scholarships, Sub, Unsub). Subject to the SOR % for award year 2026-27 and later. Grade Level is the only access gate - the Loan Limit Exception (grandfathering) does NOT affect Grad PLUS access.
             </InfoTip>
           </h3>
           <div className="grid grid-cols-2 gap-2">
