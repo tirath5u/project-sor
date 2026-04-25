@@ -13,11 +13,33 @@
 
 import { defaultInputs, TERM_LABELS, type SORInputs, type TermKey } from "./sor";
 
+/**
+ * Source publication status for a fixture's underlying regulatory references.
+ * - `confirmed`: the cited authority is final/published and unlikely to change.
+ * - `preliminary`: cited authority is interim guidance (e.g. early ED EA);
+ *    the fixture's expected values may shift on final guidance.
+ */
+export type FixtureSourceStatus = "confirmed" | "preliminary";
+
+/**
+ * How tightly the maintainers stand behind the expected values.
+ * - `strict`: every asserted field must match exactly to dollar / boolean.
+ * - `directional`: numbers may shift slightly under future engine refinements,
+ *    but ordering / sign / order-of-magnitude must hold.
+ */
+export type FixtureAssertionLevel = "strict" | "directional";
+
 export interface ParityFixture {
   id: string;
   description: string;
   /** Public-source-register IDs that justify the expected output. */
   sourceRefs: string[];
+  /** Status of the underlying regulatory citations. Default: confirmed. */
+  sourceStatus?: FixtureSourceStatus;
+  /** Strictness of the expected-value assertion. Default: strict. */
+  assertionLevel?: FixtureAssertionLevel;
+  /** ISO date the maintainers last reviewed this fixture against sources. */
+  asOfDate?: string;
   input: SORInputs;
   /** Field-level assertions keyed by SORResults field. Subset is fine. */
   expected: {
@@ -35,6 +57,12 @@ export interface ParityFixture {
     terms?: Partial<Record<TermKey, { finalSub?: number; finalUnsub?: number; finalGradPlus?: number }>>;
   };
 }
+
+/**
+ * Default review date for fixtures that don't pin their own. Update when a
+ * new round of source-set verification has been completed.
+ */
+const DEFAULT_AS_OF_DATE = "2026-04-25";
 
 function build(
   patch: Partial<SORInputs>,
@@ -252,6 +280,9 @@ export function serializeFixturesForPublic() {
     id: f.id,
     description: f.description,
     sourceRefs: f.sourceRefs,
+    sourceStatus: f.sourceStatus ?? "confirmed",
+    assertionLevel: f.assertionLevel ?? "strict",
+    asOfDate: f.asOfDate ?? DEFAULT_AS_OF_DATE,
     input: f.input,
     expected: f.expected,
   }));
