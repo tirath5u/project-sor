@@ -1,194 +1,389 @@
-# V19 UI / Tooltip Polish + Audit Gap Closure
+# V20 — Public SOR Calculation API (Final Comprehensive Plan)
 
 ## Goal
 
-Bring the live site at `sor.myproduct.life` to V19 audit parity in the **UI layer only**: the engine math is already correct, but the matrix, tooltips, labels, and Section A field order all leak v18 vocabulary, conflate SOR % with Enrollment Intensity, hide the Grad PLUS track, and let the user pick grade levels that aren't valid for the selected award year. None of this changes the calculator's outputs; it changes how we *talk to the user* about them.
+Expose the existing V19 SOR calculation engine as a free, public, portfolio-grade HTTP API on `sor.myproduct.life`, with full provenance, parity testing against the canonical spreadsheet, an open challenge workflow, and a transparent build narrative. Source the repo to GitHub so practitioners, vendors, and reviewers can inspect, use, and challenge the math.
+
+**Non-goal**: changing the engine math. The Balance-Forward engine + cent-precision rounding from V19 is correct and the regression suite stays green.
 
 ---
 
-## 1. Strip every "v18" / "v19" / "spreadsheet" reference from user-facing text
+## Architecture: One Engine, Two Consumers
 
-End users have no concept of v18/v19 - those are *our* internal milestones. Every tooltip, label, and visible string on the page should stand on its own with reference only to:
+```
+┌─────────────────────────────────────────────────┐
+│           src/lib/sor.ts (engine)               │
+│   Pure TypeScript, deterministic, zero deps     │
+└──────────────┬───────────────────────┬──────────┘
+               │                       │
+       direct import              HTTP wrapper
+               │                       │
+               ▼                       ▼
+   ┌─────────────────────┐   ┌─────────────────────────┐
+   │  React UI (today)   │   │ /api/public/v1/calculate│
+   │  zero-latency math  │   │ Zod-validated, CORS     │
+   └─────────────────────┘   └─────────────────────────┘
+```
 
-- The regulation (e.g., 34 CFR 685.203, OBBBA, the Combined Limit Shifting Rule),
-- The award year (2025-26 vs 2026-27),
-- The plain-English thing it does.
-
-**Files to scrub** (user-visible strings only - JSDoc / code comments stay as-is):
-
-
-| File                                     | What to change                                                                                                                                                                                                                                                                                          |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/components/sor/ResultsPanel.tsx`    | "Schedule of Reductions" header tooltip currently says "v18". Rewrite to: *"Calculates how Direct Loan annual limits are reduced for less-than-full-time enrollment under 34 CFR 685.203. Shows the SOR %, the reduced Sub/Unsub/Grad PLUS annual pools, and the per-term disbursements."*              |
-| `src/components/sor/TermsMatrix.tsx`     | Regression strip text `"✓ Matches v18 to the dollar"` → `"✓ Matches expected scenario values"`. Header tooltips drop "v18".                                                                                                                                                                             |
-| `src/routes/index.tsx`                   | Comment `{/* Section A — compact inputs */}` is fine (code comment). But the visible string `"Table = spreadsheet-style matrix mirroring v18 (sections B–J)..."` (line 949) → `"Table = compact spreadsheet view of every calculation step. Cards = per-term card layout, easier on narrow viewports."` |
-| `src/components/sor/StepWalkthrough.tsx` | Already user-friendly; verify no v18 strings render.                                                                                                                                                                                                                                                    |
-
-
-**Rule**: if a user looking at the page can see the text, it cannot say "v18", "v19", "the spreadsheet", "master spreadsheet", or "§ G/H".
+**Rule**: the UI never goes through the API, the API never re-implements engine logic, and `src/lib/sor.ts` stays the single source of truth.
 
 ---
 
-## 2. Replace every em-dash (`—`) with a regular hyphen (`-`) in user-visible strings
+## Stage 1 — Contract & Parity (do this BEFORE the API)
 
-Found in 14+ places across `src/routes/index.tsx`, `src/components/sor/ResultsPanel.tsx`, `src/components/sor/TermsMatrix.tsx`, `src/components/sor/StepWalkthrough.tsx`. These are all in tooltips, headers, comments-that-render, and inline body text.
+### 1.1 Version & policy metadata — `src/lib/sor.version.ts` (new)
 
-**Scope**: only replace em-dashes inside **strings that render to the DOM** (JSX text content, `tooltip=`, `hint=`, `description=`, `label=`, `placeholder=` props, `<InfoTip>` children). Do NOT touch:
-
-- JSDoc block comments at the top of files (those are dev docs, not rendered).
-- The TS file headers (`* Card view — same data as TermsMatrix`).
-
-Also check the `placeholder="—"` on line 1058 of `index.tsx` and replace with `placeholder="-"` so blank cells display as a regular dash.
-
----
-
-## 3. Rename "Grade Code" → "Grade Level" + reorder Section A so Award Year comes first
-
-The audit caught this: the dropdown is labeled **Grade Code** but the field is the Grade Level (SLC). Also today the layout is:
-
-> Row 1: Grade Code, Dependency, Annual Need, AY FT Credits  
-> Row 2: Award Year, LLE, COA, Other Aid, Requested Grad PLUS
-
-Per the user, **Award Year drives which Grade Levels are valid**, so AY must be picked first. Reorder Section A:
-
-> **Row 1 (new):** Award Year · Loan Limit Exception (Grandfathered) · Dependency · AY Full-Time Credits  
-> **Row 2 (new):** Grade Level · Annual Financial Need · Cost of Attendance · Other Non-PLUS Aid · Requested Grad PLUS
-
-`Grade Level` label change is a one-line edit in `src/routes/index.tsx` line 381 + `QuickTermCalc.tsx` line 93. also ensure all references to grade code are called grade level. 
-
----
-
-## 4. Filter the Grade Level dropdown by selected Award Year
-
-The user said "I'll send you the exact mapping in chat" - so I will **not invent values**. Instead I will set up the *plumbing* so when they send the mapping, dropping it into one constant in `loanLimits.ts` is a 30-second edit.
-
-**Plumbing changes** (in `src/lib/loanLimits.ts`):
+Separated from the schema so validation logic and release identity stay decoupled:
 
 ```ts
-// Add a new constant - placeholder until the user provides the official mapping
-export const GRADE_LEVELS_BY_AWARD_YEAR: Record<"2025-26" | "2026-27", GradeLevel[]> = {
-  "2025-26": [/* TODO: user to provide */],
-  "2026-27": [/* TODO: user to provide */],
-};
+export const ENGINE_VERSION = "19.0.0";        // bumps on math/code changes
+export const POLICY_SET = "direct-loan-sor";
+export const POLICY_YEAR = "2026-27";
+export const POLICY_SNAPSHOT_DATE = "2026-04-24";
+// Injected at build time; fallback for local dev
+export const SOURCE_COMMIT =
+  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_COMMIT_SHA) ||
+  process.env.VITE_COMMIT_SHA ||
+  "local-dev";
 
-// Helper that respects the mapping
-export function gradeLevelsForAwardYear(ay: "2025-26" | "2026-27"): GradeLevel[] {
-  return GRADE_LEVELS_BY_AWARD_YEAR[ay] ?? Object.keys(LIMITS) as GradeLevel[];
+/**
+ * Award-year support matrix. Reflected in /scenarios and /api-docs.
+ */
+export const SUPPORT_MATRIX = {
+  "2025-26": { supported: true,  status: "confirmed",            notes: "Stable; 34 CFR 685.203 baseline." },
+  "2026-27": { supported: true,  status: "preliminary-OBBBA",    notes: "OBBBA non-grandfathered behavior is preliminary; subject to final ED rulemaking." },
+} as const;
+```
+
+**When each version bumps** (documented in `docs/methodology.md`):
+- `ENGINE_VERSION` — math or code change in `src/lib/sor.ts`.
+- `POLICY_YEAR` / `POLICY_SNAPSHOT_DATE` — ED publishes new guidance that changes a rule (e.g., OBBBA final rule).
+
+### 1.2 Shared schema — `src/lib/sor.schema.ts` (new)
+
+Pure shape validation only — no version metadata here.
+
+```ts
+import { z } from "zod";
+
+// Reject empty strings, nulls, whitespace for required numeric fields.
+// z.coerce.number() alone silently turns "" into 0, which corrupts SOR math.
+const strictNumber = z.preprocess((v) => {
+  if (v === null || v === undefined) return v;
+  if (typeof v === "string") {
+    const t = v.trim();
+    if (t === "") return undefined; // forces "Required" error
+    const n = Number(t);
+    return Number.isFinite(n) ? n : v;
+  }
+  return v;
+}, z.number().finite());
+
+export const SORInputSchema = z.object({
+  awardYear: z.enum(["2025-26", "2026-27"]),
+  gradeLevel: z.string().min(1).max(8),
+  dependency: z.enum(["dependent", "independent"]),
+  loanLimitException: z.boolean().default(false),
+  ayFullTimeCredits: strictNumber.refine((n) => n > 0, "must be > 0"),
+  annualNeed: strictNumber.nonnegative(),
+  cost: strictNumber.nonnegative(),
+  otherAid: strictNumber.nonnegative(),
+  requestedGradPlus: strictNumber.nonnegative().default(0),
+  terms: z.array(/* term schema */).min(1).max(6),
+}).strict(); // reject unknown fields → 422
+
+export type SORInput = z.infer<typeof SORInputSchema>;
+```
+
+### 1.3 Canonical fixtures — `src/lib/sor.fixtures.ts` (new, single source of truth)
+
+`sor.fixtures.ts` is canonical. The `/scenarios` endpoint serializes to JSON at request time — we do **not** maintain a parallel `.json` file.
+
+```ts
+export type SourceStatus =
+  | "confirmed"
+  | "operational-clarification"
+  | "inferred"
+  | "pending-federal-guidance"
+  | "school-policy-dependent";
+
+export type AssertionLevel =
+  | "canonical"               // matches the published spreadsheet exactly
+  | "implemented-interpretation"
+  | "exploratory";
+
+export interface Fixture {
+  id: string;                 // e.g. "fixture-v19-001"
+  name: string;
+  description: string;
+  input: SORInput;
+  expected: SORResults;
+  sourceStatus: SourceStatus;
+  assertionLevel: AssertionLevel;
+  sourceRefs: string[];       // e.g. ["psr-001", "psr-014"] → docs/public-source-register.md
+  asOf: string;               // ISO date — when this rule was last verified
+  notes?: string;
 }
 ```
 
-**As a starting placeholder** (so the UI works today and the user can correct later), seed with the audit's hint - 2025-26 hides graduate/professional/prep tiers, 2026-27 shows the full set. I'll mark this with a visible `// TODO: confirm with regulations` and a small InfoTip on the Grade Level field saying "Grade levels available depend on the selected Award Year. Confirm with current ED guidance before production use."
+**Privacy/safety on fixtures**:
+- All inputs are synthetic personas or federally-published examples. No real student data, ever.
+- `sourceRefs` point to entries in `docs/public-source-register.md`, not to private spreadsheet paths.
+- The internal worksheet path (e.g. `spreadsheets/v19.xlsx#sheet=Scenario-A`) is **not** published. If a reviewer needs it, it lives in the public source register only when the spreadsheet itself is public and scrubbed.
 
-**UI changes** (`src/routes/index.tsx` + `QuickTermCalc.tsx`):
+### 1.4 Parity test — `src/lib/sor.parity.test.ts` (new)
 
-- Filter `GRADE_GROUPS` rendering to only show codes in `gradeLevelsForAwardYear(inputs.awardYear)`.
-- Add a `useEffect` that auto-resets `inputs.gradeLevel` to a valid one (e.g. first allowed code) when the user toggles AY and the current selection is no longer in the allowed list.
-- Same logic in `QuickTermCalc.tsx`.
+For every fixture: run engine → assert cent-exact equality with `expected`. This is the credibility layer; CI fails if any canonical fixture drifts.
 
-When the user posts the official mapping in chat, the only edit needed is updating `GRADE_LEVELS_BY_AWARD_YEAR` - everything else flows.
+### 1.5 Rounding policy — `docs/rounding-policy.md` (new)
 
----
-
-## 5. Separate "SOR %" from "Enrollment Intensity (EI) %"
-
-Per the user's clarification:
-
-- **SOR %** = Σ AY enrolled credits ÷ AY FT credits, rounded. **Used by the engine** to reduce annual limits.
-- **Enrollment Intensity (EI) %** = per-term enrolled ÷ term FT. **Reported to COD**, never used in the SOR calculation.
-
-The engine already computes both correctly (`results.sorPctRounded` is SOR %, `term.intensityPct` is EI). The bug is **labeling**: the Results panel header card is labeled "Academic Year %" but should be **SOR %**, and the per-term EI display in the matrix should make clear it's the COD-reportable number, not part of the calc.
-
-**Edits**:
-
-- `src/components/sor/ResultsPanel.tsx` (lines 81-90): Rename the "Academic Year %" stat card to **"SOR %"** with subtitle *"Σ AY enrolled credits ÷ AY FT credits"*. Tooltip: *"The Schedule of Reductions percentage applied to the annual Sub/Unsub (and Grad PLUS) baselines. This is the calculation input - distinct from Enrollment Intensity (EI), which is the per-term value reported to COD."*
-- `src/components/sor/TermsMatrix.tsx`: Rename the row currently labeled "Enrollment Intensity (EI) %" - keep the label, but update the tooltip to: *"Per-term Enrollment Intensity = (Enrolled + lapsed below-half-time credits) ÷ FT. **Reported to COD on disbursement records.** Not used in the SOR reduction itself - that uses the annual SOR % shown in the Results panel."*
-- `StepWalkthrough.tsx`: Rename Step 2 header from "Academic Year Enrollment %" to "SOR % (Academic Year reduction factor)"; same disambiguating sentence.
-- `QuickTermCalc.tsx`: Rename the "AY %" stat to "SOR %".
+Documents the four cases the local SOR guide flags as open: cents rounding, term rounding, percentage rounding (SOR % vs EI %), and carry-forward behavior. Every fixture proves one of these.
 
 ---
 
-## 6. Add Grad PLUS to the Per-term Calculation Matrix
+## Stage 2 — Public API MVP
 
-Currently `TermsMatrix.tsx` only emits Sub/Unsub rows. Per the user's choice, render Grad PLUS rows **only when `results.initialGradPlus > 0**` so the UG/2025-26 view stays clean.
+### 2.1 `POST /api/public/v1/calculate` — `src/routes/api/public/v1/calculate.ts` (new)
 
-**Edits to `src/components/sor/TermsMatrix.tsx**`:
+Strict HTTP semantics:
+- `415 Unsupported Media Type` if `Content-Type` is not `application/json`.
+- `406 Not Acceptable` if `Accept` is set and excludes `application/json`.
+- `405 Method Not Allowed` for non-POST/OPTIONS, with `Allow: POST, OPTIONS`.
+- `413 Payload Too Large` if body > 32 KB.
+- `400` for malformed JSON; `422` for valid JSON that fails Zod.
+- `200` on success.
 
-- Add 3 conditional rows after the existing `Final Unsub` row (or interleaved with the Sub/Unsub Share / Calc / Final block to mirror their structure):
-  - **Step-3 Share Grad PLUS** → `t.shareGradPlus`
-  - **Calc Grad PLUS (Step 5)** → `t.calcGradPlus`
-  - **Final Grad PLUS** (emphasized) → `t.finalGradPlus`, with COA-cap warning shading like Sub/Unsub.
-- Build the row list dynamically: `const ROWS = baseRows.concat(results.initialGradPlus > 0 ? gradPlusRows : []);` - keep the static `ROWS` const for Sub/Unsub and append.
-- Same conditional shading rules: `t.coaCapGradPlus > 0 && t.calcGradPlus > t.coaCapGradPlus` → warning color.
+CORS:
+- `Access-Control-Allow-Origin: *`
+- `Access-Control-Allow-Methods: POST, OPTIONS`
+- `Access-Control-Allow-Headers: Content-Type, Accept, X-Request-Id` *(Accept is included because we validate it)*
+- `Access-Control-Max-Age: 86400`
+- `OPTIONS` returns **204 No Content** — checklist will be aligned to 204 (single source of truth).
 
-**Edits to `src/components/sor/TermsCards.tsx**`:
-
-- Add a Grad PLUS final tile in the bottom grid (same conditional `results.initialGradPlus > 0`), 3-column layout instead of 2.
-- Add a "Net Paid Grad PLUS" row in the `<dl>` block.
-
-**Edits to `src/components/sor/StepWalkthrough.tsx**`:
-
-- In the Step 4/5 table, add Calc Grad PLUS / Final Grad PLUS columns when applicable.
-- In Step 1, add a third equation block when `initialGradPlus > 0` showing the COA derivation: `min(requested, COA - other aid - Sub - Unsub) = $X`.
-
----
-
-## 7. Add the static "Per-term Cap" row to the matrix
-
-Per the user's choice: **Per-term Cap = Reduced Annual ÷ Total Eligible Terms** (static, not running). Cell turns **red** when `Final > Per-term Cap`.
-
-The engine already computes `perTermCapSub`, `perTermCapUnsub`, `perTermCapGradPlus` on `SORResults`, and `exceedsPerTermCapSub/Unsub/GradPlus` boolean flags on each `TermResult`. So this is purely a display addition.
-
-**Edits to `src/components/sor/TermsMatrix.tsx**`:
-
-- Add a new informational row group after Final Sub / Final Unsub (and Final Grad PLUS when shown):
-  - **Per-term Cap (Sub)** → all cells show `fmtCurrency(results.perTermCapSub)` (same value across columns since it's static); the cell for the AY Total column shows the static cap too.
-  - **Per-term Cap (Unsub)** → same.
-  - **Per-term Cap (Grad PLUS)** → conditional on `initialGradPlus > 0`.
-- Apply red text + red background tint (`bg-destructive/10 text-destructive`) on the corresponding **Final Sub/Unsub/GradPlus** cell when `t.exceedsPerTermCapSub/Unsub/GradPlus === true`. This is **separate from** the existing yellow COA-cap shading - the two states can co-occur, and red (cap exceeded) takes precedence.
-- Add a small InfoTip on each Per-term Cap row: *"Reduced Annual ÷ Number of Eligible Terms. Informational only - proportional front-loading is permitted under 34 CFR 685.301(b)(8). Cells turn red when the final disbursement exceeds this cap so you can flag for audit review."*
-
-**Edits to `src/components/sor/TermsCards.tsx**`:
-
-- Add the same red-vs-yellow precedence on the Final Sub/Unsub/GradPlus tiles.
-- Add a small "Per-term cap: $X" line under each Final tile.
-
----
-
-## 8. Out of scope for this pass (call out to the user)
-
-Things in the audit / transcript that I'm **not** doing in this pass, so the user knows:
-
-- **Engine math changes**: none. The Balance-Forward engine + cent-precision rounding is already correct per the v19 plan and the $1,840 / 12-6-15 → $669/$335/$836 regression test still passes.
-- **Public API endpoint**: deferred until after this UI pass lands and the user is ready to expose `/api/public/v1/calculate` (separate scope).
-- **Lifecycle Tracker** (`/lifecycle`): not touched. Audit gap on DLGP lifecycle tracking is real but is a separate page; can be a follow-up.
-- **PDF export**: not touched in this pass. Will likely need a follow-up to add the Grad PLUS columns + the "Per-term Cap" row to the PDF.
-
----
-
-## Files that will change
-
-```
-src/lib/loanLimits.ts              # Add GRADE_LEVELS_BY_AWARD_YEAR map + helper
-src/routes/index.tsx               # Reorder Section A, rename Grade Code, filter dropdown by AY, em-dash sweep
-src/components/sor/TermsMatrix.tsx # Add DLGP rows, Per-term Cap rows, red exceedance shading, drop "v18" strings
-src/components/sor/TermsCards.tsx  # Add DLGP tile, per-term cap label, red shading
-src/components/sor/ResultsPanel.tsx# Rename to SOR %, rewrite header tooltip, em-dash sweep
-src/components/sor/StepWalkthrough.tsx # Rename Step 2 to SOR %, add DLGP equations, em-dash sweep
-src/components/sor/QuickTermCalc.tsx   # "Grade Code" → "Grade Level", "AY %" → "SOR %", AY-aware grade filter
+Response envelope:
+```json
+{
+  "data": { /* SORResults */ },
+  "meta": {
+    "engineVersion": "19.0.0",
+    "policySet": "direct-loan-sor",
+    "policyYear": "2026-27",
+    "policySnapshotDate": "2026-04-24",
+    "sourceCommit": "abc1234",
+    "sourceRepo": "github.com/<owner>/<repo>",
+    "sourceSet": ["direct-loan-sor-v1"],
+    "citations": [],
+    "requestId": "01HXXX...",
+    "computedAt": "2026-04-25T12:34:56Z"
+  }
+}
 ```
 
-No engine, no test, no scenario, no router changes.
+`citations` is an array, only populated when the engine can map the scenario to specific rule tags. We do **not** stamp every response with `34 CFR 685.203(a)(2)` — that would overclaim.
+
+### 2.2 Logging & privacy
+
+`src/lib/api-logger.ts` (inline in handler initially; extract on second use):
+- Log: `requestId`, `duration`, `status`, `userAgent`, `awardYear`, `gradeLevel`, `engineVersion`, `policyYear`.
+- **Do not log raw IP.** Raw IP is used transiently for rate-limit bucketing only and is never written to logs. If we ever need IP-shaped analytics, log a daily-salted SHA-256 hash, never the raw value.
+- Structured JSON output for grep-ability.
+
+### 2.3 Rate limiting — `src/lib/rate-limit.ts` (new)
+
+Best-effort, per-Worker-isolate, in-memory: 30 req/min and 5,000 req/day per IP. Headers on every response:
+- `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+- `X-RateLimit-Policy: best-effort-per-isolate`
+- `Retry-After` on 429.
+
+### 2.4 Error envelope — `src/lib/api-errors.ts` (new)
+
+```json
+{ "error": { "code": "VALIDATION_ERROR", "message": "...", "details": [...], "requestId": "..." } }
+```
+
+### 2.5 Health — `GET /api/public/v1/health`
+
+Returns `{ status, engineVersion, policyYear, policySnapshotDate, sourceCommit, uptime }`.
 
 ---
 
-## Verification when done
+## Stage 3 — Public Evidence Layer
 
-1. Open `/`, confirm Section A reads: Award Year → LLE → Dependency → AY FT (row 1), Grade Level → Annual Need → COA → Other Aid → Requested Grad PLUS (row 2).
-2. Switch Award Year between 2025-26 and 2026-27 - the Grade Level dropdown contents change accordingly (using whatever mapping is in `GRADE_LEVELS_BY_AWARD_YEAR`).
-3. Hover every InfoTip on the page - none mention "v18", "v19", "spreadsheet", or "§ G/H".
-4. Search the rendered page for `—` (em-dash) - should be zero hits.
-5. With grade = G/P + Requested Grad PLUS > 0 + COA > 0: matrix shows Share/Calc/Final **Grad PLUS** rows; the Per-term Cap rows render for all three buckets.
-6. Force a Final Sub > Per-term Cap (e.g. proportional front-loading): that cell turns **red**, not yellow.
-7. Results panel header card is labeled **SOR %** with the disambiguating subtitle; the matrix EI row tooltip explicitly says "reported to COD, not used in the SOR calc".
+### 3.1 `GET /api/public/v1/scenarios`
 
-Once approved, I'll execute these edits in default mode in the order listed.
+Serializes `sor.fixtures.ts` to JSON at request time. Each scenario includes id, name, input, expected, `sourceStatus`, `assertionLevel`, `sourceRefs`, `asOf`. Lets any third party verify engine parity by replaying inputs against `/calculate`.
+
+### 3.2 `GET /api/public/v1/openapi.json`
+
+OpenAPI 3.1 generated from `src/lib/sor.schema.ts` via `zod-to-openapi`. Includes `operationId` for SDK generation and `x-code-samples` (cURL, JS, Python).
+
+### 3.3 `GET /api/public/v1/`
+
+Discovery endpoint listing all v1 routes + links to docs.
+
+### 3.4 Versioning policy (in `docs/methodology.md`)
+
+- **v1.x (additive)**: new optional fields, new endpoints, new fixtures, expanded `sourceRefs`.
+- **v2 (breaking)**: any change to the meaning of an existing input or output field (e.g., adding disbursement-mode semantics that change how `paidSub` interacts with `finalSub`).
+- Disbursement mode (handling `paidSub`, `refundUnsub`, recalcs) is **v2**, not v1.1, because it changes the semantics of the calculation, not just the surface area.
+
+---
+
+## Stage 4 — Portfolio Polish
+
+### 4.1 Branded `/api-docs` — `src/routes/api-docs.tsx` (new)
+
+- Hero: live API status, current `engineVersion` / `policyYear`.
+- Quickstart with code tabs (cURL, fetch, Python `requests`).
+- Award-year support matrix (rendered from `SUPPORT_MATRIX`).
+- Rate-limit policy explained.
+- **"Challenge this calculation" callout** — links to a pre-filled GitHub issue.
+- Disclaimer (see §6).
+
+### 4.2 Swagger UI — `/api/v1/docs` (new)
+
+`swagger-ui-react` pointing at `/api/public/v1/openapi.json`. Optional for launch — ship `/api-docs` first if Swagger adds load.
+
+### 4.3 Examples — `examples/` (new)
+
+Runnable: `examples/curl.sh`, `examples/node.mjs`, `examples/python.py`. README in the folder shows expected output.
+
+---
+
+## Stage 5 — GitHub & Documentation
+
+### 5.1 README rewrite
+
+Single image at top showing the **provenance chain**:
+**Regulation citation → Spreadsheet screenshot → API call → Matching response → Passing parity test.**
+
+Sections:
+- Live app + API quickstart
+- Architecture (link to `docs/architecture.md`, Mermaid)
+- "How to verify our math": one paragraph — `git clone && bun install && bunx vitest run`. Every canonical fixture passes cent-exact.
+- "How to challenge a calculation"
+- Methodology + process narrative links
+- License (MIT) + disclaimer
+
+### 5.2 Documentation suite
+
+| File | Purpose |
+|---|---|
+| `docs/architecture.md` | Mermaid diagram, one-engine-two-consumers explanation |
+| `docs/methodology.md` | Source-status taxonomy (one paragraph + example per label), version bump rules, versioning policy (v1 vs v2) |
+| `docs/process.md` | **Transparent build process** (renamed from "open the kimono"): how the spreadsheet was derived → wiki → LLM-assisted formula derivation → adversarial multi-LLM review → final spec → Lovable build → API plan debate |
+| `docs/rounding-policy.md` | Cents, term, percentage, carry-forward rounding rules |
+| `docs/public-source-register.md` | Every public citation: URL, source type, `sourceStatus`, last-verified date, which rule it supports. Internal notes / vendor transcripts / client examples are excluded |
+| `docs/regulatory-citations.md` | 34 CFR 685.203, OBBBA primary sources |
+| `docs/scenario-catalog.md` | Human-readable index of all fixtures with their `assertionLevel` |
+| `LICENSE` | MIT (required for the "free, public" framing to be legally valid) |
+| `CONTRIBUTING.md` | Includes SLA: *"Issues are triaged weekly. Accepted scenario challenges become fixtures within one release cycle."* |
+| `CHANGELOG.md` | Semantic version log keyed to `ENGINE_VERSION` and `POLICY_SNAPSHOT_DATE` |
+
+**LLM governance note** (in `docs/process.md` and `README.md`):
+> *LLMs helped derive, critique, and implement this calculator. Source documents (34 CFR 685.203, OBBBA, FSA TechRefs), the published spreadsheet, fixtures, and the parity test suite are the authority. The LLM is the assistant, not the source of truth.*
+
+### 5.3 GitHub repo target
+
+Confirm with the user during execution: does Lovable's sync push to `github.com/<their-account>/<repo>`? If not, fork/mirror to `tirath5u/sor-api` so README badges and `meta.sourceRepo` resolve correctly.
+
+### 5.4 Issue templates — `.github/ISSUE_TEMPLATE/`
+
+- `scenario-challenge.yml` — pre-fills inputs, expected output, source citation, reason. Every accepted challenge becomes a **fixture first, code change second**.
+- `citation-update.yml` — for regulatory updates (e.g., OBBBA final rule).
+- `bug.yml`.
+
+### 5.5 CI — `.github/workflows/ci.yml` (new)
+
+Mandatory: typecheck, lint, `bunx vitest run` (engine + parity + API). Inject `VITE_COMMIT_SHA=${{ github.sha }}` at build so `meta.sourceCommit` is real.
+
+Deploy workflow is **conditional** — only added once the user confirms Lovable supports the exact GitHub Actions deployment path. Until then, Lovable's sync handles deploys.
+
+### 5.6 Public-safety pre-launch checklist
+
+Before flipping the repo public:
+- [ ] No client data in any fixture or doc
+- [ ] No internal team names / vendor names
+- [ ] No proprietary worksheet tabs or internal file paths
+- [ ] No unpublished vendor material
+- [ ] No screenshots exposing internal artifacts
+- [ ] Disclaimer present in README + `/api-docs`
+- [ ] LICENSE committed
+
+---
+
+## 6. Disclaimer (README + `/api-docs`)
+
+> This is an open educational and validation tool, **not** an official ED calculator, legal advice, or an institutional policy substitute. **No real student data is or will ever be in this repository.** All scenarios use synthetic personas or federally-published examples. OBBBA-related behavior for award year 2026-27 is **preliminary** pending final ED rulemaking. Higher-ed practitioners, vendor teams, and reviewers are invited to inspect, use, and challenge the math via GitHub issues.
+
+(Avoids the "ED partners endorse this" overclaim.)
+
+---
+
+## Files Created / Modified
+
+**New logic & contracts**
+- `src/lib/sor.version.ts`
+- `src/lib/sor.schema.ts`
+- `src/lib/sor.fixtures.ts` *(canonical, single source of truth)*
+- `src/lib/sor.parity.test.ts`
+- `src/lib/api-errors.ts`
+- `src/lib/rate-limit.ts`
+- `src/lib/openapi-spec.ts`
+
+**New routes**
+- `src/routes/api/public/v1/index.ts` *(discovery)*
+- `src/routes/api/public/v1/calculate.ts`
+- `src/routes/api/public/v1/health.ts`
+- `src/routes/api/public/v1/scenarios.ts`
+- `src/routes/api/public/v1/openapi.json.ts`
+- `src/routes/api/v1/docs.tsx` *(Swagger UI, optional for launch)*
+- `src/routes/api-docs.tsx`
+
+**Docs & meta**
+- `README.md` (rewrite)
+- `LICENSE` (MIT)
+- `CONTRIBUTING.md`, `CHANGELOG.md`
+- `docs/architecture.md`, `docs/methodology.md`, `docs/process.md`
+- `docs/rounding-policy.md`, `docs/public-source-register.md`
+- `docs/regulatory-citations.md`, `docs/scenario-catalog.md`
+- `examples/curl.sh`, `examples/node.mjs`, `examples/python.py`
+- `.github/workflows/ci.yml`
+- `.github/ISSUE_TEMPLATE/{scenario-challenge,citation-update,bug}.yml`
+
+**Modified**
+- `src/lib/sor.ts` — export types only; no math change.
+- `src/routes/index.tsx` — header link to `/api-docs`.
+
+**Untouched**
+- Engine math, scenarios, regression tests, lifecycle page.
+
+---
+
+## Verification Checklist
+
+1. `POST /api/public/v1/calculate` with valid body → `200` + `data` + `meta` (with real `sourceCommit`, not `local-dev`, in CI builds).
+2. Wrong `Content-Type` → `415`. `Accept: text/html` → `406`. `GET` → `405` with `Allow: POST, OPTIONS`. Body > 32 KB → `413`.
+3. Malformed JSON → `400`. Valid JSON, schema fail → `422` with field-level details. Empty-string numeric field → `422` "Required" (not silently `0`).
+4. Unknown field in body → `422` (schema is `.strict()`).
+5. CORS preflight `OPTIONS` returns **204** with `Allow-Headers` including `Accept`.
+6. 31st request in 60s → `429` with `Retry-After` and `X-RateLimit-Policy: best-effort-per-isolate`.
+7. Logs contain `requestId`, `duration`, `userAgent` — **never** raw IP.
+8. `GET /scenarios` returns fixtures with `sourceStatus`, `assertionLevel`, `sourceRefs`, `asOf`. Replaying any canonical fixture against `/calculate` returns cent-exact `expected`.
+9. `meta.citations` is `[]` for generic scenarios; populated only when the engine maps to specific rule tags.
+10. `/api-docs` shows the support matrix, "Challenge this calculation" link, and the disclaimer.
+11. `bunx vitest run` → all parity tests green; CI blocks merge on failure.
+12. Public-safety checklist completed before repo goes public.
+
+---
+
+## Stage Order
+
+1. **Stage 1 — Contract & Parity**: version file, schema with `strictNumber`, fixtures, parity test, rounding doc.
+2. **Stage 2 — API MVP**: `/calculate`, `/health`, errors, rate-limit, no-IP logging.
+3. **Stage 3 — Evidence Layer**: `/scenarios`, `/openapi.json`, `/` discovery.
+4. **Stage 4 — Polish**: `/api-docs` page, examples, optional Swagger.
+5. **Stage 5 — GitHub & Docs**: README, all docs, LICENSE, issue templates, CI with `VITE_COMMIT_SHA` injection.
+6. **Pre-launch**: public-safety checklist, then flip the repo public.
+
+Once approved, Stage 1 starts in default mode.
