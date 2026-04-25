@@ -1,0 +1,67 @@
+name: Scenario Challenge
+description: Report a calculation result you believe is incorrect, with a regulatory citation.
+title: "[Scenario] <one-line summary>"
+labels: ["scenario-challenge", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for challenging the math — this is exactly how the project
+        gets stronger. Please fill in **all** sections; issues without a
+        regulatory citation will be asked for one before triage.
+  - type: input
+    id: engine-version
+    attributes:
+      label: Engine version
+      description: Value of `engineVersion` from `/api/public/v1/health` or the response `meta`.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: policy-year
+    attributes:
+      label: Award year
+      placeholder: "2026-27"
+    validations:
+      required: true
+  - type: textarea
+    id: input-json
+    attributes:
+      label: Input JSON
+      description: The exact request body you sent to `/api/public/v1/calculate`.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: actual-output
+    attributes:
+      label: Actual output
+      description: The `data` block returned by the API.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: expected-output
+    attributes:
+      label: Expected output
+      description: What you believe the correct values are. Field-level is best.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: citation
+    attributes:
+      label: Regulatory citation
+      description: |
+        Cite the public source supporting your expected output — e.g. a
+        section of 34 CFR 685.203, a page of the current FSA COD Technical
+        Reference, or published bill text. Issues without a citation will be
+        asked for one.
+      placeholder: "34 CFR 685.203(a)(2); 2026-27 COD Tech Ref §X.Y, page NN."
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Anything else (worked example, screenshot of guidance, etc.).
