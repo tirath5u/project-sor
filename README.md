@@ -2,7 +2,7 @@
 
 An open-source, parity-tested implementation of the OBBBA Less-Than-Full-Time Reduction (Schedule of Reductions) for federal Direct Subsidized and Unsubsidized loans, with a free public HTTP API.
 
-Built and maintained by **Tirath Chhatriwala**, Principal Product Manager at Anthology / Ellucian.
+Built and maintained by **Tirath Chhatriwala**, Product Manager with over 14 years of experience in EdTech, Higher Education and FSA Regulatory Compliance. 
 
 [![CI](https://github.com/tirath5u/project-sor/actions/workflows/ci.yml/badge.svg)](https://github.com/tirath5u/project-sor/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
