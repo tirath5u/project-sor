@@ -150,6 +150,50 @@ export const GRADE_GROUPS: { label: string; codes: GradeLevel[] }[] = [
   },
 ];
 
+/**
+ * Which Grade Levels are valid for which Award Year.
+ *
+ * TODO: confirm with current ED guidance / regulations. Working placeholder
+ * based on the audit hint that grad/professional/preparatory tiers were not
+ * valid prior to OBBB (AY 2026-27). Update this single constant when the
+ * authoritative mapping is provided — no other code changes are required.
+ */
+export const GRADE_LEVELS_BY_AWARD_YEAR: Record<"2025-26" | "2026-27", GradeLevel[]> = {
+  "2025-26": ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7"],
+  "2026-27": [
+    "g0",
+    "g1",
+    "g2",
+    "g3",
+    "g4",
+    "g5",
+    "g6",
+    "g7",
+    "graduate",
+    "professional",
+    "g10_teacher_cert",
+    "g11_prep_undergrad",
+    "g12_prep_teacher",
+    "g13_prep_grad",
+  ],
+};
+
+/** Returns the Grade Levels available for a given Award Year. */
+export function gradeLevelsForAwardYear(ay: "2025-26" | "2026-27"): GradeLevel[] {
+  return GRADE_LEVELS_BY_AWARD_YEAR[ay] ?? (Object.keys(LIMITS) as GradeLevel[]);
+}
+
+/** Filters GRADE_GROUPS down to only the codes valid for the given Award Year. */
+export function gradeGroupsForAwardYear(
+  ay: "2025-26" | "2026-27",
+): { label: string; codes: GradeLevel[] }[] {
+  const allowed = new Set<GradeLevel>(gradeLevelsForAwardYear(ay));
+  return GRADE_GROUPS.map((g) => ({
+    label: g.label,
+    codes: g.codes.filter((c) => allowed.has(c)),
+  })).filter((g) => g.codes.length > 0);
+}
+
 export function lookupLimits(
   grade: GradeLevel,
   dependency: Dependency,
