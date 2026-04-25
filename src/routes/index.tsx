@@ -451,6 +451,90 @@ function SORCalculatorPage() {
             />
           </div>
 
+          {/* v19 — Award Year, LLE, COA, Other Aid, Requested Grad PLUS */}
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">Award Year</Label>
+                <InfoTip>
+                  SOR is tied to the 2026-27 award year. A 2025-26 loan disbursed after 7/1/2026 is NOT subject to SOR.
+                </InfoTip>
+              </div>
+              <RadioGroup
+                value={inputs.awardYear ?? "2026-27"}
+                onValueChange={(v) =>
+                  update({ awardYear: v as "2025-26" | "2026-27" })
+                }
+                className="grid grid-cols-2 gap-1.5"
+              >
+                {(["2025-26", "2026-27"] as const).map((y) => (
+                  <Label
+                    key={y}
+                    htmlFor={`ay-${y}`}
+                    className="flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
+                  >
+                    <RadioGroupItem id={`ay-${y}`} value={y} />
+                    <span className="font-medium">{y}</span>
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">Loan Limit Exception</Label>
+                <InfoTip>
+                  Grandfathered? Switches Sub/Unsub limit table between Legacy and OBBB. Does NOT gate Grad PLUS — Grad PLUS access is grade-level only.
+                </InfoTip>
+              </div>
+              <Label className="flex h-9 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-xs">
+                <span className="font-medium">
+                  {inputs.loanLimitException ? "Grandfathered (Legacy)" : "Non-grandfathered (OBBB)"}
+                </span>
+                <Switch
+                  checked={Boolean(inputs.loanLimitException)}
+                  onCheckedChange={(v) => update({ loanLimitException: v })}
+                />
+              </Label>
+            </div>
+
+            <NumberField
+              label="Cost of Attendance"
+              prefix="$"
+              value={inputs.coa ?? 0}
+              onChange={(v) => update({ coa: v })}
+              tooltip="Total COA for the academic year. Drives the Grad PLUS cap (COA - other aid - Sub - Unsub)."
+            />
+            <NumberField
+              label="Other Non-PLUS Aid"
+              prefix="$"
+              value={inputs.otherAid ?? 0}
+              onChange={(v) => update({ otherAid: v })}
+              tooltip="Pell, grants, scholarships, outside loans. Excludes Sub/Unsub/PLUS by definition."
+            />
+            <NumberField
+              label="Requested Grad PLUS"
+              prefix="$"
+              value={inputs.requestedGradPlus ?? 0}
+              onChange={(v) => update({ requestedGradPlus: v })}
+              hint={gradLocked ? `Initial Max DLGP: ${fmtCurrency(results.initialGradPlus)}` : "Grad/Professional only"}
+              tooltip="Student-requested Grad PLUS amount. Eligibility is COA minus all other estimated aid. Only available for grad/professional grade levels (SLC ≥ 8)."
+            />
+          </div>
+
+          {!inputs.loanLimitException && results.obbbTableIsPlaceholder ? (
+            <div className="mt-3 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-[11px] text-warning-foreground">
+              <span className="font-semibold uppercase tracking-wide">Heads up:</span>{" "}
+              OBBB 2026-27 limits for non-grandfathered students currently mirror the Legacy values pending the final ED rule. Verify before production use.
+            </div>
+          ) : null}
+
+          {!results.sorApplicable ? (
+            <div className="mt-2 rounded-lg border border-muted bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
+              <span className="font-semibold text-foreground">SOR not applicable</span> for award year {results.awardYear} — pre-OBBB rules in effect, no enrollment-based reduction applied.
+            </div>
+          ) : null}
+
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
