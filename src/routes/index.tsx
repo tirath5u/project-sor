@@ -23,10 +23,11 @@ import {
   type DistributionModel,
 } from "@/lib/sor";
 import {
-  GRADE_GROUPS,
   GRADE_LABELS,
   lookupLimits,
   isGradOrProf,
+  gradeGroupsForAwardYear,
+  gradeLevelsForAwardYear,
   type GradeLevel,
   type Dependency,
 } from "@/lib/loanLimits";
@@ -201,6 +202,17 @@ function SORCalculatorPage() {
     });
   }, [inputs.gradeLevel, inputs.dependency, inputs.parentPlusDenied, inputs.overrideLimits]);
 
+  // If the user toggles Award Year and the current Grade Level is no longer
+  // valid for that AY (e.g. picked Graduate while on 2025-26), snap to the
+  // first allowed code so the dropdown never shows an invalid selection.
+  React.useEffect(() => {
+    const ay = inputs.awardYear ?? "2026-27";
+    const allowed = gradeLevelsForAwardYear(ay);
+    if (!allowed.includes(inputs.gradeLevel) && allowed.length > 0) {
+      setInputs((p) => ({ ...p, gradeLevel: allowed[0] }));
+    }
+  }, [inputs.awardYear, inputs.gradeLevel]);
+
   const activeTermKeys: TermKey[] = TERM_ORDER.filter((k) => {
     const stdIdx = STANDARD_KEYS.indexOf(k);
     if (stdIdx >= 0 && stdIdx < inputs.numStandardTerms) return true;
@@ -238,7 +250,7 @@ function SORCalculatorPage() {
               <h1 className="flex items-center gap-1.5 text-base font-semibold leading-tight text-foreground sm:text-lg">
                 Schedule of Reductions - One Big Beautiful Bill Less Than Full-Time Reduction
                 <InfoTip label="About Schedule of Reductions" size="sm">
-                  The Schedule of Reductions (SOR) calculates how Direct Loan annual limits are reduced for less-than-full-time enrollment under the One Big Beautiful Bill Act. This tool computes the AY %, the reduced Sub/Unsub annual pools, and the per-term disbursements per 34 CFR 685.203.
+                  The Schedule of Reductions (SOR) calculates how Direct Loan annual limits are reduced for less-than-full-time enrollment under the One Big Beautiful Bill Act and 34 CFR 685.203. This tool computes the SOR %, the reduced Sub / Unsub / Grad PLUS annual pools, and the per-term disbursements.
                 </InfoTip>
               </h1>
               <p className="text-[10px] italic text-muted-foreground/80 sm:text-[11px]">
@@ -375,32 +387,52 @@ function SORCalculatorPage() {
           description="Grade, dependency, and the single Annual Financial Need that drives Sub/Unsub split."
           tooltip="Inputs that determine the statutory loan ceilings and baseline Sub/Unsub split per the Combined Limit Shifting Rule (34 CFR 685.203)."
         >
+          {/* Row 1 — Award Year drives which Grade Levels are valid, so it
+              MUST be selected first. */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
-                <Label className="text-xs font-medium">Grade Code</Label>
-                <InfoTip>Determines the statutory Sub/Unsub annual maximums per 34 CFR 685.203.</InfoTip>
+                <Label className="text-xs font-medium">Award Year</Label>
+                <InfoTip>
+                  SOR is tied to the 2026-27 award year. A 2025-26 loan disbursed after 7/1/2026 is NOT subject to SOR. The available Grade Levels also depend on the Award Year.
+                </InfoTip>
               </div>
-              <Select
-                value={inputs.gradeLevel}
-                onValueChange={(v) => update({ gradeLevel: v as GradeLevel })}
+              <RadioGroup
+                value={inputs.awardYear ?? "2026-27"}
+                onValueChange={(v) =>
+                  update({ awardYear: v as "2025-26" | "2026-27" })
+                }
+                className="grid grid-cols-2 gap-1.5"
               >
-                <SelectTrigger className="h-9 rounded-lg">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {GRADE_GROUPS.map((g) => (
-                    <SelectGroup key={g.label}>
-                      <SelectLabel>{g.label}</SelectLabel>
-                      {g.codes.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {GRADE_LABELS[c]}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
+                {(["2025-26", "2026-27"] as const).map((y) => (
+                  <Label
+                    key={y}
+                    htmlFor={`ay-${y}`}
+                    className="flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
+                  >
+                    <RadioGroupItem id={`ay-${y}`} value={y} />
+                    <span className="font-medium">{y}</span>
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">Loan Limit Exception</Label>
+                <InfoTip>
+                  Grandfathered? Switches the Sub/Unsub annual limit table between the legacy (pre-OBBB) values and the OBBB 2026-27 values. Does NOT gate Grad PLUS - Grad PLUS access is determined by Grade Level only.
+                </InfoTip>
+              </div>
+              <Label className="flex h-9 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-xs">
+                <span className="font-medium">
+                  {inputs.loanLimitException ? "Grandfathered (Legacy)" : "Non-grandfathered (OBBB)"}
+                </span>
+                <Switch
+                  checked={Boolean(inputs.loanLimitException)}
+                  onCheckedChange={(v) => update({ loanLimitException: v })}
+                />
+              </Label>
             </div>
 
             <div className="space-y-1.5">
@@ -433,77 +465,61 @@ function SORCalculatorPage() {
             </div>
 
             <NumberField
-              label="Annual Financial Need"
-              prefix="$"
-              value={inputs.annualNeed}
-              onChange={(v) => update({ annualNeed: v })}
-              hint={`→ Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(results.unsubBaseline)}`}
-              tooltip="Cost of Attendance − EFC/SAI − other aid. Drives the Sub baseline. Unsub is NOT need-based — it's calculated from the Combined Limit Shifting Rule."
-            />
-
-            <NumberField
               label="AY Full-Time Credits"
               value={inputs.ayFtCredits}
               step={0.5}
               onChange={(v) => update({ ayFtCredits: v })}
-              hint="Step 2 denominator"
-              tooltip="The denominator for the Academic Year %. Example: 24 FT credits per year for a typical undergrad SAY."
+              hint="SOR % denominator"
+              tooltip="The denominator for the SOR % (Σ AY enrolled credits ÷ AY full-time credits). Example: 24 FT credits per year for a typical undergrad SAY."
             />
           </div>
 
-          {/* v19 — Award Year, LLE, COA, Other Aid, Requested Grad PLUS */}
+          {/* Row 2 — Grade Level (filtered by Award Year) + Need + COA inputs */}
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
-                <Label className="text-xs font-medium">Award Year</Label>
+                <Label className="text-xs font-medium">Grade Level</Label>
                 <InfoTip>
-                  SOR is tied to the 2026-27 award year. A 2025-26 loan disbursed after 7/1/2026 is NOT subject to SOR.
+                  Student Level Code (SLC). Determines the statutory Sub/Unsub annual maximums per 34 CFR 685.203. Available Grade Levels depend on the selected Award Year - confirm with current ED guidance before production use.
                 </InfoTip>
               </div>
-              <RadioGroup
-                value={inputs.awardYear ?? "2026-27"}
-                onValueChange={(v) =>
-                  update({ awardYear: v as "2025-26" | "2026-27" })
-                }
-                className="grid grid-cols-2 gap-1.5"
+              <Select
+                value={inputs.gradeLevel}
+                onValueChange={(v) => update({ gradeLevel: v as GradeLevel })}
               >
-                {(["2025-26", "2026-27"] as const).map((y) => (
-                  <Label
-                    key={y}
-                    htmlFor={`ay-${y}`}
-                    className="flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
-                  >
-                    <RadioGroupItem id={`ay-${y}`} value={y} />
-                    <span className="font-medium">{y}</span>
-                  </Label>
-                ))}
-              </RadioGroup>
+                <SelectTrigger className="h-9 rounded-lg">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {gradeGroupsForAwardYear(inputs.awardYear ?? "2026-27").map((g) => (
+                    <SelectGroup key={g.label}>
+                      <SelectLabel>{g.label}</SelectLabel>
+                      {g.codes.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {GRADE_LABELS[c]}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5">
-                <Label className="text-xs font-medium">Loan Limit Exception</Label>
-                <InfoTip>
-                  Grandfathered? Switches Sub/Unsub limit table between Legacy and OBBB. Does NOT gate Grad PLUS — Grad PLUS access is grade-level only.
-                </InfoTip>
-              </div>
-              <Label className="flex h-9 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-xs">
-                <span className="font-medium">
-                  {inputs.loanLimitException ? "Grandfathered (Legacy)" : "Non-grandfathered (OBBB)"}
-                </span>
-                <Switch
-                  checked={Boolean(inputs.loanLimitException)}
-                  onCheckedChange={(v) => update({ loanLimitException: v })}
-                />
-              </Label>
-            </div>
+            <NumberField
+              label="Annual Financial Need"
+              prefix="$"
+              value={inputs.annualNeed}
+              onChange={(v) => update({ annualNeed: v })}
+              hint={`Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(results.unsubBaseline)}`}
+              tooltip="Cost of Attendance minus EFC/SAI minus other aid. Drives the Sub baseline. Unsub is NOT need-based - it is calculated from the Combined Limit Shifting Rule."
+            />
 
             <NumberField
               label="Cost of Attendance"
               prefix="$"
               value={inputs.coa ?? 0}
               onChange={(v) => update({ coa: v })}
-              tooltip="Total COA for the academic year. Drives the Grad PLUS cap (COA - other aid - Sub - Unsub)."
+              tooltip="Total COA for the academic year. Drives the Grad PLUS cap: COA minus other aid minus Sub minus Unsub."
             />
             <NumberField
               label="Other Non-PLUS Aid"
@@ -518,7 +534,7 @@ function SORCalculatorPage() {
               value={inputs.requestedGradPlus ?? 0}
               onChange={(v) => update({ requestedGradPlus: v })}
               hint={gradLocked ? `Initial Max DLGP: ${fmtCurrency(results.initialGradPlus)}` : "Grad/Professional only"}
-              tooltip="Student-requested Grad PLUS amount. Eligibility is COA minus all other estimated aid. Only available for grad/professional grade levels (SLC ≥ 8)."
+              tooltip="Student-requested Grad PLUS amount. Eligibility is COA minus all other estimated aid. Only available for graduate/professional Grade Levels."
             />
           </div>
 
@@ -531,7 +547,7 @@ function SORCalculatorPage() {
 
           {!results.sorApplicable ? (
             <div className="mt-2 rounded-lg border border-muted bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
-              <span className="font-semibold text-foreground">SOR not applicable</span> for award year {results.awardYear} — pre-OBBB rules in effect, no enrollment-based reduction applied.
+              <span className="font-semibold text-foreground">SOR not applicable</span> for award year {results.awardYear} - pre-OBBB rules in effect, no enrollment-based reduction applied.
             </div>
           ) : null}
 
@@ -740,7 +756,7 @@ function SORCalculatorPage() {
                         <th className="px-2 py-2 font-medium">
                           <span className="inline-flex items-center gap-1">
                             Disbursed?
-                            <InfoTip>Mark when funds have actually released. Disbursed terms are anchored — the engine cannot retroactively change them.</InfoTip>
+                          <InfoTip>Mark when funds have actually released. Disbursed terms are anchored - the engine cannot retroactively change them.</InfoTip>
                           </span>
                         </th>
                         <th className="px-2 py-2 font-medium">
@@ -754,13 +770,13 @@ function SORCalculatorPage() {
                     <th className="px-2 py-2 font-medium">
                       <span className="inline-flex items-center gap-1">
                         Paid Sub
-                        <InfoTip>Sub amount already disbursed. Locks ONLY the Sub bucket for this term. Leave blank if you have not entered Sub yet — blank ≠ $0. Enter 0 explicitly to anchor at zero.</InfoTip>
+                        <InfoTip>Sub amount already disbursed. Locks ONLY the Sub bucket for this term. Leave blank if you have not entered Sub yet - blank is not the same as $0. Enter 0 explicitly to anchor at zero.</InfoTip>
                       </span>
                     </th>
                     <th className="px-2 py-2 font-medium">
                       <span className="inline-flex items-center gap-1">
                         Paid Unsub
-                        <InfoTip>Unsub amount already disbursed. Locks ONLY the Unsub bucket for this term. Sub and Unsub are anchored independently — entering one does not zero the other.</InfoTip>
+                        <InfoTip>Unsub amount already disbursed. Locks ONLY the Unsub bucket for this term. Sub and Unsub are anchored independently - entering one does not zero the other.</InfoTip>
                       </span>
                     </th>
                     <th className="px-2 py-2 font-medium">
@@ -873,7 +889,7 @@ function SORCalculatorPage() {
             <p className="mt-2 rounded-md border border-border/40 bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
               <span className="font-semibold text-foreground">Tip:</span>{" "}
               Sub and Unsub are anchored <em>independently</em>. Entering Paid
-              Sub does not zero Paid Unsub — leave a field blank until you have
+              Sub does not zero Paid Unsub - leave a field blank until you have
               committed that loan type. Type <code className="rounded bg-background px-1">0</code>{" "}
               explicitly only if you intend to anchor the bucket at $0.
             </p>
@@ -946,7 +962,7 @@ function SORCalculatorPage() {
               <div className="flex items-center gap-1.5">
                 <h2 className="text-sm font-semibold text-foreground">Results</h2>
                 <InfoTip>
-                  Table = spreadsheet-style matrix mirroring v18 (sections B–J). Cards = per-term card layout, easier on narrow viewports.
+                  Table = compact view of every calculation step, term by term. Cards = per-term card layout, easier on narrow viewports.
                 </InfoTip>
               </div>
               <div className="inline-flex rounded-lg border border-border bg-background p-1 text-xs">
@@ -1055,7 +1071,7 @@ function CompactNumNullable({
       type="number"
       value={display}
       min={0}
-      placeholder="—"
+      placeholder="-"
       onFocus={(e) => e.target.select()}
       onChange={(e) => {
         const raw = e.target.value;
@@ -1071,7 +1087,7 @@ function CompactNumNullable({
           ? "border-dashed border-border/60 text-muted-foreground/70"
           : "border-border"
       } ${wide ? "w-20" : "w-14"}`}
-      title={isPending ? "Not entered — bucket is not anchored" : undefined}
+      title={isPending ? "Not entered - bucket is not anchored" : undefined}
     />
   );
 }

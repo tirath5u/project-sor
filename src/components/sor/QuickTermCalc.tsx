@@ -90,7 +90,7 @@ export function QuickTermCalc() {
         <div className="border-t border-border px-4 py-3">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Grade</Label>
+              <Label className="text-xs font-medium">Grade Level</Label>
               <Select value={grade} onValueChange={(v) => setGrade(v as GradeLevel)}>
                 <SelectTrigger className="h-9 rounded-lg">
                   <SelectValue />
@@ -125,7 +125,7 @@ export function QuickTermCalc() {
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Stat label="AY %" value={`${Math.round(result.sorPctRounded * 100)}%`} />
+            <Stat label="SOR %" value={`${Math.round(result.sorPctRounded * 100)}%`} />
             <Stat label="Term %" value={`${Math.round((term1?.termPct ?? 0) * 100)}%`} />
             <Stat
               label="Max Sub this term"

@@ -1,6 +1,6 @@
 /**
- * v18 § B–J spreadsheet-style results matrix: rows = calculation lines,
- * columns = each enabled term + AY Total. Sticky first column for scroll.
+ * Per-term calculation matrix: rows = calculation lines, columns = each
+ * enabled term + AY Total. Sticky first column for scroll.
  */
 import { fmtCurrency, type SORResults, type TermResult } from "@/lib/sor";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,10 @@ interface RowDef {
   total?: (visible: TermResult[]) => number | null;
   emphasize?: boolean;
   divider?: boolean;
+  /** Static value shown in every term column (used by per-term cap rows). */
+  staticValue?: (results: SORResults) => number;
+  /** When true, applies red exceedance shading per cell. */
+  redIf?: (t: TermResult) => boolean;
 }
 
 const ROWS: RowDef[] = [
@@ -45,8 +49,8 @@ const ROWS: RowDef[] = [
   },
   {
     label: "Enrollment Intensity (EI) %",
-    hint: "EI: (enrolled + carried below-half-time credits) ÷ FT",
-    tip: "Enrollment Intensity (EI) = (Enrolled + lapsed credits from prior below-half-time terms) ÷ FT. May exceed 100% (balloon). Capped to 100% in the COD export. Distinct from Term enrollment %, which counts only this term's enrolled credits.",
+    hint: "Per-term EI: (enrolled + carried below-half-time credits) ÷ FT",
+    tip: "Per-term Enrollment Intensity = (Enrolled + lapsed below-half-time credits) ÷ FT. May exceed 100% (balloon). REPORTED TO COD on disbursement records. Not used in the SOR reduction itself - that uses the annual SOR % shown in the Results panel.",
     format: "pct",
     get: (t) => t.intensityPct,
     total: () => null,
@@ -55,14 +59,14 @@ const ROWS: RowDef[] = [
   {
     label: "Step-3 Share Sub",
     hint: "Annual Sub ÷ eligible terms (or proportional)",
-    tip: "This term's slice of the running annual Sub pool, calculated AFTER subtracting any locked/paid amounts from earlier terms.",
+    tip: "This term's slice of the running annual Sub pool, after subtracting any locked/paid amounts from earlier terms.",
     format: "money",
     get: (t) => t.shareSub,
     total: (rs) => rs.reduce((s, t) => s + t.shareSub, 0),
   },
   {
     label: "Step-3 Share Unsub",
-    tip: "This term's slice of the running annual Unsub pool, calculated AFTER subtracting any locked/paid amounts from earlier terms.",
+    tip: "This term's slice of the running annual Unsub pool, after subtracting any locked/paid amounts from earlier terms.",
     format: "money",
     get: (t) => t.shareUnsub,
     total: (rs) => rs.reduce((s, t) => s + t.shareUnsub, 0),
@@ -71,7 +75,7 @@ const ROWS: RowDef[] = [
   {
     label: "Calc Sub (Step 5)",
     hint: "Share × min(term %, 100%) + balance-forward",
-    tip: "Step 5 output: Share × min(term %, 100%), plus carried-forward unspent share from prior eligible terms.",
+    tip: "Step 5 output: Share x min(term %, 100%), plus carried-forward unspent share from prior eligible terms.",
     format: "money",
     get: (t) => t.calcSub,
     total: (rs) => rs.reduce((s, t) => s + t.calcSub, 0),
@@ -87,14 +91,14 @@ const ROWS: RowDef[] = [
   {
     label: "Net Paid Sub",
     hint: "Already paid − refund (locks in disbursement mode)",
-    tip: "Paid Sub − Refunded Sub. In Disbursement view this anchors the term — the engine cannot retroactively change it.",
+    tip: "Paid Sub minus Refunded Sub. In Disbursement view this anchors the term - the engine cannot retroactively change it.",
     format: "money",
     get: (t) => t.netPaidSub,
     total: (rs) => rs.reduce((s, t) => s + t.netPaidSub, 0),
   },
   {
     label: "Net Paid Unsub",
-    tip: "Paid Unsub − Refunded Unsub. In Disbursement view this anchors the term.",
+    tip: "Paid Unsub minus Refunded Unsub. In Disbursement view this anchors the term.",
     format: "money",
     get: (t) => t.netPaidUnsub,
     total: (rs) => rs.reduce((s, t) => s + t.netPaidUnsub, 0),
@@ -103,11 +107,12 @@ const ROWS: RowDef[] = [
   {
     label: "Final Sub",
     hint: "Disbursement after COA cap & adjustments",
-    tip: "MIN(Calc Sub, COA cap). Mirrors the Step 5 engine output exactly — no averaging.",
+    tip: "MIN(Calc Sub, COA cap). Mirrors the Step 5 engine output exactly - no averaging.",
     format: "money",
     get: (t) => t.finalSub,
     total: (rs) => rs.reduce((s, t) => s + t.finalSub, 0),
     emphasize: true,
+    redIf: (t) => t.exceedsPerTermCapSub,
   },
   {
     label: "Final Unsub",
@@ -116,6 +121,61 @@ const ROWS: RowDef[] = [
     get: (t) => t.finalUnsub,
     total: (rs) => rs.reduce((s, t) => s + t.finalUnsub, 0),
     emphasize: true,
+    redIf: (t) => t.exceedsPerTermCapUnsub,
+  },
+];
+
+const PER_TERM_CAP_ROWS: RowDef[] = [
+  {
+    label: "Per-term Cap (Sub)",
+    hint: "Reduced Annual Sub ÷ eligible terms (static)",
+    tip: "Reduced Annual Sub divided by the number of eligible terms. Informational only - proportional front-loading is permitted under 34 CFR 685.301(b)(8). Final Sub turns red above when it exceeds this cap so you can flag it for audit review.",
+    format: "money",
+    get: () => null,
+    staticValue: (r) => r.perTermCapSub,
+    total: (_rs) => null,
+  },
+  {
+    label: "Per-term Cap (Unsub)",
+    tip: "Reduced Annual Unsub divided by the number of eligible terms. Informational only - proportional front-loading is permitted under 34 CFR 685.301(b)(8).",
+    format: "money",
+    get: () => null,
+    staticValue: (r) => r.perTermCapUnsub,
+    total: (_rs) => null,
+  },
+];
+
+const GRAD_PLUS_ROWS: RowDef[] = [
+  {
+    label: "Step-3 Share Grad PLUS",
+    tip: "This term's slice of the running annual Grad PLUS pool.",
+    format: "money",
+    get: (t) => t.shareGradPlus,
+    total: (rs) => rs.reduce((s, t) => s + t.shareGradPlus, 0),
+  },
+  {
+    label: "Calc Grad PLUS (Step 5)",
+    tip: "Step 5 output for Grad PLUS. Same formula as Calc Sub/Unsub but against the Grad PLUS pool.",
+    format: "money",
+    get: (t) => t.calcGradPlus,
+    total: (rs) => rs.reduce((s, t) => s + t.calcGradPlus, 0),
+  },
+  {
+    label: "Final Grad PLUS",
+    tip: "MIN(Calc Grad PLUS, COA cap). Mirrors the engine output exactly.",
+    format: "money",
+    get: (t) => t.finalGradPlus,
+    total: (rs) => rs.reduce((s, t) => s + t.finalGradPlus, 0),
+    emphasize: true,
+    redIf: (t) => t.exceedsPerTermCapGradPlus,
+  },
+  {
+    label: "Per-term Cap (Grad PLUS)",
+    tip: "Reduced Annual Grad PLUS divided by the number of eligible terms. Informational only.",
+    format: "money",
+    get: () => null,
+    staticValue: (r) => r.perTermCapGradPlus,
+    total: () => null,
   },
 ];
 
@@ -133,6 +193,12 @@ interface TermsMatrixProps {
 
 export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
   const visible = results.termResults.filter((t) => t.enabled);
+  const showGradPlus = results.initialGradPlus > 0;
+  const allRows: RowDef[] = [
+    ...ROWS,
+    ...PER_TERM_CAP_ROWS,
+    ...(showGradPlus ? GRAD_PLUS_ROWS : []),
+  ];
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-card)]">
@@ -181,7 +247,7 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
             </tr>
           </thead>
           <tbody>
-            {ROWS.map((row, ri) => {
+            {allRows.map((row, ri) => {
               const total = row.total ? row.total(visible) : null;
               return (
                 <tr
@@ -210,7 +276,7 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
                     ) : null}
                   </td>
                   {visible.map((t) => {
-                    const v = row.get(t);
+                    const v = row.staticValue ? row.staticValue(results) : row.get(t);
                     const overload =
                       (row.label === "Term %" && t.termPct > 1) ||
                       (row.label === "Enrollment Intensity (EI) %" && t.intensityPct > 1);
@@ -220,6 +286,11 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
                       row.label === "Final Unsub" &&
                       t.coaCapUnsub > 0 &&
                       t.calcUnsub > t.coaCapUnsub;
+                    const gradPlusCapped =
+                      row.label === "Final Grad PLUS" &&
+                      (t.coaCapGradPlus ?? 0) > 0 &&
+                      t.calcGradPlus > (t.coaCapGradPlus ?? 0);
+                    const overCap = row.redIf ? row.redIf(t) : false;
                     const adj =
                       (row.label === "Final Sub" && t.adjustmentSub !== 0) ||
                       (row.label === "Final Unsub" && t.adjustmentUnsub !== 0);
@@ -230,12 +301,22 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
                           "border-l border-border/60 px-3 py-1.5 text-right",
                           row.emphasize && "font-semibold text-foreground",
                           overload && "font-semibold text-primary",
-                          (subCapped || unsubCapped) &&
+                          (subCapped || unsubCapped || gradPlusCapped) &&
                             "bg-warning/15 text-warning-foreground",
+                          overCap && "bg-destructive/15 text-destructive font-semibold",
+                          row.staticValue && "text-muted-foreground italic",
                           adj && "underline decoration-dotted decoration-accent",
                         )}
                         title={
-                          adj
+                          overCap
+                            ? `Exceeds Per-term Cap (${fmtCurrency(
+                                row.label === "Final Sub"
+                                  ? results.perTermCapSub
+                                  : row.label === "Final Unsub"
+                                  ? results.perTermCapUnsub
+                                  : results.perTermCapGradPlus,
+                              )})`
+                            : adj
                             ? row.label === "Final Sub"
                               ? `Adjustment: ${fmtCurrency(t.adjustmentSub)}`
                               : `Adjustment: ${fmtCurrency(t.adjustmentUnsub)}`
@@ -293,7 +374,7 @@ function RegressionStrip({
       )}
     >
       <span className="font-semibold">
-        {allOk ? "✓ Matches v18 to the dollar" : "⚠ v18 regression diff"}:
+        {allOk ? "✓ Matches expected scenario values" : "⚠ Scenario regression diff"}:
       </span>{" "}
       {checks.map((c, i) => {
         const sub = c.exp?.sub;
