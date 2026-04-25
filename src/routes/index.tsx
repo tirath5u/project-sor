@@ -548,7 +548,7 @@ function SORCalculatorPage() {
 
           {!results.sorApplicable ? (
             <div className="mt-2 rounded-lg border border-muted bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
-              <span className="font-semibold text-foreground">SOR not applicable</span> for award year {results.awardYear} — pre-OBBB rules in effect, no enrollment-based reduction applied.
+              <span className="font-semibold text-foreground">SOR not applicable</span> for award year {results.awardYear} - pre-OBBB rules in effect, no enrollment-based reduction applied.
             </div>
           ) : null}
 
@@ -757,7 +757,7 @@ function SORCalculatorPage() {
                         <th className="px-2 py-2 font-medium">
                           <span className="inline-flex items-center gap-1">
                             Disbursed?
-                            <InfoTip>Mark when funds have actually released. Disbursed terms are anchored — the engine cannot retroactively change them.</InfoTip>
+                          <InfoTip>Mark when funds have actually released. Disbursed terms are anchored - the engine cannot retroactively change them.</InfoTip>
                           </span>
                         </th>
                         <th className="px-2 py-2 font-medium">
@@ -771,13 +771,13 @@ function SORCalculatorPage() {
                     <th className="px-2 py-2 font-medium">
                       <span className="inline-flex items-center gap-1">
                         Paid Sub
-                        <InfoTip>Sub amount already disbursed. Locks ONLY the Sub bucket for this term. Leave blank if you have not entered Sub yet — blank ≠ $0. Enter 0 explicitly to anchor at zero.</InfoTip>
+                        <InfoTip>Sub amount already disbursed. Locks ONLY the Sub bucket for this term. Leave blank if you have not entered Sub yet - blank is not the same as $0. Enter 0 explicitly to anchor at zero.</InfoTip>
                       </span>
                     </th>
                     <th className="px-2 py-2 font-medium">
                       <span className="inline-flex items-center gap-1">
                         Paid Unsub
-                        <InfoTip>Unsub amount already disbursed. Locks ONLY the Unsub bucket for this term. Sub and Unsub are anchored independently — entering one does not zero the other.</InfoTip>
+                        <InfoTip>Unsub amount already disbursed. Locks ONLY the Unsub bucket for this term. Sub and Unsub are anchored independently - entering one does not zero the other.</InfoTip>
                       </span>
                     </th>
                     <th className="px-2 py-2 font-medium">
@@ -890,7 +890,7 @@ function SORCalculatorPage() {
             <p className="mt-2 rounded-md border border-border/40 bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
               <span className="font-semibold text-foreground">Tip:</span>{" "}
               Sub and Unsub are anchored <em>independently</em>. Entering Paid
-              Sub does not zero Paid Unsub — leave a field blank until you have
+              Sub does not zero Paid Unsub - leave a field blank until you have
               committed that loan type. Type <code className="rounded bg-background px-1">0</code>{" "}
               explicitly only if you intend to anchor the bucket at $0.
             </p>
@@ -963,7 +963,7 @@ function SORCalculatorPage() {
               <div className="flex items-center gap-1.5">
                 <h2 className="text-sm font-semibold text-foreground">Results</h2>
                 <InfoTip>
-                  Table = spreadsheet-style matrix mirroring v18 (sections B–J). Cards = per-term card layout, easier on narrow viewports.
+                  Table = compact view of every calculation step, term by term. Cards = per-term card layout, easier on narrow viewports.
                 </InfoTip>
               </div>
               <div className="inline-flex rounded-lg border border-border bg-background p-1 text-xs">
@@ -1072,7 +1072,7 @@ function CompactNumNullable({
       type="number"
       value={display}
       min={0}
-      placeholder="—"
+      placeholder="-"
       onFocus={(e) => e.target.select()}
       onChange={(e) => {
         const raw = e.target.value;
@@ -1088,7 +1088,7 @@ function CompactNumNullable({
           ? "border-dashed border-border/60 text-muted-foreground/70"
           : "border-border"
       } ${wide ? "w-20" : "w-14"}`}
-      title={isPending ? "Not entered — bucket is not anchored" : undefined}
+      title={isPending ? "Not entered - bucket is not anchored" : undefined}
     />
   );
 }
