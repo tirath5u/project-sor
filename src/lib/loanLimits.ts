@@ -106,6 +106,21 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
   },
 };
 
+/**
+ * v19 — Two parallel limit tables.
+ *
+ * `LEGACY_LIMITS` mirrors the v18 values used for grandfathered students
+ * (Loan Limit Exception = Yes). `OBBB_LIMITS` is the post-OBBB 2026-27 table
+ * used for non-grandfathered students. Per the v19 plan §3.2, the OBBB table
+ * currently MIRRORS the Legacy values as a working placeholder pending the
+ * final ED rule. Update OBBB_LIMITS in place when the final values land.
+ */
+export const LEGACY_LIMITS = LIMITS;
+export const OBBB_LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = LIMITS;
+
+/** True until ED publishes the final OBBB 2026-27 limit table. Drives the UI banner. */
+export const OBBB_TABLE_IS_PLACEHOLDER = true;
+
 export const GRADE_LABELS: Record<GradeLevel, string> = {
   g0: "0 - 1st-year undergrad (≤ 1 AY remaining)",
   g1: "1 - 1st-year undergrad",
@@ -139,6 +154,7 @@ export function lookupLimits(
   grade: GradeLevel,
   dependency: Dependency,
   parentPlusDenied: boolean = false,
+  useLegacyTable: boolean = true,
 ): {
   sub: number;
   unsub: number;
@@ -158,8 +174,9 @@ export function lookupLimits(
   // Grad/Prof are independent by definition; PLUS denial doesn't apply.
   const effectiveDep: Dependency =
     isGP || dependency === "independent" || parentPlusDenied ? "independent" : "dependent";
-  const row = LIMITS[safeGrade][effectiveDep];
-  const baseRow = LIMITS[safeGrade]["dependent"];
+  const table = useLegacyTable ? LEGACY_LIMITS : OBBB_LIMITS;
+  const row = table[safeGrade][effectiveDep];
+  const baseRow = table[safeGrade]["dependent"];
   const baseUnsub = Math.max(0, baseRow.combined - baseRow.sub);
   const totalUnsub = Math.max(0, row.combined - row.sub);
   const additionalUnsub =
