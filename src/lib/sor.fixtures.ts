@@ -139,7 +139,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   {
     id: "fixture-v19-004",
     description:
-      "Part-time Fall 6, overload Spring 18 — AY% = 100, balloon to Spring (ed-1).",
+      "Part-time Fall 6, overload Spring 18, proportional model — AY% = 100, balloon to Spring (ed-1).",
     sourceRefs: ["psr-001"],
     input: build(
       {
@@ -148,6 +148,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
         gradeLevel: "g1",
         dependency: "dependent",
         annualNeed: 3500,
+        distributionModel: "proportional",
       },
       {
         term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
