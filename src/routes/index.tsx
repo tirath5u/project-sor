@@ -394,7 +394,7 @@ function SORCalculatorPage() {
               <div className="flex items-center gap-1.5">
                 <Label className="text-xs font-medium">Award Year</Label>
                 <InfoTip>
-                  SOR is tied to the 2026-27 award year. A 2025-26 loan disbursed after 7/1/2026 is NOT subject to SOR. The available Grade Levels also depend on the Award Year.
+                  SOR is tied to the 2026-27 award year. A 2025-26 loan disbursed after 7/1/2026 is NOT subject to SOR.
                 </InfoTip>
               </div>
               <RadioGroup
@@ -480,7 +480,7 @@ function SORCalculatorPage() {
               <div className="flex items-center gap-1.5">
                 <Label className="text-xs font-medium">Grade Level</Label>
                 <InfoTip>
-                  Student Level Code (SLC). Determines the statutory Sub/Unsub annual maximums per 34 CFR 685.203. Available Grade Levels depend on the selected Award Year - confirm with current ED guidance before production use.
+                  Student Level Code (SLC). Determines the statutory Sub/Unsub annual maximums per 34 CFR 685.203, and gates Grad PLUS eligibility (codes 8 and above are graduate / professional).
                 </InfoTip>
               </div>
               <Select

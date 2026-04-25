@@ -17,17 +17,15 @@ export type GradeLevel =
   | "g3"
   | "g4"
   | "g5"
-  | "g6"
-  | "g7"
-  | "graduate"
-  | "professional"
-  | "g10_teacher_cert"
-  | "g11_prep_undergrad"
-  | "g12_prep_teacher"
-  | "g13_prep_grad";
+  | "g8"
+  | "g9"
+  | "g10"
+  | "g11"
+  | "g12"
+  | "g13";
 
 // Backwards-compat aliases (used by older callers).
-export type LegacyGradeLevel = "g0_1" | "g3plus";
+export type LegacyGradeLevel = "g0_1" | "g3plus" | "g6" | "g7" | "graduate" | "professional";
 
 export type Dependency = "dependent" | "independent";
 
@@ -72,37 +70,29 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
     dependent: { sub: 5500, combined: 7500 },
     independent: { sub: 5500, combined: 12500 },
   },
-  g6: {
-    dependent: { sub: 5500, combined: 7500 },
-    independent: { sub: 5500, combined: 12500 },
-  },
-  g7: {
-    dependent: { sub: 5500, combined: 7500 },
-    independent: { sub: 5500, combined: 12500 },
-  },
-  graduate: {
+  g8: {
     dependent: { sub: 0, combined: 20500 },
     independent: { sub: 0, combined: 20500 },
   },
-  professional: {
+  g9: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g10: {
     dependent: { sub: 0, combined: 50000 },
     independent: { sub: 0, combined: 50000 },
   },
-  g10_teacher_cert: {
-    dependent: { sub: 5500, combined: 7500 },
-    independent: { sub: 5500, combined: 12500 },
+  g11: {
+    dependent: { sub: 0, combined: 50000 },
+    independent: { sub: 0, combined: 50000 },
   },
-  g11_prep_undergrad: {
-    dependent: { sub: 2625, combined: 6625 },
-    independent: { sub: 2625, combined: 10625 },
+  g12: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
   },
-  g12_prep_teacher: {
-    dependent: { sub: 5500, combined: 7500 },
-    independent: { sub: 5500, combined: 12500 },
-  },
-  g13_prep_grad: {
-    dependent: { sub: 5500, combined: 7500 },
-    independent: { sub: 5500, combined: 12500 },
+  g13: {
+    dependent: { sub: 0, combined: 50000 },
+    independent: { sub: 0, combined: 50000 },
   },
 };
 
@@ -122,60 +112,41 @@ export const OBBB_LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> =
 export const OBBB_TABLE_IS_PLACEHOLDER = true;
 
 export const GRADE_LABELS: Record<GradeLevel, string> = {
-  g0: "0 - 1st-year undergrad (≤ 1 AY remaining)",
-  g1: "1 - 1st-year undergrad",
-  g2: "2 - 2nd-year undergrad",
-  g3: "3 - 3rd-year undergrad",
-  g4: "4 - 4th-year undergrad",
-  g5: "5 - 5th-year undergrad",
-  g6: "6 - Continuing undergrad",
-  g7: "7 - Senior / 4+ year",
-  graduate: "G - Graduate",
-  professional: "P - Professional",
-  g10_teacher_cert: "10 - Post-bacc teacher certification",
-  g11_prep_undergrad: "11 - Preparatory coursework, undergrad",
-  g12_prep_teacher: "12 - Preparatory coursework, teacher cert",
-  g13_prep_grad: "13 - Preparatory coursework, graduate",
+  g0: "0 - 1st-Year Undergrad",
+  g1: "1 - 1st-Year Undergrad",
+  g2: "2 - 2nd-Year Undergrad",
+  g3: "3 - 3rd-Year Undergrad",
+  g4: "4 - 4th-Year Undergrad",
+  g5: "5 - 5th-Year Undergrad",
+  g8: "8 - Graduate, Never Professional",
+  g9: "9 - Graduate (Independent only)",
+  g10: "10 - Professional (Independent only)",
+  g11: "11 - Professional, Was Graduate",
+  g12: "12 - Graduate Concurrent",
+  g13: "13 - Professional Concurrent",
 };
 
 export const GRADE_GROUPS: { label: string; codes: GradeLevel[] }[] = [
   {
     label: "Undergraduate",
-    codes: ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7"],
+    codes: ["g0", "g1", "g2", "g3", "g4", "g5"],
   },
-  { label: "Graduate / Professional", codes: ["graduate", "professional"] },
   {
-    label: "Teacher cert / Preparatory",
-    codes: ["g10_teacher_cert", "g11_prep_undergrad", "g12_prep_teacher", "g13_prep_grad"],
+    label: "Graduate / Professional",
+    codes: ["g8", "g9", "g10", "g11", "g12", "g13"],
   },
 ];
 
 /**
  * Which Grade Levels are valid for which Award Year.
  *
- * TODO: confirm with current ED guidance / regulations. Working placeholder
- * based on the audit hint that grad/professional/preparatory tiers were not
- * valid prior to OBBB (AY 2026-27). Update this single constant when the
- * authoritative mapping is provided — no other code changes are required.
+ * Per the V19 spec, the same numeric Anthology/COD Grade Level mapping
+ * applies to BOTH Award Years. The Loan Limit Exception (grandfathered)
+ * toggle - not the Award Year - drives which limit table is used.
  */
 export const GRADE_LEVELS_BY_AWARD_YEAR: Record<"2025-26" | "2026-27", GradeLevel[]> = {
-  "2025-26": ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7"],
-  "2026-27": [
-    "g0",
-    "g1",
-    "g2",
-    "g3",
-    "g4",
-    "g5",
-    "g6",
-    "g7",
-    "graduate",
-    "professional",
-    "g10_teacher_cert",
-    "g11_prep_undergrad",
-    "g12_prep_teacher",
-    "g13_prep_grad",
-  ],
+  "2025-26": ["g0", "g1", "g2", "g3", "g4", "g5", "g8", "g9", "g10", "g11", "g12", "g13"],
+  "2026-27": ["g0", "g1", "g2", "g3", "g4", "g5", "g8", "g9", "g10", "g11", "g12", "g13"],
 };
 
 /** Returns the Grade Levels available for a given Award Year. */
@@ -213,7 +184,13 @@ export function lookupLimits(
       ? "g1"
       : grade === ("g3plus" as string)
         ? "g3"
-        : "g1";
+        : grade === ("g6" as string) || grade === ("g7" as string)
+          ? "g5"
+          : grade === ("graduate" as string)
+            ? "g8"
+            : grade === ("professional" as string)
+              ? "g10"
+              : "g1";
   const isGP = isGradOrProf(safeGrade);
   // Grad/Prof are independent by definition; PLUS denial doesn't apply.
   const effectiveDep: Dependency =
@@ -231,7 +208,14 @@ export function lookupLimits(
 }
 
 export function isGradOrProf(grade: GradeLevel): boolean {
-  return grade === "graduate" || grade === "professional";
+  return (
+    grade === "g8" ||
+    grade === "g9" ||
+    grade === "g10" ||
+    grade === "g11" ||
+    grade === "g12" ||
+    grade === "g13"
+  );
 }
 
 /** Aggregate lifetime caps used by the Lifecycle tracker. */
