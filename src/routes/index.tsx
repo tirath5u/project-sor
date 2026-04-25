@@ -23,7 +23,6 @@ import {
   type DistributionModel,
 } from "@/lib/sor";
 import {
-  GRADE_GROUPS,
   GRADE_LABELS,
   lookupLimits,
   isGradOrProf,
