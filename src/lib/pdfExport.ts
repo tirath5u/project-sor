@@ -15,6 +15,12 @@ interface ExportArgs {
   scenarioId?: string;
 }
 
+/**
+ * jspdf-autotable attaches `lastAutoTable` to the jsPDF instance at runtime
+ * but does not augment the type. Narrow once here so call sites stay typed.
+ */
+type DocWithAutoTable = jsPDF & { lastAutoTable: { finalY: number } };
+
 const COLOR_PRIMARY: [number, number, number] = [75, 46, 131]; // #4B2E83 deep purple
 const COLOR_INK: [number, number, number] = [33, 25, 56];
 const COLOR_MUTED: [number, number, number] = [110, 105, 130];
