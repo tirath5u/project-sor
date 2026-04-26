@@ -3,7 +3,7 @@
  *
  * Design choices:
  * - `strictNumber` rejects empty strings, null, undefined, whitespace, and
- *   NaN for REQUIRED numeric fields. We never silently coerce blank → 0 — the
+ *   NaN for REQUIRED numeric fields. We never silently coerce blank → 0 - the
  *   engine's null/0 distinction is semantically meaningful (see sor.ts on
  *   paidSub: null = blank, 0 = explicit zero anchor).
  * - `nullableMoney` is for the paid/refund fields where null is meaningful.
@@ -58,7 +58,7 @@ export const strictNumber = (opts: { min?: number; max?: number; int?: boolean }
 /** Optional money: number or null. Null = "not entered" (engine semantic). */
 const nullableMoney = z.union([z.number().finite(), z.null()]);
 
-/** Optional money with default 0 — for fields that were never null in v18/v19. */
+/** Optional money with default 0 - for fields that were never null in v18/v19. */
 const optionalMoney = z.number().finite().min(0).optional().default(0);
 
 const TermKeySchema = z.enum([
@@ -91,18 +91,16 @@ const TermInputSchema = z.object({
   coaCapGradPlus: optionalMoney,
 });
 
-const TermsRecordSchema = z
-  .record(TermKeySchema, TermInputSchema)
-  .superRefine((rec, ctx) => {
-    for (const k of TERM_ORDER as TermKey[]) {
-      if (!rec[k]) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Missing term entry: ${k}`,
-        });
-      }
+const TermsRecordSchema = z.record(TermKeySchema, TermInputSchema).superRefine((rec, ctx) => {
+  for (const k of TERM_ORDER as TermKey[]) {
+    if (!rec[k]) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Missing term entry: ${k}`,
+      });
     }
-  });
+  }
+});
 
 export const CalculateInputSchema = z
   .object({
@@ -154,7 +152,7 @@ export const CalculateInputSchema = z
 
 export type CalculateInput = z.infer<typeof CalculateInputSchema>;
 
-/** Output schema is permissive — engine fields are appended over time. */
+/** Output schema is permissive - engine fields are appended over time. */
 export const CalculateOutputSchema = z
   .object({
     data: z.record(z.string(), z.unknown()),

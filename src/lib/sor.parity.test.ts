@@ -1,12 +1,12 @@
 /**
- * Parity test suite — runs every PARITY_FIXTURE through the engine and asserts
+ * Parity test suite - runs every PARITY_FIXTURE through the engine and asserts
  * field-level equality with the committed `expected` values.
  *
  * If this suite breaks, EITHER:
- *  (a) the engine has changed in a way that affects outputs — bump
+ *  (a) the engine has changed in a way that affects outputs - bump
  *      ENGINE_VERSION in src/lib/sor.version.ts and update the fixture
  *      `expected` block with a justification, OR
- *  (b) a regression has slipped in — fix the engine.
+ *  (b) a regression has slipped in - fix the engine.
  *
  * Fixtures are the single source of truth for the public /scenarios endpoint.
  */
@@ -19,7 +19,7 @@ import { z } from "zod";
 
 describe("SOR parity fixtures", () => {
   for (const fx of PARITY_FIXTURES) {
-    it(`${fx.id} — ${fx.description.slice(0, 80)}`, () => {
+    it(`${fx.id} - ${fx.description.slice(0, 80)}`, () => {
       const r = calculateSOR(fx.input);
       const e = fx.expected;
 
@@ -56,7 +56,7 @@ describe("SOR parity fixtures", () => {
   });
 });
 
-describe("strictNumber — no silent coercion", () => {
+describe("strictNumber - no silent coercion", () => {
   const s = z.object({ x: strictNumber({ min: 0 }) });
 
   it("accepts a number", () => {

@@ -1,5 +1,5 @@
 /**
- * OBBBA / Working Families Tax Cuts Act — Annual Loan Limits, AY 2026-27.
+ * OBBBA / Working Families Tax Cuts Act - Annual Loan Limits, AY 2026-27.
  *
  * v18 master spreadsheet uses 14 numeric grade codes (0..13) covering every
  * undergraduate, graduate, professional, and teacher-cert tier. Each row
@@ -43,7 +43,7 @@ export interface LoanLimitRow {
  * Independent (and PLUS-denied dependent) undergrads get the higher
  * combined cap; grad/professional borrowers are independent by definition.
  *
- * Codes 10-13 are the Title-IV "preparatory coursework" rows from v18 — they
+ * Codes 10-13 are the Title-IV "preparatory coursework" rows from v18 - they
  * use the same caps as the corresponding regular tier (1st-yr undergrad for
  * 10/11, graduate for 13, etc.) per ED guidance.
  */
@@ -161,20 +161,7 @@ export const GRADE_GROUPS: { label: string; codes: GradeLevel[] }[] = [
  */
 export const GRADE_LEVELS_BY_AWARD_YEAR: Record<"2025-26" | "2026-27", GradeLevel[]> = {
   "2025-26": ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7"],
-  "2026-27": [
-    "g0",
-    "g1",
-    "g2",
-    "g3",
-    "g4",
-    "g5",
-    "g8",
-    "g9",
-    "g10",
-    "g11",
-    "g12",
-    "g13",
-  ],
+  "2026-27": ["g0", "g1", "g2", "g3", "g4", "g5", "g8", "g9", "g10", "g11", "g12", "g13"],
 };
 
 /** Returns the Grade Levels available for a given Award Year. */

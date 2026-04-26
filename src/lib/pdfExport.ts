@@ -5,12 +5,7 @@
 
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import {
-  fmtCurrency,
-  type SORInputs,
-  type SORResults,
-  type TermResult,
-} from "./sor";
+import { fmtCurrency, type SORInputs, type SORResults, type TermResult } from "./sor";
 import { GRADE_LABELS } from "./loanLimits";
 
 interface ExportArgs {
@@ -19,6 +14,12 @@ interface ExportArgs {
   scenarioTitle?: string;
   scenarioId?: string;
 }
+
+/**
+ * jspdf-autotable attaches `lastAutoTable` to the jsPDF instance at runtime
+ * but does not augment the type. Narrow once here so call sites stay typed.
+ */
+type DocWithAutoTable = jsPDF & { lastAutoTable: { finalY: number } };
 
 const COLOR_PRIMARY: [number, number, number] = [75, 46, 131]; // #4B2E83 deep purple
 const COLOR_INK: [number, number, number] = [33, 25, 56];
@@ -74,7 +75,7 @@ export function exportSORCaseFile({
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text(safe("Schedule of Reductions — Case File"), margin, 32);
+  doc.text(safe("Schedule of Reductions - Case File"), margin, 32);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.text(safe(`Generated ${pretty()}`), margin, 50);
@@ -114,8 +115,8 @@ export function exportSORCaseFile({
         1: { textColor: COLOR_INK, fontStyle: "bold" },
       },
     });
-    
-    y = (doc as any).lastAutoTable.finalY + 14;
+
+    y = (doc as DocWithAutoTable).lastAutoTable.finalY + 14;
   };
 
   // ---------- 1. STUDENT & LOAN PERIOD ----------
@@ -166,7 +167,9 @@ export function exportSORCaseFile({
   if (results.additionalUnsubBase > 0) {
     doc.setTextColor(...COLOR_PRIMARY);
     doc.text(
-      safe(`+ ${fmtCurrency(results.additionalUnsubBase)} additional Unsub from PLUS-denial uplift.`),
+      safe(
+        `+ ${fmtCurrency(results.additionalUnsubBase)} additional Unsub from PLUS-denial uplift.`,
+      ),
       margin,
       y,
     );
@@ -188,17 +191,19 @@ export function exportSORCaseFile({
       fmtCurrency(t.paidSub),
       fmtCurrency(t.paidUnsub),
       `${fmtCurrency(t.refundSub)} / ${fmtCurrency(t.refundUnsub)}`,
-      safe(`${t.coaCapSub ? fmtCurrency(t.coaCapSub) : "—"} / ${
-        t.coaCapUnsub ? fmtCurrency(t.coaCapUnsub) : "—"
-      }`),
+      safe(
+        `${t.coaCapSub ? fmtCurrency(t.coaCapSub) : "—"} / ${
+          t.coaCapUnsub ? fmtCurrency(t.coaCapUnsub) : "—"
+        }`,
+      ),
     ]),
     headStyles: { fillColor: COLOR_PRIMARY, textColor: 255, fontSize: 9 },
     bodyStyles: { fontSize: 8.5, textColor: COLOR_INK },
     alternateRowStyles: { fillColor: [248, 246, 252] },
     styles: { cellPadding: 4 },
   });
-  
-  y = (doc as any).lastAutoTable.finalY + 18;
+
+  y = (doc as DocWithAutoTable).lastAutoTable.finalY + 18;
 
   // ---------- 4. RESULTS MATRIX ----------
   sectionHeading("4. Results matrix");
@@ -234,8 +239,8 @@ export function exportSORCaseFile({
     alternateRowStyles: { fillColor: [248, 246, 252] },
     styles: { cellPadding: 4 },
   });
-  
-  y = (doc as any).lastAutoTable.finalY + 18;
+
+  y = (doc as DocWithAutoTable).lastAutoTable.finalY + 18;
 
   // ---------- 5. ANNUAL TOTALS ----------
   sectionHeading("5. Annual totals");
@@ -254,14 +259,12 @@ export function exportSORCaseFile({
   const eligibleTerms = results.termResults.filter((t) => t.eligible);
   const enabledTerms = results.termResults.filter((t) => t.enabled);
   const ayPctRoundedPct = Math.round(results.sorPctRounded * 100);
-  const shareSubLine = eligibleTerms
-    .map((t) => `${t.label} ${fmtCurrency(t.shareSub)}`)
-    .join(", ");
+  const shareSubLine = eligibleTerms.map((t) => `${t.label} ${fmtCurrency(t.shareSub)}`).join(", ");
   const shareUnsubLine = eligibleTerms
     .map((t) => `${t.label} ${fmtCurrency(t.shareUnsub)}`)
     .join(", ");
 
-  // Step 3 formula proof — equal vs proportional
+  // Step 3 formula proof - equal vs proportional
   const N = results.eligibleTermsCount;
   const equalSubPer = N > 0 ? Math.floor(results.reducedSub / N) : 0;
   const equalUnsubPer = N > 0 ? Math.floor(results.reducedUnsub / N) : 0;
@@ -291,14 +294,14 @@ export function exportSORCaseFile({
   }
 
   const steps: string[] = [
-    `Step 1 — Initial maxima (Combined Limit Shifting Rule): Sub = MIN(Annual Need ${fmtCurrency(
+    `Step 1 - Initial maxima (Combined Limit Shifting Rule): Sub = MIN(Annual Need ${fmtCurrency(
       inputs.annualNeed,
     )}, Sub cap ${fmtCurrency(results.effectiveSubStatutory)}) = ${fmtCurrency(
       results.subBaseline,
     )}. Unsub = Combined limit ${fmtCurrency(
       results.effectiveCombinedLimit,
     )} - ${fmtCurrency(results.subBaseline)} = ${fmtCurrency(results.unsubBaseline)}.`,
-    `Step 2 — Academic Year enrollment %: ${results.enrolledSumAll} / ${results.ftSumAll} = ${(
+    `Step 2 - Academic Year enrollment %: ${results.enrolledSumAll} / ${results.ftSumAll} = ${(
       results.enrollmentFractionRaw * 100
     ).toFixed(2)}% -> rounded to ${ayPctRoundedPct}%. Reduced annual Sub ${fmtCurrency(
       results.subBaseline,
@@ -307,8 +310,8 @@ export function exportSORCaseFile({
     )}; Unsub ${fmtCurrency(results.unsubBaseline)} x ${ayPctRoundedPct}% = ${fmtCurrency(
       results.reducedUnsub,
     )}.`,
-    `Step 3 — Per-term share via "${inputs.distributionModel}" model across ${results.eligibleTermsCount} eligible term(s).${step3Formula} Resulting Sub split: ${shareSubLine || "n/a"}. Unsub split: ${shareUnsubLine || "n/a"}.`,
-    `Step 4 — Term enrollment % (term enrolled / term FT): ${enabledTerms
+    `Step 3 - Per-term share via "${inputs.distributionModel}" model across ${results.eligibleTermsCount} eligible term(s).${step3Formula} Resulting Sub split: ${shareSubLine || "n/a"}. Unsub split: ${shareUnsubLine || "n/a"}.`,
+    `Step 4 - Term enrollment % (term enrolled / term FT): ${enabledTerms
       .map(
         (t) =>
           `${t.label} ${t.effectiveCredits}/${t.ftCredits} = ${Math.round(
@@ -316,7 +319,7 @@ export function exportSORCaseFile({
           )}%${t.eligible ? "" : " (ineligible, below half-time)"}`,
       )
       .join("; ")}.`,
-    `Step 5 — Disbursement = share x min(term %, 100%); over/underflow carries forward; finals clamped to per-term COA caps. ${enabledTerms
+    `Step 5 - Disbursement = share x min(term %, 100%); over/underflow carries forward; finals clamped to per-term COA caps. ${enabledTerms
       .filter((t) => t.eligible)
       .map((t) => {
         const pctCapped = Math.min(100, Math.round(t.termPct * 100));

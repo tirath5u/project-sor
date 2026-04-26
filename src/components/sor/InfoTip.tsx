@@ -1,10 +1,6 @@
 import * as React from "react";
 import { Info } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 interface InfoTipProps {
@@ -16,7 +12,7 @@ interface InfoTipProps {
   className?: string;
   /** Tooltip placement. */
   side?: "top" | "right" | "bottom" | "left";
-  /** Visual size — defaults to xs (12px icon). */
+  /** Visual size - defaults to xs (12px icon). */
   size?: "xs" | "sm";
 }
 
@@ -48,11 +44,7 @@ export function InfoTip({
           <Info className={size === "xs" ? "h-3 w-3" : "h-3.5 w-3.5"} />
         </button>
       </TooltipTrigger>
-      <TooltipContent
-        side={side}
-        role="tooltip"
-        className="max-w-[260px] text-[11px] leading-snug"
-      >
+      <TooltipContent side={side} role="tooltip" className="max-w-[260px] text-[11px] leading-snug">
         {children}
       </TooltipContent>
     </Tooltip>

@@ -1,15 +1,10 @@
 /**
- * Single-term quick calculator — one term, derive the maximum Sub/Unsub
+ * Single-term quick calculator - one term, derive the maximum Sub/Unsub
  * disbursement using the same engine. Collapsible.
  */
 import * as React from "react";
 import { ChevronDown, Zap } from "lucide-react";
-import {
-  calculateSOR,
-  defaultInputs,
-  fmtCurrency,
-  type SORInputs,
-} from "@/lib/sor";
+import { calculateSOR, defaultInputs, fmtCurrency, type SORInputs } from "@/lib/sor";
 import { GRADE_GROUPS, GRADE_LABELS, type GradeLevel } from "@/lib/loanLimits";
 import { NumberField } from "./NumberField";
 import { Label } from "@/components/ui/label";
@@ -81,7 +76,9 @@ export function QuickTermCalc() {
               Quick single-term calculator
               <span onClick={(e) => e.stopPropagation()}>
                 <InfoTip label="About the quick calculator">
-                  Estimate one term's maximum Sub/Unsub disbursement in isolation — useful for spot-checking a single term without configuring the full annual SOR. Uses the same engine and statutory limits.
+                  Estimate one term's maximum Sub/Unsub disbursement in isolation - useful for
+                  spot-checking a single term without configuring the full annual SOR. Uses the same
+                  engine and statutory limits.
                 </InfoTip>
               </span>
             </div>
@@ -117,12 +114,7 @@ export function QuickTermCalc() {
                 </SelectContent>
               </Select>
             </div>
-            <NumberField
-              label="Annual Need"
-              prefix="$"
-              value={need}
-              onChange={setNeed}
-            />
+            <NumberField label="Annual Need" prefix="$" value={need} onChange={setNeed} />
             <NumberField label="Term FT credits" value={ft} step={0.5} onChange={setFt} />
             <NumberField
               label="Enrolled credits"
@@ -135,16 +127,8 @@ export function QuickTermCalc() {
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Stat label="SOR %" value={`${Math.round(result.sorPctRounded * 100)}%`} />
             <Stat label="Term %" value={`${Math.round((term1?.termPct ?? 0) * 100)}%`} />
-            <Stat
-              label="Max Sub this term"
-              value={fmtCurrency(term1?.finalSub ?? 0)}
-              accent
-            />
-            <Stat
-              label="Max Unsub this term"
-              value={fmtCurrency(term1?.finalUnsub ?? 0)}
-              accent
-            />
+            <Stat label="Max Sub this term" value={fmtCurrency(term1?.finalSub ?? 0)} accent />
+            <Stat label="Max Unsub this term" value={fmtCurrency(term1?.finalUnsub ?? 0)} accent />
           </div>
         </div>
       ) : null}
@@ -161,9 +145,7 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
           : "border-border bg-background text-foreground"
       }`}
     >
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-        {label}
-      </div>
+      <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-0.5 text-lg font-bold tabular-nums">{value}</div>
     </div>
   );

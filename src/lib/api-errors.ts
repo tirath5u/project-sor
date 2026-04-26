@@ -1,6 +1,6 @@
 /**
  * Uniform error envelope for the public API. Never leaks raw exception
- * messages from internal modules — only the typed code + safe message.
+ * messages from internal modules - only the typed code + safe message.
  */
 
 export type ApiErrorCode =
@@ -29,7 +29,7 @@ export const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Headers": "Content-Type, Accept, X-Request-Id",
   "Access-Control-Expose-Headers": "X-Request-Id, Retry-After",
   "Access-Control-Max-Age": "86400",
-  "Vary": "Origin",
+  Vary: "Origin",
 };
 
 const STATUS_FOR_CODE: Record<ApiErrorCode, number> = {
@@ -100,10 +100,7 @@ export function corsPreflightResponse(): Response {
 /**
  * Standard 405 response. Sets `Allow` per RFC 9110.
  */
-export function methodNotAllowedResponse(
-  allowed: string[],
-  requestId?: string,
-): Response {
+export function methodNotAllowedResponse(allowed: string[], requestId?: string): Response {
   return errorResponse(
     "method_not_allowed",
     `Method not allowed. Allowed: ${allowed.join(", ")}.`,

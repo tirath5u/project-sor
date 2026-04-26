@@ -45,17 +45,22 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                 responses: {
                   "200": { description: "Calculation results" },
                   "400": { description: "Invalid input (malformed JSON or unreadable body)" },
-                  "405": { description: "Method not allowed (only POST and OPTIONS are supported)" },
+                  "405": {
+                    description: "Method not allowed (only POST and OPTIONS are supported)",
+                  },
                   "406": { description: "Not acceptable (only application/json responses)" },
                   "413": { description: "Payload too large (request body exceeds 1 MB)" },
                   "415": { description: "Unsupported media type" },
-                  "422": { description: "Schema validation failed (well-formed JSON, but violates the input contract)" },
+                  "422": {
+                    description:
+                      "Schema validation failed (well-formed JSON, but violates the input contract)",
+                  },
                   "429": { description: "Rate limited" },
                   "500": { description: "Internal engine error" },
                 },
               },
               get: {
-                summary: "Not allowed — calculate accepts POST only",
+                summary: "Not allowed - calculate accepts POST only",
                 responses: {
                   "405": { description: "Method not allowed" },
                 },

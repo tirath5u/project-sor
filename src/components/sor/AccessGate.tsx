@@ -15,8 +15,10 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    setUnlocked(window.sessionStorage.getItem(STORAGE_KEY) === "1" ||
-      window.localStorage.getItem(STORAGE_KEY) === "1");
+    setUnlocked(
+      window.sessionStorage.getItem(STORAGE_KEY) === "1" ||
+        window.localStorage.getItem(STORAGE_KEY) === "1",
+    );
   }, []);
 
   // SSR / pre-hydration: render children so SEO and first paint aren't blocked
@@ -75,9 +77,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
                 placeholder="Enter password"
               />
             </div>
-            {error ? (
-              <p className="text-[11px] text-destructive">Incorrect password.</p>
-            ) : null}
+            {error ? <p className="text-[11px] text-destructive">Incorrect password.</p> : null}
           </div>
           <Button type="submit" className="w-full">
             Unlock

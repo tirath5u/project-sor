@@ -1,5 +1,5 @@
 /**
- * Canonical SOR parity fixtures — SINGLE SOURCE OF TRUTH.
+ * Canonical SOR parity fixtures - SINGLE SOURCE OF TRUTH.
  *
  * Each fixture pins a concrete input shape and the engine fields whose values
  * the maintainers commit to. The /api/public/v1/scenarios endpoint serializes
@@ -8,7 +8,7 @@
  *
  * `sourceRefs` are public-source-register IDs (see docs/public-source-register.md).
  * Internal worksheet paths, client names, and private URLs are NEVER allowed
- * in this file — see the public-safety pre-launch checklist.
+ * in this file - see the public-safety pre-launch checklist.
  */
 
 import { defaultInputs, TERM_LABELS, type SORInputs, type TermKey } from "./sor";
@@ -54,7 +54,9 @@ export interface ParityFixture {
     effectiveCombinedLimit?: number;
     subBaseline?: number;
     unsubBaseline?: number;
-    terms?: Partial<Record<TermKey, { finalSub?: number; finalUnsub?: number; finalGradPlus?: number }>>;
+    terms?: Partial<
+      Record<TermKey, { finalSub?: number; finalUnsub?: number; finalGradPlus?: number }>
+    >;
   };
 }
 
@@ -84,7 +86,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   {
     id: "fixture-v19-001",
     description:
-      "Dependent G1, Need $5,500, two terms 6/9 credits, 24 AY FT — canonical SOR=63% case (v18-A).",
+      "Dependent G1, Need $5,500, two terms 6/9 credits, 24 AY FT - canonical SOR=63% case (v18-A).",
     sourceRefs: ["psr-001", "psr-002"],
     input: build(
       {
@@ -115,7 +117,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   {
     id: "fixture-v19-002",
     description:
-      "Dependent G1, Need $2,000 — combined-limit shifting moves the surplus to Unsub baseline.",
+      "Dependent G1, Need $2,000 - combined-limit shifting moves the surplus to Unsub baseline.",
     sourceRefs: ["psr-001"],
     input: build(
       {
@@ -141,8 +143,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   },
   {
     id: "fixture-v19-003",
-    description:
-      "Three terms, near-full enrollment 9/12/12 — AY% = 92, annual Sub $1,840.",
+    description: "Three terms, near-full enrollment 9/12/12 - AY% = 92, annual Sub $1,840.",
     sourceRefs: ["psr-001"],
     input: build(
       {
@@ -167,7 +168,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   {
     id: "fixture-v19-004",
     description:
-      "Part-time Fall 6, overload Spring 18, proportional model — AY% = 100, balloon to Spring (ed-1).",
+      "Part-time Fall 6, overload Spring 18, proportional model - AY% = 100, balloon to Spring (ed-1).",
     sourceRefs: ["psr-001"],
     input: build(
       {
@@ -193,8 +194,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   },
   {
     id: "fixture-v19-005",
-    description:
-      "Award Year 2025-26 — SOR is NOT applicable (gate). Reduced caps equal baselines.",
+    description: "Award Year 2025-26 - SOR is NOT applicable (gate). Reduced caps equal baselines.",
     sourceRefs: ["psr-003"],
     input: build(
       {
@@ -219,7 +219,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   {
     id: "fixture-v19-006",
     description:
-      "Grad PLUS basic — G8 independent, COA $40k, other aid $5k, Need $20.5k, requested PLUS $15k → initialPLUS = $14,500, SOR=100%.",
+      "Grad PLUS basic - G8 independent, COA $40k, other aid $5k, Need $20.5k, requested PLUS $15k → initialPLUS = $14,500, SOR=100%.",
     sourceRefs: ["psr-002", "psr-004"],
     input: build(
       {
@@ -249,7 +249,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   {
     id: "fixture-v19-007",
     description:
-      "Grad PLUS with SOR reduction — same as 006 but Spring=5 credits → AY% = 78, reduced PLUS = $11,310.",
+      "Grad PLUS with SOR reduction - same as 006 but Spring=5 credits → AY% = 78, reduced PLUS = $11,310.",
     sourceRefs: ["psr-002", "psr-004"],
     input: build(
       {

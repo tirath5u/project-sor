@@ -1,26 +1,26 @@
 /**
- * Schedule of Reductions (SOR) — Calculation engine (v18 master parity).
+ * Schedule of Reductions (SOR) - Calculation engine (v18 master parity).
  *
  * Implements the Department of Education FIVE-STEP process plus Sections G/H
  * of the v18 master spreadsheet:
  *
- *   STEP 1 — Initial Maximum Annual Loan Limit (statutory + need cap, by loan type).
+ *   STEP 1 - Initial Maximum Annual Loan Limit (statutory + need cap, by loan type).
  *            v18 takes a single Annual Financial Need and splits it: Sub gets
  *            the lesser of need and the Sub statutory cap; Unsub gets the
  *            remaining need up to the Unsub statutory cap. Override toggle
  *            keeps Sub/Unsub need editable independently for QA.
- *   STEP 2 — AY enrollment % = Σ enrolledAY ÷ AY-FT credits.
+ *   STEP 2 - AY enrollment % = Σ enrolledAY ÷ AY-FT credits.
  *            Loan annual limit = initialMax × min(ayPct, 100%).
- *   STEP 3 — Per-term SHARE of the annual loan limit. Two models (v18 § G):
+ *   STEP 3 - Per-term SHARE of the annual loan limit. Two models (v18 § G):
  *              · "equal"        → annual ÷ N eligible terms
  *              · "proportional" → remaining dollars × (current enrolled credits ÷
  *                remaining eligible enrolled credits)
  *            Whole-dollar; remaining terms are rebalanced after each term.
- *   STEP 4 — Per-term ENROLLMENT % = term enrolled ÷ term FT (can exceed 100%).
- *   STEP 5 — Disbursement = termShare × min(termPct, 100%). Plus v18 § H
+ *   STEP 4 - Per-term ENROLLMENT % = term enrolled ÷ term FT (can exceed 100%).
+ *   STEP 5 - Disbursement = termShare × min(termPct, 100%). Plus v18 § H
  *            balance-forward: any unspent share (term % < 100%, ineligible
  *            term, or already-paid term that drew less than its share) flows
- *            forward to subsequent eligible terms — capped at each forward
+ *            forward to subsequent eligible terms - capped at each forward
  *            term's own ceiling.
  *
  * Disbursement (recalculation) mode:
@@ -78,7 +78,7 @@ export interface TermInput {
   refundUnsub: number | null;
   coaCapSub: number;
   coaCapUnsub: number;
-  /** v19 — Grad PLUS (DLGP) per-term tracking (third parallel bucket). */
+  /** v19 - Grad PLUS (DLGP) per-term tracking (third parallel bucket). */
   paidGradPlus?: number | null;
   refundGradPlus?: number | null;
   coaCapGradPlus?: number;
@@ -100,7 +100,7 @@ export interface SORInputs {
   /** Grade Level + Dependency drive Step 1 lookup. */
   gradeLevel: GradeLevel;
   dependency: Dependency;
-  /** Dependent undergrad whose parents were denied PLUS — unlocks Independent Unsub cap. */
+  /** Dependent undergrad whose parents were denied PLUS - unlocks Independent Unsub cap. */
   parentPlusDenied: boolean;
   /** Override the lookup with manual statutory caps. */
   overrideLimits: boolean;
@@ -108,7 +108,7 @@ export interface SORInputs {
   annualNeed: number;
   subStatutory: number;
   unsubStatutory: number;
-  /** v18 § G — per-term share model. */
+  /** v18 § G - per-term share model. */
   distributionModel: DistributionModel;
   /** Apply Sub→Unsub shift after Step 2 (combined cap behavior per OBBBA). */
   applySubUnsubShift: boolean;
@@ -118,17 +118,17 @@ export interface SORInputs {
   /** Count LTHT (below-half-time) credits in the AY-pct numerator (term still pays $0). */
   countLthtInAyPct: boolean;
   terms: Record<TermKey, TermInput>;
-  /** v19 — Award Year. SOR only applies to "2026-27"+. "2025-26" disables the SOR%. */
+  /** v19 - Award Year. SOR only applies to "2026-27"+. "2025-26" disables the SOR%. */
   awardYear?: "2025-26" | "2026-27";
-  /** v19 — Loan Limit Exception (grandfathered). Switches Sub/Unsub limit table only.
+  /** v19 - Loan Limit Exception (grandfathered). Switches Sub/Unsub limit table only.
    *  Does NOT gate Grad PLUS access. */
   loanLimitException?: boolean;
-  /** v19 — Cost of Attendance (Section B). Drives Grad PLUS cap. */
+  /** v19 - Cost of Attendance (Section B). Drives Grad PLUS cap. */
   coa?: number;
-  /** v19 — Other Non-PLUS Aid (Pell, grants, scholarships, outside loans).
+  /** v19 - Other Non-PLUS Aid (Pell, grants, scholarships, outside loans).
    *  Excludes Sub/Unsub/PLUS by definition. */
   otherAid?: number;
-  /** v19 — Student-requested Grad PLUS amount (the borrowing ceiling). */
+  /** v19 - Student-requested Grad PLUS amount (the borrowing ceiling). */
   requestedGradPlus?: number;
 }
 
@@ -163,7 +163,7 @@ export interface TermResult {
   /** Adjustment relative to a prior plan (disbursement mode). */
   adjustmentSub: number;
   adjustmentUnsub: number;
-  /** v19 — Grad PLUS bucket. */
+  /** v19 - Grad PLUS bucket. */
   shareGradPlus: number;
   calcGradPlus: number;
   finalGradPlus: number;
@@ -213,7 +213,7 @@ export interface SORResults {
   /** Step 1 baseline before Need-cap reduction (for double-reduction display). */
   subStatBaseline: number;
   unsubStatBaseline: number;
-  /** Reduced (adjusted) Need cap after first SOR pass — only differs when
+  /** Reduced (adjusted) Need cap after first SOR pass - only differs when
    *  applyDoubleReduction is on AND Need < Statutory. */
   subNeedAdjusted: number;
   unsubNeedAdjusted: number;
@@ -243,11 +243,11 @@ export interface SORResults {
   verifyUnsub: number;
   warnings: string[];
   recalcHistory: RecalcEvent[];
-  /** v19 — Award Year & SOR applicability. */
+  /** v19 - Award Year & SOR applicability. */
   awardYear: "2025-26" | "2026-27";
   sorApplicable: boolean;
   loanLimitException: boolean;
-  /** v19 — Grad PLUS bucket aggregates. */
+  /** v19 - Grad PLUS bucket aggregates. */
   coa: number;
   otherAid: number;
   requestedGradPlus: number;
@@ -395,9 +395,7 @@ function activeKeys(inp: SORInputs): TermKey[] {
     term3: false,
     term4: false,
   };
-  return TERM_ORDER.filter(
-    (k) => (standardSet.has(k) || optional[k]) && inp.terms[k]?.enabled,
-  );
+  return TERM_ORDER.filter((k) => (standardSet.has(k) || optional[k]) && inp.terms[k]?.enabled);
 }
 
 /** Split annual into N equal whole-dollar shares; last term takes the remainder. */
@@ -467,8 +465,7 @@ function distributeRunningPoolDetailed(
           ? remainingPool
           : Math.round((remainingPool * currentWeight) / totalWeight);
     } else {
-      payout =
-        isLast ? remainingPool : Math.floor(remainingPool / remainingEligibleIdx.length);
+      payout = isLast ? remainingPool : Math.floor(remainingPool / remainingEligibleIdx.length);
     }
 
     share[i] = payout;
@@ -576,11 +573,9 @@ function computeSnapshot(
   const annualSub = round(initialSub * ayPctRounded);
   const annualUnsub = round(initialUnsub * ayPctRounded);
 
-  // Step 3 — per-term SHARE across all enabled terms. Historical anchoring
+  // Step 3 - per-term SHARE across all enabled terms. Historical anchoring
   // and balance-forward catch-up are reconciled later in distributeRemainingPool.
-  const enabledIdx = termsInOrder
-    .map((_, i) => i)
-    .filter((i) => termsInOrder[i].enabled);
+  const enabledIdx = termsInOrder.map((_, i) => i).filter((i) => termsInOrder[i].enabled);
   const enabledCount = enabledIdx.length;
 
   let shareSubFlat: number[] = [];
@@ -654,7 +649,7 @@ export function splitNeed(
  * Resolve the statutory caps the engine should actually use.
  *
  * - When `overrideLimits` is false, ALWAYS derive caps from the lookup table
- *   (grade level, dependency, optional PLUS-denial uplift) — never trust
+ *   (grade level, dependency, optional PLUS-denial uplift) - never trust
  *   stale `inp.subStatutory` / `inp.unsubStatutory` values that may have
  *   been left over from a prior scenario load.
  * - When `overrideLimits` is true, honor the manual caps the user typed in.
@@ -672,7 +667,7 @@ export function resolveCaps(inp: SORInputs): {
     const unsub = Math.max(0, inp.unsubStatutory);
     return { sub, unsub, combined: sub + unsub };
   }
-  // v19 — Loan Limit Exception (grandfathered) flag selects which table to use.
+  // v19 - Loan Limit Exception (grandfathered) flag selects which table to use.
   // LLE = true → Legacy table; LLE = false → OBBB table (currently a Legacy mirror).
   const useLegacy = inp.loanLimitException !== false; // default true (legacy) when undefined
   const lim = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied, useLegacy);
@@ -683,12 +678,12 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const warnings: string[] = [];
   if (inp.calType === 3 || inp.calType === 4) {
     warnings.push(
-      `Academic Calendar ${inp.calType} (non-standard) — confirm SOR applicability with the FSA Handbook.`,
+      `Academic Calendar ${inp.calType} (non-standard) - confirm SOR applicability with the FSA Handbook.`,
     );
   }
   if (isGradOrProf(inp.gradeLevel) && inp.programLevel === "undergraduate") {
     warnings.push(
-      "Grade Level is graduate/professional but Program Level is Undergraduate — review.",
+      "Grade Level is graduate/professional but Program Level is Undergraduate - review.",
     );
   }
 
@@ -702,7 +697,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
   //      the unsub bucket absorbs whatever sub did not consume of the combined cap).
   //
   // CRITICAL: use resolveCaps() so we always honor the lookup table when
-  // `overrideLimits` is false — never trust raw inp.subStatutory/unsubStatutory
+  // `overrideLimits` is false - never trust raw inp.subStatutory/unsubStatutory
   // (those may be stale from a prior scenario load and hide the combined-limit
   // shifting rule).
   const caps = resolveCaps(inp);
@@ -878,14 +873,14 @@ export function calculateSOR(inp: SORInputs): SORResults {
       adjustmentUnsub: adjUnsub,
       note:
         adjSub === 0 && adjUnsub === 0
-          ? "Disbursement matched the recalculated plan — no adjustment."
+          ? "Disbursement matched the recalculated plan - no adjustment."
           : appliedTo
             ? `Net adjustment of ${fmtCurrency(adjSub)} Sub / ${fmtCurrency(
                 adjUnsub,
               )} carried into ${TERM_LABELS[appliedTo]} via the remaining-pool catch-up.`
             : `Adjustment of ${fmtCurrency(adjSub)} Sub / ${fmtCurrency(
                 adjUnsub,
-              )} — no remaining eligible term to apply against.`,
+              )} - no remaining eligible term to apply against.`,
     });
     prevSnap = newSnap;
   }
@@ -980,7 +975,7 @@ function assemble(args: {
     finalSnap,
   } = args;
 
-  // v19 — Award Year gate: SOR only applies for "2026-27"+. For 2025-26
+  // v19 - Award Year gate: SOR only applies for "2026-27"+. For 2025-26
   // the SOR% effectively reverts to 100% so reduced limits = initial max.
   const awardYear: "2025-26" | "2026-27" = inp.awardYear ?? "2026-27";
   const sorApplicable = awardYear === "2026-27";
@@ -995,13 +990,12 @@ function assemble(args: {
     ? Math.min(unsubNeed, Math.round(unsubNeed * pct))
     : unsubNeed;
   const doubleReductionApplied =
-    inp.applyDoubleReduction &&
-    (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);
+    inp.applyDoubleReduction && (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);
 
   const reducedSubRaw = round2(subBaseline * pct);
   const reducedUnsubRaw = round2(unsubBaseline * pct);
   const additionalUnsubReduced = round2(additionalUnsubBase * pct);
-  let reducedSub = reducedSubRaw;
+  const reducedSub = reducedSubRaw;
   let reducedUnsub = reducedUnsubRaw;
   let shiftedToUnsub = 0;
   if (inp.applySubUnsubShift) {
@@ -1013,7 +1007,7 @@ function assemble(args: {
     reducedUnsub = reducedUnsubRaw + shiftedToUnsub;
   }
 
-  // v19 — Grad PLUS bucket (DLGP). Third parallel track alongside Sub/Unsub.
+  // v19 - Grad PLUS bucket (DLGP). Third parallel track alongside Sub/Unsub.
   // Initial Max DLGP = MAX(0, MIN(requested, COA - otherAid - subBaseline - unsubBaseline))
   // Gated on grade level (SLC >= 8), NOT on LLE/grandfathering (spec §4.3).
   const coa = Math.max(0, inp.coa ?? 0);
@@ -1057,7 +1051,7 @@ function assemble(args: {
     weights,
   });
 
-  // Grad PLUS distribution — same balance-forward distributor as Sub/Unsub.
+  // Grad PLUS distribution - same balance-forward distributor as Sub/Unsub.
   const lockedGradPlusDisplay = ordered.map((t) =>
     t.paidGradPlus !== null && t.paidGradPlus !== undefined
       ? netAmount(t.paidGradPlus ?? null, t.refundGradPlus ?? null)
@@ -1076,8 +1070,7 @@ function assemble(args: {
   const activeTermCount = ordered.length;
   const perTermCapSub = activeTermCount > 0 ? round2(reducedSub / activeTermCount) : 0;
   const perTermCapUnsub = activeTermCount > 0 ? round2(reducedUnsub / activeTermCount) : 0;
-  const perTermCapGradPlus =
-    activeTermCount > 0 ? round2(reducedGradPlus / activeTermCount) : 0;
+  const perTermCapGradPlus = activeTermCount > 0 ? round2(reducedGradPlus / activeTermCount) : 0;
 
   const termResults: TermResult[] = ordered.map((t, i) => {
     const eff = effectiveCreditsBy(t);
@@ -1086,22 +1079,17 @@ function assemble(args: {
     const calcSub = displaySub.calc[i];
     const calcUnsub = displayUnsub.calc[i];
     const calcGradPlus = displayGradPlus.calc[i];
-    // Final = MIN(Step 5 Calc, COA cap). No averaging, no override —
+    // Final = MIN(Step 5 Calc, COA cap). No averaging, no override -
     // Final must rigidly mirror the Step-5 output to preserve history anchoring.
     const cappedSub = round2(t.coaCapSub > 0 ? Math.min(calcSub, t.coaCapSub) : calcSub);
-    const cappedUnsub = round2(
-      t.coaCapUnsub > 0 ? Math.min(calcUnsub, t.coaCapUnsub) : calcUnsub,
-    );
+    const cappedUnsub = round2(t.coaCapUnsub > 0 ? Math.min(calcUnsub, t.coaCapUnsub) : calcUnsub);
     const coaCapGradPlus = t.coaCapGradPlus ?? 0;
     const cappedGradPlus = round2(
       coaCapGradPlus > 0 ? Math.min(calcGradPlus, coaCapGradPlus) : calcGradPlus,
     );
     const netPaidSub = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
     const netPaidUnsub = Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0));
-    const netPaidGradPlus = Math.max(
-      0,
-      (t.paidGradPlus || 0) - (t.refundGradPlus || 0),
-    );
+    const netPaidGradPlus = Math.max(0, (t.paidGradPlus || 0) - (t.refundGradPlus || 0));
     const termPct = t.ftCredits > 0 ? eff / t.ftCredits : 0;
     return {
       key: t.key,
@@ -1249,7 +1237,7 @@ export const fmtCurrency = (n: number) =>
     signDisplay: n < 0 ? "always" : "auto",
   }).format(n);
 
-/** v19 — cent-precision currency formatter for COD SmallCurrencyType cells. */
+/** v19 - cent-precision currency formatter for COD SmallCurrencyType cells. */
 export const fmtCurrencyCents = (n: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",

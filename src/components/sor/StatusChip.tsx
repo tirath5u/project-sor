@@ -12,7 +12,13 @@ const LABELS: Record<TermResult["status"], string> = {
   off: "Off",
 };
 
-export function StatusChip({ status, className }: { status: TermResult["status"]; className?: string }) {
+export function StatusChip({
+  status,
+  className,
+}: {
+  status: TermResult["status"];
+  className?: string;
+}) {
   return (
     <span
       className={cn(

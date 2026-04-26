@@ -28,7 +28,9 @@ function VerifyBadge({ label, diff }: { label: string; diff: number }) {
     >
       {ok ? <CheckCircle2 className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
       <span className="font-medium">{label}:</span>
-      <span>{ok ? "Balanced" : `${diff > 0 ? "Under by" : "Over by"} ${fmtCurrency(Math.abs(diff))}`}</span>
+      <span>
+        {ok ? "Balanced" : `${diff > 0 ? "Under by" : "Over by"} ${fmtCurrency(Math.abs(diff))}`}
+      </span>
     </div>
   );
 }
@@ -81,9 +83,10 @@ export function ResultsPanel({
             <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-80">
               SOR %
               <InfoTip>
-                Schedule of Reductions percentage. = Σ AY enrolled credits ÷ AY full-time credits, rounded.
-                This is the calculation input that reduces the annual Sub/Unsub (and Grad PLUS) baselines.
-                Distinct from Enrollment Intensity (EI), which is the per-term value reported to COD on disbursement records.
+                Schedule of Reductions percentage. = Σ AY enrolled credits ÷ AY full-time credits,
+                rounded. This is the calculation input that reduces the annual Sub/Unsub (and Grad
+                PLUS) baselines. Distinct from Enrollment Intensity (EI), which is the per-term
+                value reported to COD on disbursement records.
               </InfoTip>
             </div>
             <div className="mt-1 text-2xl font-bold tabular-nums">
@@ -96,7 +99,9 @@ export function ResultsPanel({
           <div className="rounded-lg bg-white/10 p-3">
             <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-80">
               Raw fraction
-              <InfoTip>The unrounded enrollment fraction before SOR rounding rules are applied.</InfoTip>
+              <InfoTip>
+                The unrounded enrollment fraction before SOR rounding rules are applied.
+              </InfoTip>
             </div>
             <div className="mt-1 text-2xl font-bold tabular-nums">
               {(results.enrollmentFractionRaw * 100).toFixed(2)}%
@@ -106,7 +111,9 @@ export function ResultsPanel({
           <div className="rounded-lg bg-white/10 p-3">
             <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-80">
               Annual Sub limit
-              <InfoTip>Sub baseline × AY %. The reduced annual Sub pool that gets sliced across terms.</InfoTip>
+              <InfoTip>
+                Sub baseline × AY %. The reduced annual Sub pool that gets sliced across terms.
+              </InfoTip>
             </div>
             <div className="mt-1 text-xl font-semibold tabular-nums">
               {fmtCurrency(results.reducedSub)}
@@ -134,7 +141,10 @@ export function ResultsPanel({
         <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
           Per-term Disbursements
           <InfoTip label="About per-term disbursements">
-            How the reduced annual Sub/Unsub pools are sliced across each eligible term using the chosen distribution rule (Equal or Proportional). Disbursed/paid terms are anchored - the engine never retroactively changes them; the remaining pool is redistributed to future eligible terms. Final values are clamped to per-term COA caps.
+            How the reduced annual Sub/Unsub pools are sliced across each eligible term using the
+            chosen distribution rule (Equal or Proportional). Disbursed/paid terms are anchored -
+            the engine never retroactively changes them; the remaining pool is redistributed to
+            future eligible terms. Final values are clamped to per-term COA caps.
           </InfoTip>
         </h3>
         <div className="-mx-2 overflow-x-auto">
@@ -174,9 +184,7 @@ export function ResultsPanel({
                           </span>
                         ) : null}
                       </td>
-                      <td className="px-2 py-2 text-right">
-                        {(t.termPct * 100).toFixed(0)}%
-                      </td>
+                      <td className="px-2 py-2 text-right">{(t.termPct * 100).toFixed(0)}%</td>
                       <td
                         className={cn(
                           "px-2 py-2 text-right font-medium",
@@ -220,10 +228,7 @@ export function ResultsPanel({
           </h3>
           <ol className="space-y-2 text-[11px]">
             {results.recalcHistory.map((e, i) => (
-              <li
-                key={i}
-                className="rounded-lg border border-border/60 bg-background/60 p-3"
-              >
+              <li key={i} className="rounded-lg border border-border/60 bg-background/60 p-3">
                 <div className="mb-1 flex items-center justify-between">
                   <span className="font-semibold text-foreground">
                     #{i + 1} · {e.triggerLabel} disbursed
@@ -234,8 +239,7 @@ export function ResultsPanel({
                 </div>
                 <div className="grid grid-cols-2 gap-1 font-mono text-[10px] text-muted-foreground">
                   <span>
-                    Annual Sub: {fmtCurrency(e.beforeAnnualSub)} →{" "}
-                    {fmtCurrency(e.afterAnnualSub)}
+                    Annual Sub: {fmtCurrency(e.beforeAnnualSub)} → {fmtCurrency(e.afterAnnualSub)}
                   </span>
                   <span>
                     Annual Unsub: {fmtCurrency(e.beforeAnnualUnsub)} →{" "}
@@ -253,7 +257,10 @@ export function ResultsPanel({
         <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
           Verification
           <InfoTip label="About verification">
-            Sanity check: sums all per-term Final Sub/Unsub and compares against the reduced annual limits. "Balanced" (ideal) means the engine fully distributed the pool with no rounding loss. "Under by" indicates leftover headroom (e.g. COA caps or ineligible terms truncated the pool); "Over by" would signal a calculation bug.
+            Sanity check: sums all per-term Final Sub/Unsub and compares against the reduced annual
+            limits. "Balanced" (ideal) means the engine fully distributed the pool with no rounding
+            loss. "Under by" indicates leftover headroom (e.g. COA caps or ineligible terms
+            truncated the pool); "Over by" would signal a calculation bug.
           </InfoTip>
         </h3>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -285,7 +292,10 @@ export function ResultsPanel({
           <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
             Grad PLUS (DLGP)
             <InfoTip label="About Grad PLUS">
-              Third parallel disbursement bucket for graduate / professional borrowers. Capped at Cost of Attendance minus all other aid (Pell, grants, scholarships, Sub, Unsub). Subject to the SOR % for award year 2026-27 and later. Grade Level is the only access gate - the Loan Limit Exception (grandfathering) does NOT affect Grad PLUS access.
+              Third parallel disbursement bucket for graduate / professional borrowers. Capped at
+              Cost of Attendance minus all other aid (Pell, grants, scholarships, Sub, Unsub).
+              Subject to the SOR % for award year 2026-27 and later. Grade Level is the only access
+              gate - the Loan Limit Exception (grandfathering) does NOT affect Grad PLUS access.
             </InfoTip>
           </h3>
           <div className="grid grid-cols-2 gap-2">
@@ -297,7 +307,11 @@ export function ResultsPanel({
             <Stat
               label="Reduced Annual DLGP"
               value={fmtCurrencyCents(results.reducedGradPlus)}
-              sub={results.sorApplicable ? `× ${Math.round(results.sorPctRounded * 100)}% SOR` : "no SOR (pre-2026-27)"}
+              sub={
+                results.sorApplicable
+                  ? `× ${Math.round(results.sorPctRounded * 100)}% SOR`
+                  : "no SOR (pre-2026-27)"
+              }
             />
           </div>
           <div className="mt-3 -mx-2 overflow-x-auto">

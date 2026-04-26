@@ -94,7 +94,8 @@
   --gradient-subtle: linear-gradient(180deg, oklch(0.995 0.003 290), oklch(0.985 0.005 290));
   --gradient-gold: linear-gradient(135deg, oklch(0.85 0.16 85), oklch(0.78 0.17 75));
   --shadow-elegant: 0 12px 40px -14px color-mix(in oklab, oklch(0.36 0.13 295) 30%, transparent);
-  --shadow-card: 0 1px 3px 0 oklch(0.18 0.04 285 / 0.05), 0 1px 2px -1px oklch(0.18 0.04 285 / 0.05);
+  --shadow-card:
+    0 1px 3px 0 oklch(0.18 0.04 285 / 0.05), 0 1px 2px -1px oklch(0.18 0.04 285 / 0.05);
   --chart-1: oklch(0.36 0.13 295);
   --chart-2: oklch(0.83 0.15 85);
   --chart-3: oklch(0.55 0.16 230);
@@ -163,11 +164,23 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      "Segoe UI",
+      Inter,
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     letter-spacing: -0.01em;
   }
 
@@ -178,7 +191,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Skip-to-content link — visually hidden until focused. */
+  /* Skip-to-content link - visually hidden until focused. */
   .skip-link {
     position: absolute;
     top: -40px;

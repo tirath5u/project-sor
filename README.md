@@ -2,7 +2,7 @@
 
 An open-source, parity-tested implementation of the OBBBA Less-Than-Full-Time Reduction (Schedule of Reductions) for federal Direct Subsidized and Unsubsidized loans, with a free public HTTP API.
 
-Built and maintained by **Tirath Chhatriwala**, Product Manager with over 14 years of experience in EdTech, Higher Education and FSA Regulatory Compliance. 
+Built and maintained by **Tirath Chhatriwala**, Product Manager with over 14 years of experience in EdTech, Higher Education and FSA Regulatory Compliance.
 
 [![CI](https://github.com/tirath5u/project-sor/actions/workflows/ci.yml/badge.svg)](https://github.com/tirath5u/project-sor/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -65,16 +65,34 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 
 ## Public API
 
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `/api/public/v1/health` | GET | Liveness, engine version, policy year |
-| `/api/public/v1/scenarios` | GET | Fixture catalog with regulatory citations and source-status labels |
-| `/api/public/v1/calculate` | POST | Run the engine on supplied inputs |
-| `/api/public/v1/openapi.json` | GET | OpenAPI 3.1 specification |
+| Endpoint                      | Method | Purpose                                                            |
+| ----------------------------- | ------ | ------------------------------------------------------------------ |
+| `/api/public/v1/health`       | GET    | Liveness, engine version, policy year                              |
+| `/api/public/v1/scenarios`    | GET    | Fixture catalog with regulatory citations and source-status labels |
+| `/api/public/v1/calculate`    | POST   | Run the engine on supplied inputs                                  |
+| `/api/public/v1/openapi.json` | GET    | OpenAPI 3.1 specification                                          |
 
 **Rate limit:** 30 requests per minute and 5,000 per day per IP, best-effort per edge isolate. No keys, no signup. Header `X-RateLimit-Policy: best-effort-per-isolate` documents the constraint honestly.
 
-**Response envelope:** every successful response carries `meta.engineVersion`, `meta.policyVersion`, `meta.requestId`, and `meta.sourceRepo` so a consumer can reproduce a calculation against a specific snapshot of the rules.
+**Response envelope:** every successful response carries the metadata needed to
+reproduce a calculation against a specific snapshot of the rules. Top-level
+keys: `data` and `meta`. The `meta` object includes:
+
+- `engineVersion` - semantic version of the calculation engine (e.g. `1.0.0`)
+- `policyYear` - award year the engine was evaluated against (e.g. `2026-27`)
+- `policySnapshotDate` - ISO date of the policy snapshot used
+- `policyStatus` - `confirmed` or `supported-preliminary`
+- `sourceCommit` - Git SHA of the deployed engine, or `local-dev` for
+  non-CI builds (see note below)
+- `sourceSet` - identifiers of the rule packs used (e.g. `["direct-loan-sor-v1"]`)
+- `citations` - regulatory citations applicable to the result (may be empty)
+- `computedAt` - ISO timestamp the response was produced
+- `requestId` - correlation ID; also returned in the `X-Request-Id` response header
+
+> **`sourceCommit` note.** GitHub CI injects the real commit SHA via
+> `VITE_COMMIT_SHA` at build time. Deployments triggered from the Lovable
+> editor do not set that variable and will return `sourceCommit: "local-dev"`.
+> For source-reproducible results, pin against a CI-built deployment.
 
 **Error contract:** uniform `{ error: { code, message, details? } }` envelope. Status codes are RFC-correct: 400 for malformed JSON, 415 for wrong content type, 422 for valid JSON that fails schema, 429 for rate limit, 405 for wrong method, 413 for oversized body.
 
@@ -82,9 +100,9 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 
 ## Operations
 
-- **[Load test report](docs/load-test.md)** — measured throughput and tail latency against the live production deployment. Headline: ~16,700 requests across the three public endpoints, zero 5xx, p99 under 175 ms.
-- **[Incident runbook](docs/runbook.md)** — health check, triage matrix, fixture-replay smoke test, and rollback procedure.
-- **[Security policy](SECURITY.md)** — how to report a vulnerability privately.
+- **[Load test report](docs/load-test.md)** - measured throughput and tail latency against the live production deployment. Headline: ~16,700 requests across the three public endpoints, zero 5xx, p99 under 175 ms.
+- **[Incident runbook](docs/runbook.md)** - health check, triage matrix, fixture-replay smoke test, and rollback procedure.
+- **[Security policy](SECURITY.md)** - how to report a vulnerability privately.
 
 ---
 
@@ -105,12 +123,12 @@ A second verification path is purely external: pull the catalog from `/api/publi
 
 ## Who this is for
 
-| Audience | What you get |
-|---|---|
-| **Financial aid administrators (FAA)** | Plain-English walkthrough of how OBBBA's LT-FT reduction lands on a real student, term by term. |
-| **SIS / FA developers** | A reference engine and parity tests for the SOR formula, rounding rules, and disbursement anchoring you can compare your own implementation against. |
-| **QA engineers** | The fixture catalog as one-click presets, plus a parity test suite covering edge cases (mid-cycle drops, partial entry, override caps). |
-| **Product managers** | A worked example of converting regulatory ambiguity into shippable acceptance criteria, with sources cited inline. |
+| Audience                               | What you get                                                                                                                                         |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Financial aid administrators (FAA)** | Plain-English walkthrough of how OBBBA's LT-FT reduction lands on a real student, term by term.                                                      |
+| **SIS / FA developers**                | A reference engine and parity tests for the SOR formula, rounding rules, and disbursement anchoring you can compare your own implementation against. |
+| **QA engineers**                       | The fixture catalog as one-click presets, plus a parity test suite covering edge cases (mid-cycle drops, partial entry, override caps).              |
+| **Product managers**                   | A worked example of converting regulatory ambiguity into shippable acceptance criteria, with sources cited inline.                                   |
 
 ---
 
@@ -137,7 +155,7 @@ A second verification path is purely external: pull the catalog from `/api/publi
 ## Hard rules teams miss
 
 - **Sub and Unsub anchor independently.** Entering `Paid Sub = 666` for a term must NOT zero out that term's `Paid Unsub`. Each loan type has its own history.
-- **Blank is not zero.** A `Paid Unsub` field that has not been entered is *pending*, not *committed zero*. The engine only redistributes Unsub forward after the user explicitly enters or confirms 0.
+- **Blank is not zero.** A `Paid Unsub` field that has not been entered is _pending_, not _committed zero_. The engine only redistributes Unsub forward after the user explicitly enters or confirms 0.
 - **Enrollment intensity is award-year-level**, not term-level. A student going 12/6/12 is not "full-time, half-time, full-time." They are at one weighted AY percentage.
 - **Combined limit is the ceiling.** Unsub baseline equals `max(0, combinedLimit - subBaseline)`. Override mode does not let you exceed the lookup combined limit unless you intentionally override that cap too.
 - **Round to dollar at the term level**, not the annual level. Per-term values are integer dollars; the rounding residual lands in the last eligible term.
@@ -150,13 +168,13 @@ A second verification path is purely external: pull the catalog from `/api/publi
 
 Every fixture and rule traces back to a source labeled with one of five statuses:
 
-| Label | Meaning |
-|---|---|
-| `confirmed` | Published in a Dear Colleague Letter, Electronic Announcement, the COD Tech Ref, or final ED Q&A |
-| `operational-clarification` | Confirmed by ED in a vendor focus group or written response to a vendor question |
-| `inferred` | Derived from regulation text or analogy to an existing rule, not yet published |
-| `pending-federal-guidance` | Known open question; current behavior is the safest default until ED confirms |
-| `school-policy-dependent` | Permitted variability where institutional policy controls the answer |
+| Label                       | Meaning                                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------------------ |
+| `confirmed`                 | Published in a Dear Colleague Letter, Electronic Announcement, the COD Tech Ref, or final ED Q&A |
+| `operational-clarification` | Confirmed by ED in a vendor focus group or written response to a vendor question                 |
+| `inferred`                  | Derived from regulation text or analogy to an existing rule, not yet published                   |
+| `pending-federal-guidance`  | Known open question; current behavior is the safest default until ED confirms                    |
+| `school-policy-dependent`   | Permitted variability where institutional policy controls the answer                             |
 
 Full register: [`docs/public-source-register.md`](docs/public-source-register.md). Methodology: [`docs/methodology.md`](docs/methodology.md). Rounding policy: [`docs/rounding-policy.md`](docs/rounding-policy.md).
 

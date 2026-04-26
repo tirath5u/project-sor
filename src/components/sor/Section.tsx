@@ -11,13 +11,17 @@ interface SectionProps {
   className?: string;
 }
 
-export function Section({ letter, title, description, tooltip, children, className }: SectionProps) {
+export function Section({
+  letter,
+  title,
+  description,
+  tooltip,
+  children,
+  className,
+}: SectionProps) {
   return (
     <section
-      className={cn(
-        "rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6",
-        className,
-      )}
+      className={cn("rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6", className)}
     >
       <header className="mb-4 flex items-start gap-3 border-b border-border/60 pb-3">
         <span
