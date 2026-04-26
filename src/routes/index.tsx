@@ -266,6 +266,13 @@ function SORCalculatorPage() {
                 academic years.
               </InfoTip>
             </div>
+            <Link
+              to="/api-docs"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition hover:bg-accent/10"
+            >
+              <BookOpen className="h-4 w-4 text-primary" />
+              API Docs
+            </Link>
             <div className="hidden md:block">
               <div className="flex items-center gap-1">
                 <Select

@@ -7,8 +7,11 @@ Built and maintained by **Tirath Chhatriwala**, Product Manager with over 14 yea
 [![CI](https://github.com/tirath5u/project-sor/actions/workflows/ci.yml/badge.svg)](https://github.com/tirath5u/project-sor/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Live API](https://img.shields.io/badge/API-sor.myproduct.life-7100EB.svg)](https://sor.myproduct.life/api/public/v1/health)
+[![API Docs](https://img.shields.io/badge/Docs-api--docs-4B2E83.svg)](https://sor.myproduct.life/api-docs)
 
 > **Try it now:** [sor.myproduct.life](https://sor.myproduct.life)
+>
+> **API docs:** [sor.myproduct.life/api-docs](https://sor.myproduct.life/api-docs)
 >
 > **Source:** <https://github.com/tirath5u/project-sor>
 >
@@ -71,6 +74,7 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 | `/api/public/v1/scenarios`    | GET    | Fixture catalog with regulatory citations and source-status labels |
 | `/api/public/v1/calculate`    | POST   | Run the engine on supplied inputs                                  |
 | `/api/public/v1/openapi.json` | GET    | OpenAPI 3.1 specification                                          |
+| `/api-docs`                   | GET    | Human-readable API guide with examples and challenge workflow      |
 
 **Rate limit:** 30 requests per minute and 5,000 per day per IP, best-effort per edge isolate. No keys, no signup. Header `X-RateLimit-Policy: best-effort-per-isolate` documents the constraint honestly.
 

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
+import { Route as ApiDocsRouteImport } from './routes/api-docs'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicV1ScenariosRouteImport } from './routes/api/public/v1/scenarios'
 import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
@@ -19,6 +20,11 @@ import { Route as ApiPublicV1CalculateRouteImport } from './routes/api/public/v1
 const LifecycleRoute = LifecycleRouteImport.update({
   id: '/lifecycle',
   path: '/lifecycle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDocsRoute = ApiDocsRouteImport.update({
+  id: '/api-docs',
+  path: '/api-docs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -50,6 +56,7 @@ const ApiPublicV1CalculateRoute = ApiPublicV1CalculateRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api-docs': typeof ApiDocsRoute
   '/lifecycle': typeof LifecycleRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api-docs': typeof ApiDocsRoute
   '/lifecycle': typeof LifecycleRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
@@ -67,6 +75,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api-docs': typeof ApiDocsRoute
   '/lifecycle': typeof LifecycleRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/api-docs'
     | '/lifecycle'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/api-docs'
     | '/lifecycle'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/api-docs'
     | '/lifecycle'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiDocsRoute: typeof ApiDocsRoute
   LifecycleRoute: typeof LifecycleRoute
   ApiPublicV1CalculateRoute: typeof ApiPublicV1CalculateRoute
   ApiPublicV1HealthRoute: typeof ApiPublicV1HealthRoute
@@ -116,6 +129,13 @@ declare module '@tanstack/react-router' {
       path: '/lifecycle'
       fullPath: '/lifecycle'
       preLoaderRoute: typeof LifecycleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api-docs': {
+      id: '/api-docs'
+      path: '/api-docs'
+      fullPath: '/api-docs'
+      preLoaderRoute: typeof ApiDocsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -158,6 +178,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiDocsRoute: ApiDocsRoute,
   LifecycleRoute: LifecycleRoute,
   ApiPublicV1CalculateRoute: ApiPublicV1CalculateRoute,
   ApiPublicV1HealthRoute: ApiPublicV1HealthRoute,
