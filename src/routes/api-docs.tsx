@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Code2,
+  Compass,
   ExternalLink,
   FileJson2,
   GitPullRequest,
@@ -62,6 +63,29 @@ const sourceStatuses = [
   {
     label: "preliminary",
     detail: "The behavior is supported by current public guidance, but may change after final federal guidance.",
+  },
+];
+
+const developerTools = [
+  {
+    title: "OpenAPI JSON",
+    href: "https://sor.myproduct.life/api/public/v1/openapi.json",
+    detail: "Use this as the source contract for tooling, SDK review, and automated checks.",
+  },
+  {
+    title: "Swagger Editor",
+    href: "https://editor.swagger.io/",
+    detail: "Open Swagger Editor, choose Import URL, and paste the OpenAPI JSON URL.",
+  },
+  {
+    title: "Postman",
+    href: "https://www.postman.com/",
+    detail: "In Postman, choose Import, then Link, then paste the OpenAPI JSON URL.",
+  },
+  {
+    title: "Scenario Challenge",
+    href: "https://github.com/tirath5u/project-sor/issues/new?template=scenario-challenge.yml",
+    detail: "Use this when a response appears wrong and you have a public citation.",
   },
 ];
 
@@ -198,6 +222,38 @@ function ApiDocsPage() {
             <CodePanel title="cURL" code={curlSample} />
             <CodePanel title="JavaScript" code={jsSample} />
             <CodePanel title="Python" code={pythonSample} />
+          </div>
+        </section>
+
+        <section className="border-y border-border/70 bg-muted/25">
+          <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+            <div className="mb-5 flex items-center gap-2">
+              <Compass className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold tracking-normal">Developer Tools</h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {developerTools.map((tool) => (
+                <a
+                  key={tool.title}
+                  href={tool.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-lg border border-border bg-background p-4 shadow-sm transition hover:border-primary/40 hover:bg-primary/5"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold">{tool.title}</div>
+                    <ExternalLink className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{tool.detail}</p>
+                </a>
+              ))}
+            </div>
+            <div className="mt-4 rounded-lg border border-border bg-background p-4 text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">Import URL:</span>{" "}
+              <code className="rounded bg-muted px-1.5 py-1 text-xs text-foreground">
+                https://sor.myproduct.life/api/public/v1/openapi.json
+              </code>
+            </div>
           </div>
         </section>
 
