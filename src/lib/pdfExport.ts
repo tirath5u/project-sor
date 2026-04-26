@@ -116,7 +116,7 @@ export function exportSORCaseFile({
       },
     });
 
-    y = (doc as any).lastAutoTable.finalY + 14;
+    y = (doc as DocWithAutoTable).lastAutoTable.finalY + 14;
   };
 
   // ---------- 1. STUDENT & LOAN PERIOD ----------
@@ -203,7 +203,7 @@ export function exportSORCaseFile({
     styles: { cellPadding: 4 },
   });
 
-  y = (doc as any).lastAutoTable.finalY + 18;
+  y = (doc as DocWithAutoTable).lastAutoTable.finalY + 18;
 
   // ---------- 4. RESULTS MATRIX ----------
   sectionHeading("4. Results matrix");
@@ -240,7 +240,7 @@ export function exportSORCaseFile({
     styles: { cellPadding: 4 },
   });
 
-  y = (doc as any).lastAutoTable.finalY + 18;
+  y = (doc as DocWithAutoTable).lastAutoTable.finalY + 18;
 
   // ---------- 5. ANNUAL TOTALS ----------
   sectionHeading("5. Annual totals");
