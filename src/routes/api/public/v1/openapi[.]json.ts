@@ -90,21 +90,116 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                     content: {
                       "application/json": {
                         schema: { $ref: "#/components/schemas/ErrorResponse" },
+                        example: {
+                          error: {
+                            code: "invalid_input",
+                            message: "Request body is not valid JSON.",
+                            requestId: "demo-sor-001",
+                          },
+                        },
                       },
                     },
                   },
                   "405": {
                     description: "Method not allowed (only POST and OPTIONS are supported)",
+                    content: {
+                      "application/json": {
+                        schema: { $ref: "#/components/schemas/ErrorResponse" },
+                        example: {
+                          error: {
+                            code: "method_not_allowed",
+                            message: "Method not allowed. Allowed: POST, OPTIONS.",
+                            requestId: "demo-sor-001",
+                          },
+                        },
+                      },
+                    },
                   },
                   "406": { description: "Not acceptable (only application/json responses)" },
-                  "413": { description: "Payload too large (request body exceeds 1 MB)" },
-                  "415": { description: "Unsupported media type" },
+                  "413": {
+                    description: "Payload too large (request body exceeds 1 MB)",
+                    content: {
+                      "application/json": {
+                        schema: { $ref: "#/components/schemas/ErrorResponse" },
+                        example: {
+                          error: {
+                            code: "payload_too_large",
+                            message: "Request body exceeds 1000000 bytes.",
+                            details: { maxBytes: 1000000 },
+                            requestId: "demo-sor-001",
+                          },
+                        },
+                      },
+                    },
+                  },
+                  "415": {
+                    description: "Unsupported media type",
+                    content: {
+                      "application/json": {
+                        schema: { $ref: "#/components/schemas/ErrorResponse" },
+                        example: {
+                          error: {
+                            code: "unsupported_media_type",
+                            message: "Content-Type must be application/json.",
+                            requestId: "demo-sor-001",
+                          },
+                        },
+                      },
+                    },
+                  },
                   "422": {
                     description:
                       "Schema validation failed (well-formed JSON, but violates the input contract)",
+                    content: {
+                      "application/json": {
+                        schema: { $ref: "#/components/schemas/ErrorResponse" },
+                        example: {
+                          error: {
+                            code: "schema_validation_failed",
+                            message: "Input failed schema validation.",
+                            details: [
+                              {
+                                path: ["viewMode"],
+                                message: "Required",
+                              },
+                            ],
+                            requestId: "demo-sor-001",
+                          },
+                        },
+                      },
+                    },
                   },
-                  "429": { description: "Rate limited" },
-                  "500": { description: "Internal engine error" },
+                  "429": {
+                    description: "Rate limited",
+                    content: {
+                      "application/json": {
+                        schema: { $ref: "#/components/schemas/ErrorResponse" },
+                        example: {
+                          error: {
+                            code: "rate_limited",
+                            message: "Rate limit exceeded. Try again shortly.",
+                            details: { retryAfterSec: 2 },
+                            requestId: "demo-sor-001",
+                          },
+                        },
+                      },
+                    },
+                  },
+                  "500": {
+                    description: "Internal engine error",
+                    content: {
+                      "application/json": {
+                        schema: { $ref: "#/components/schemas/ErrorResponse" },
+                        example: {
+                          error: {
+                            code: "internal_error",
+                            message: "Calculation engine threw an unexpected error.",
+                            requestId: "demo-sor-001",
+                          },
+                        },
+                      },
+                    },
+                  },
                 },
               },
               get: {
@@ -181,6 +276,17 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                     properties: {
                       code: {
                         type: "string",
+                        enum: [
+                          "invalid_input",
+                          "schema_validation_failed",
+                          "payload_too_large",
+                          "method_not_allowed",
+                          "unsupported_media_type",
+                          "not_acceptable",
+                          "rate_limited",
+                          "internal_error",
+                          "not_found",
+                        ],
                         example: "schema_validation_failed",
                       },
                       message: {
