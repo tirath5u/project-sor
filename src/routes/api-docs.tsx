@@ -80,7 +80,7 @@ const developerTools = [
   {
     title: "Postman",
     href: "https://www.postman.com/",
-    detail: "In Postman, choose Import, then Link, then paste the OpenAPI JSON URL.",
+    detail: "Import the OpenAPI URL, or run the exported collection from the repo with Newman.",
   },
   {
     title: "Scenario Challenge",

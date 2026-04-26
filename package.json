@@ -11,7 +11,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "contract:openapi": "node scripts/openapi-contract-check.mjs",
+    "postman:run": "bunx newman@6.2.1 run postman/project-sor.postman_collection.json -e postman/project-sor.postman_environment.json"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",

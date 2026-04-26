@@ -25,7 +25,12 @@ bun install
 bun test            # parity + unit tests
 bun run dev         # local TanStack Start dev server
 bun run build       # production build
+bun run contract:openapi  # replay the OpenAPI example against CONTRACT_BASE_URL
+bun run postman:run       # run the exported Postman collection with Newman
 ```
+
+See [`docs/contract-testing.md`](./docs/contract-testing.md) for the full
+OpenAPI, Postman, and Newman workflow.
 
 ## Versioning policy
 
@@ -59,6 +64,8 @@ award year the engine targets by default.
       diffs.
 - [ ] Public-API changes are reflected in
       [`/api/public/v1/openapi.json`](./src/routes/api/public/v1/openapi.json.ts).
+- [ ] Accepted API contract mismatches are classified as an OpenAPI docs fix,
+      an API bug fix, or a versioned contract change.
 
 ## Code of conduct
 

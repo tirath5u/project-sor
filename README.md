@@ -106,6 +106,7 @@ keys: `data` and `meta`. The `meta` object includes:
 
 - **[Load test report](docs/load-test.md)** - measured throughput and tail latency against the live production deployment. Headline: ~16,700 requests across the three public endpoints, zero 5xx, p99 under 175 ms.
 - **[Incident runbook](docs/runbook.md)** - health check, triage matrix, fixture-replay smoke test, and rollback procedure.
+- **[Contract testing](docs/contract-testing.md)** - OpenAPI example replay, exported Postman collection, Newman nightly checks, and mismatch triage rules.
 - **[Security policy](SECURITY.md)** - how to report a vulnerability privately.
 
 ---
@@ -121,7 +122,7 @@ bun test
 
 42 tests pass cent-exact against published fixtures: 7 SOR parity scenarios plus schema validation plus numeric coercion edges. CI runs the same suite on every push and pull request.
 
-A second verification path is purely external: pull the catalog from `/api/public/v1/scenarios`, replay each `input` through `/api/public/v1/calculate`, and diff against each `expectedOutput`. A reviewer can do this with a 20-line script.
+A second verification path is executable contract testing: CI pulls the documented request example from `/api/public/v1/openapi.json`, posts it to `/api/public/v1/calculate`, and checks the documented stable fields. The exported Postman collection in `postman/` runs nightly through Newman against the live API.
 
 ---
 

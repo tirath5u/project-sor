@@ -32,5 +32,33 @@ jobs:
       - name: Run tests (parity + unit)
         run: bunx vitest run
 
+      - name: Start local contract server
+        run: |
+          bun run dev --host 127.0.0.1 --port 4173 > /tmp/project-sor-dev.log 2>&1 &
+          echo $! > /tmp/project-sor-dev.pid
+
+      - name: Wait for local contract server
+        run: |
+          for i in {1..45}; do
+            if curl -fsS http://127.0.0.1:4173/api/public/v1/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/project-sor-dev.log
+          exit 1
+
+      - name: Run OpenAPI contract against local API
+        env:
+          CONTRACT_BASE_URL: http://127.0.0.1:4173
+        run: bun run contract:openapi
+
+      - name: Stop local contract server
+        if: always()
+        run: |
+          if [ -f /tmp/project-sor-dev.pid ]; then
+            kill "$(cat /tmp/project-sor-dev.pid)" || true
+          fi
+
       - name: Build
         run: bun run build

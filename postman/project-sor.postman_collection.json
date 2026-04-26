@@ -1,0 +1,256 @@
+{
+  "info": {
+    "_postman_id": "3b7d7a3f-809c-4df3-9d4f-6b2f8f4e2f12",
+    "name": "Public Schedule of Reductions (SOR) Calculation API",
+    "description": "Black-box contract checks for the public SOR API. The calculate request is seeded from the OpenAPI example, then validated against the documented stable response fields.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET health",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Response time is under 3000ms', function () { pm.expect(pm.response.responseTime).to.be.below(3000); });",
+              "pm.test('Response body is valid JSON', function () { pm.response.json(); });",
+              "pm.test('Response has engineVersion at the top level', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json).to.have.property('engineVersion');",
+              "});",
+              "pm.test('Response has policy metadata', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json).to.have.property('policyYear');",
+              "  pm.expect(json).to.have.property('policySnapshotDate');",
+              "  pm.expect(json).to.have.property('sourceCommit');",
+              "});",
+              "pm.test('Response has requestId', function () {",
+              "  pm.expect(pm.response.json()).to.have.property('requestId');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{baseUrl}}/api/public/v1/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "public", "v1", "health"]
+        }
+      }
+    },
+    {
+      "name": "GET openapi.json",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Response time is under 3000ms', function () { pm.expect(pm.response.responseTime).to.be.below(3000); });",
+              "pm.test('Response body is valid JSON', function () { pm.response.json(); });",
+              "pm.test('Spec has OpenAPI 3.1 metadata', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json).to.have.property('openapi');",
+              "  pm.expect(json.openapi).to.match(/^3\\.1/);",
+              "  pm.expect(json).to.have.property('info');",
+              "});",
+              "pm.test('Spec has a calculate request example', function () {",
+              "  var json = pm.response.json();",
+              "  var content = json.paths['/api/public/v1/calculate'].post.requestBody.content['application/json'];",
+              "  var example = content.examples.firstPublishedScenario.value || content.example;",
+              "  pm.expect(example).to.be.an('object');",
+              "  pm.collectionVariables.set('openApiCalculateInput', JSON.stringify(example, null, 2));",
+              "});",
+              "pm.test('Spec documents stable calculate response fields', function () {",
+              "  var json = pm.response.json();",
+              "  var schemas = json.components.schemas;",
+              "  pm.expect(schemas).to.have.property('SORResultsStable');",
+              "  pm.expect(schemas.SORResultsStable.required).to.include.members(['totalFinalSub', 'totalFinalUnsub', 'reducedSub', 'reducedUnsub', 'sorPctRounded', 'sorApplicable', 'termResults']);",
+              "  var expectedData = json.paths['/api/public/v1/calculate'].post.responses['200'].content['application/json'].example.data;",
+              "  pm.collectionVariables.set('openApiCalculateExpectedData', JSON.stringify(expectedData, null, 2));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{baseUrl}}/api/public/v1/openapi.json",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "public", "v1", "openapi.json"]
+        }
+      }
+    },
+    {
+      "name": "GET scenarios",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Response time is under 3000ms', function () { pm.expect(pm.response.responseTime).to.be.below(3000); });",
+              "pm.test('Response body is valid JSON', function () { pm.response.json(); });",
+              "pm.test('Response has scenarios array', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json).to.have.property('scenarios');",
+              "  pm.expect(json.scenarios).to.be.an('array');",
+              "  pm.expect(json.scenarios.length).to.be.above(0);",
+              "});",
+              "pm.test('First scenario has input, expected output, and sourceRefs', function () {",
+              "  var first = pm.response.json().scenarios[0];",
+              "  pm.expect(first).to.have.property('input');",
+              "  pm.expect(first).to.have.property('expected');",
+              "  pm.expect(first).to.have.property('sourceRefs');",
+              "  pm.expect(first.sourceRefs).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{baseUrl}}/api/public/v1/scenarios",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "public", "v1", "scenarios"]
+        }
+      }
+    },
+    {
+      "name": "POST calculate from OpenAPI example",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('openApiCalculateInput')) {",
+              "  throw new Error('Run GET openapi.json before POST calculate so the documented example is loaded.');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "function assertSubset(actual, expected, path) {",
+              "  if (expected === null || typeof expected !== 'object') {",
+              "    pm.expect(actual, path).to.eql(expected);",
+              "    return;",
+              "  }",
+              "  if (Array.isArray(expected)) {",
+              "    pm.expect(actual, path).to.be.an('array');",
+              "    expected.forEach(function (item, index) { assertSubset(actual[index], item, path + '[' + index + ']'); });",
+              "    return;",
+              "  }",
+              "  pm.expect(actual, path).to.be.an('object');",
+              "  Object.keys(expected).forEach(function (key) {",
+              "    pm.expect(actual, path).to.have.property(key);",
+              "    assertSubset(actual[key], expected[key], path + '.' + key);",
+              "  });",
+              "}",
+              "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Response time is under 3000ms', function () { pm.expect(pm.response.responseTime).to.be.below(3000); });",
+              "pm.test('Response body is valid JSON', function () { pm.response.json(); });",
+              "pm.test('Response has data and meta envelopes', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json).to.have.property('data');",
+              "  pm.expect(json).to.have.property('meta');",
+              "});",
+              "pm.test('Response has documented stable calculation fields', function () {",
+              "  var data = pm.response.json().data;",
+              "  ['totalFinalSub', 'totalFinalUnsub', 'reducedSub', 'reducedUnsub', 'sorPctRounded', 'sorApplicable', 'termResults'].forEach(function (key) {",
+              "    pm.expect(data).to.have.property(key);",
+              "  });",
+              "  pm.expect(data.termResults).to.be.an('array');",
+              "});",
+              "pm.test('Each term result has stable fields', function () {",
+              "  pm.response.json().data.termResults.forEach(function (term) {",
+              "    ['key', 'label', 'enabled', 'eligible', 'status', 'finalSub', 'finalUnsub', 'finalGradPlus'].forEach(function (key) {",
+              "      pm.expect(term).to.have.property(key);",
+              "    });",
+              "  });",
+              "});",
+              "pm.test('Documented response example remains a subset of the live response', function () {",
+              "  var expected = JSON.parse(pm.collectionVariables.get('openApiCalculateExpectedData'));",
+              "  assertSubset(pm.response.json().data, expected, 'data');",
+              "});",
+              "pm.test('Response echoes request ID', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.meta).to.have.property('requestId', 'postman-contract-001');",
+              "  pm.expect(pm.response.headers.get('X-Request-Id')).to.eql('postman-contract-001');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-Request-Id", "value": "postman-contract-001" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{{openApiCalculateInput}}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/public/v1/calculate",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "public", "v1", "calculate"]
+        }
+      }
+    },
+    {
+      "name": "GET calculate returns 405",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 405', function () { pm.response.to.have.status(405); });",
+              "pm.test('Response time is under 3000ms', function () { pm.expect(pm.response.responseTime).to.be.below(3000); });",
+              "pm.test('Response body is valid JSON', function () { pm.response.json(); });",
+              "pm.test('Response has method_not_allowed error code', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json).to.have.property('error');",
+              "  pm.expect(json.error).to.have.property('code', 'method_not_allowed');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{baseUrl}}/api/public/v1/calculate",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "public", "v1", "calculate"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "https://sor.myproduct.life" },
+    { "key": "openApiCalculateInput", "value": "" },
+    { "key": "openApiCalculateExpectedData", "value": "" }
+  ]
+}
