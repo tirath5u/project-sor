@@ -7,10 +7,10 @@ import { describe, it, expect } from "vitest";
 import { calculateSOR, defaultInputs, type TermKey } from "./sor";
 import { SCENARIOS } from "./scenarios";
 
-describe("SOR engine — scenario regression", () => {
+describe("SOR engine - scenario regression", () => {
   for (const s of SCENARIOS) {
     if (!s.expectedTerms && !s.expectedTotals) continue;
-    it(`${s.id} — ${s.title}`, () => {
+    it(`${s.id} - ${s.title}`, () => {
       const r = calculateSOR(s.build());
       if (s.expectedTotals?.sub !== undefined) {
         expect(r.totalFinalSub).toBe(s.expectedTotals.sub);
@@ -34,7 +34,7 @@ describe("SOR engine — scenario regression", () => {
   }
 });
 
-describe("SOR engine — invariants", () => {
+describe("SOR engine - invariants", () => {
   it("proportional distribution uses a balance-forward remaining-credit denominator", () => {
     const inp = defaultInputs();
     inp.overrideLimits = true;
@@ -142,7 +142,7 @@ describe("SOR engine — invariants", () => {
   });
 });
 
-describe("SOR engine — Combined Limit Shifting Rule (regression)", () => {
+describe("SOR engine - Combined Limit Shifting Rule (regression)", () => {
   function depFreshman(need: number): ReturnType<typeof defaultInputs> {
     const inp = defaultInputs();
     inp.gradeLevel = "g1";
@@ -227,7 +227,7 @@ describe("SOR engine — Combined Limit Shifting Rule (regression)", () => {
   });
 });
 
-describe("SOR engine — partial-entry disbursement bug (regression)", () => {
+describe("SOR engine - partial-entry disbursement bug (regression)", () => {
   function threeTermDep(): ReturnType<typeof defaultInputs> {
     const inp = defaultInputs();
     inp.viewMode = "disbursement";
@@ -259,7 +259,7 @@ describe("SOR engine — partial-entry disbursement bug (regression)", () => {
     const t3 = r.termResults.find((t) => t.key === "term3")!;
     // Fall Sub is anchored at 666
     expect(fall.finalSub).toBe(666);
-    // Fall Unsub must keep its planned share — NOT zero
+    // Fall Unsub must keep its planned share - NOT zero
     expect(fall.finalUnsub).toBeGreaterThan(0);
     // The Unsub pool must NOT have been entirely pushed into Spring + Term3
     // (the bug symptom was 0 / 1750 / 1750 for a $3,500 Unsub pool).
@@ -272,7 +272,7 @@ describe("SOR engine — partial-entry disbursement bug (regression)", () => {
     inp.terms.term1 = {
       ...inp.terms.term1,
       paidSub: 666,
-      paidUnsub: 0, // EXPLICIT zero — user committed to no Unsub this term
+      paidUnsub: 0, // EXPLICIT zero - user committed to no Unsub this term
     };
     const r = calculateSOR(inp);
     const fall = r.termResults.find((t) => t.key === "term1")!;
@@ -307,7 +307,7 @@ describe("SOR engine — partial-entry disbursement bug (regression)", () => {
   });
 });
 
-describe("SOR engine — v19 Grad PLUS bucket", () => {
+describe("SOR engine - v19 Grad PLUS bucket", () => {
   function gradTwoTerm(opts: Partial<ReturnType<typeof defaultInputs>> = {}) {
     const inp = defaultInputs();
     inp.gradeLevel = "g8";
@@ -324,7 +324,7 @@ describe("SOR engine — v19 Grad PLUS bucket", () => {
     return inp;
   }
 
-  it("Scenario 6 — Basic Grad PLUS, grandfathered, full-time", () => {
+  it("Scenario 6 - Basic Grad PLUS, grandfathered, full-time", () => {
     const inp = gradTwoTerm({ loanLimitException: true });
     const r = calculateSOR(inp);
     expect(r.subBaseline).toBe(0);
@@ -339,7 +339,7 @@ describe("SOR engine — v19 Grad PLUS bucket", () => {
     expect(t1.finalGradPlus + t2.finalGradPlus).toBe(14500);
   });
 
-  it("Scenario 8 — LLE = false (non-grandfathered) does NOT zero Grad PLUS", () => {
+  it("Scenario 8 - LLE = false (non-grandfathered) does NOT zero Grad PLUS", () => {
     const grandfathered = calculateSOR(gradTwoTerm({ loanLimitException: true }));
     const nonGrandfathered = calculateSOR(gradTwoTerm({ loanLimitException: false }));
     // Placeholder OBBB table mirrors Legacy → identical result
@@ -348,7 +348,7 @@ describe("SOR engine — v19 Grad PLUS bucket", () => {
     expect(nonGrandfathered.initialGradPlus).toBeGreaterThan(0);
   });
 
-  it("Scenario 9 — Undergrad with Requested Grad PLUS = $5,000 returns 0", () => {
+  it("Scenario 9 - Undergrad with Requested Grad PLUS = $5,000 returns 0", () => {
     const inp = defaultInputs();
     inp.gradeLevel = "g2";
     inp.dependency = "dependent";
@@ -362,7 +362,7 @@ describe("SOR engine — v19 Grad PLUS bucket", () => {
     expect(r.reducedGradPlus).toBe(0);
   });
 
-  it("Scenario 7 — Grad PLUS with SOR reduction (78%)", () => {
+  it("Scenario 7 - Grad PLUS with SOR reduction (78%)", () => {
     const inp = gradTwoTerm({ loanLimitException: true });
     // Term 2 at 5 credits → AY% = (9+5)/18 = 77.78 → 78
     inp.terms.term2 = { ...inp.terms.term2, enrolledCredits: 5 };
@@ -373,8 +373,8 @@ describe("SOR engine — v19 Grad PLUS bucket", () => {
   });
 });
 
-describe("SOR engine — v19 Award Year gate", () => {
-  it("AY 2025-26 disables SOR — reduced limits = baselines", () => {
+describe("SOR engine - v19 Award Year gate", () => {
+  it("AY 2025-26 disables SOR - reduced limits = baselines", () => {
     const inp = defaultInputs();
     inp.awardYear = "2025-26";
     inp.gradeLevel = "g1";

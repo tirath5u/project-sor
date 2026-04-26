@@ -74,7 +74,7 @@ export function exportSORCaseFile({
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text(safe("Schedule of Reductions — Case File"), margin, 32);
+  doc.text(safe("Schedule of Reductions - Case File"), margin, 32);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.text(safe(`Generated ${pretty()}`), margin, 50);
@@ -261,7 +261,7 @@ export function exportSORCaseFile({
     .map((t) => `${t.label} ${fmtCurrency(t.shareUnsub)}`)
     .join(", ");
 
-  // Step 3 formula proof — equal vs proportional
+  // Step 3 formula proof - equal vs proportional
   const N = results.eligibleTermsCount;
   const equalSubPer = N > 0 ? Math.floor(results.reducedSub / N) : 0;
   const equalUnsubPer = N > 0 ? Math.floor(results.reducedUnsub / N) : 0;
@@ -291,14 +291,14 @@ export function exportSORCaseFile({
   }
 
   const steps: string[] = [
-    `Step 1 — Initial maxima (Combined Limit Shifting Rule): Sub = MIN(Annual Need ${fmtCurrency(
+    `Step 1 - Initial maxima (Combined Limit Shifting Rule): Sub = MIN(Annual Need ${fmtCurrency(
       inputs.annualNeed,
     )}, Sub cap ${fmtCurrency(results.effectiveSubStatutory)}) = ${fmtCurrency(
       results.subBaseline,
     )}. Unsub = Combined limit ${fmtCurrency(
       results.effectiveCombinedLimit,
     )} - ${fmtCurrency(results.subBaseline)} = ${fmtCurrency(results.unsubBaseline)}.`,
-    `Step 2 — Academic Year enrollment %: ${results.enrolledSumAll} / ${results.ftSumAll} = ${(
+    `Step 2 - Academic Year enrollment %: ${results.enrolledSumAll} / ${results.ftSumAll} = ${(
       results.enrollmentFractionRaw * 100
     ).toFixed(2)}% -> rounded to ${ayPctRoundedPct}%. Reduced annual Sub ${fmtCurrency(
       results.subBaseline,
@@ -307,8 +307,8 @@ export function exportSORCaseFile({
     )}; Unsub ${fmtCurrency(results.unsubBaseline)} x ${ayPctRoundedPct}% = ${fmtCurrency(
       results.reducedUnsub,
     )}.`,
-    `Step 3 — Per-term share via "${inputs.distributionModel}" model across ${results.eligibleTermsCount} eligible term(s).${step3Formula} Resulting Sub split: ${shareSubLine || "n/a"}. Unsub split: ${shareUnsubLine || "n/a"}.`,
-    `Step 4 — Term enrollment % (term enrolled / term FT): ${enabledTerms
+    `Step 3 - Per-term share via "${inputs.distributionModel}" model across ${results.eligibleTermsCount} eligible term(s).${step3Formula} Resulting Sub split: ${shareSubLine || "n/a"}. Unsub split: ${shareUnsubLine || "n/a"}.`,
+    `Step 4 - Term enrollment % (term enrolled / term FT): ${enabledTerms
       .map(
         (t) =>
           `${t.label} ${t.effectiveCredits}/${t.ftCredits} = ${Math.round(
@@ -316,7 +316,7 @@ export function exportSORCaseFile({
           )}%${t.eligible ? "" : " (ineligible, below half-time)"}`,
       )
       .join("; ")}.`,
-    `Step 5 — Disbursement = share x min(term %, 100%); over/underflow carries forward; finals clamped to per-term COA caps. ${enabledTerms
+    `Step 5 - Disbursement = share x min(term %, 100%); over/underflow carries forward; finals clamped to per-term COA caps. ${enabledTerms
       .filter((t) => t.eligible)
       .map((t) => {
         const pctCapped = Math.min(100, Math.round(t.termPct * 100));

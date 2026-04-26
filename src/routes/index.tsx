@@ -380,14 +380,14 @@ function SORCalculatorPage() {
         {/* Quick calc widget */}
         <QuickTermCalc />
 
-        {/* Section A — compact inputs */}
+        {/* Section A - compact inputs */}
         <Section
           letter="A"
           title="Student & Loan Period"
           description="Grade, dependency, and the single Annual Financial Need that drives Sub/Unsub split."
           tooltip="Inputs that determine the statutory loan ceilings and baseline Sub/Unsub split per the Combined Limit Shifting Rule (34 CFR 685.203)."
         >
-          {/* Row 1 — Award Year drives which Grade Levels are valid, so it
+          {/* Row 1 - Award Year drives which Grade Levels are valid, so it
               MUST be selected first. */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
@@ -474,7 +474,7 @@ function SORCalculatorPage() {
             />
           </div>
 
-          {/* Row 2 — Grade Level (filtered by Award Year) + Need + COA inputs */}
+          {/* Row 2 - Grade Level (filtered by Award Year) + Need + COA inputs */}
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
@@ -711,7 +711,7 @@ function SORCalculatorPage() {
           )}
         </Section>
 
-        {/* Section B — per-term inline grid */}
+        {/* Section B - per-term inline grid */}
         <Section
           letter="B"
           title="Per-term Enrollment"
@@ -948,7 +948,7 @@ function SORCalculatorPage() {
           </div>
         </Section>
 
-        {/* Results layout — Matrix or Cards + sticky summary */}
+        {/* Results layout - Matrix or Cards + sticky summary */}
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_360px]">
           <div className="space-y-5">
             <div className="flex items-center justify-between">

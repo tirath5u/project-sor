@@ -1,5 +1,5 @@
 /**
- * Step-by-step walkthrough panel — narrates the official 5-step ED process.
+ * Step-by-step walkthrough panel - narrates the official 5-step ED process.
  */
 import { fmtCurrency, type SORInputs, type SORResults } from "@/lib/sor";
 import { InfoTip } from "./InfoTip";
@@ -40,11 +40,11 @@ export function StepWalkthrough({
   const ftExpr = inputs.ayFtCredits > 0 ? String(inputs.ayFtCredits) : "-";
   const ayPctRoundedPct = Math.round(results.sorPctRounded * 100);
 
-  // Step 3 formula proof — for "equal" model, payout = pool ÷ N eligible terms.
+  // Step 3 formula proof - for "equal" model, payout = pool ÷ N eligible terms.
   const N = results.eligibleTermsCount;
   const equalSubPer = N > 0 ? Math.floor(results.reducedSub / N) : 0;
   const equalUnsubPer = N > 0 ? Math.floor(results.reducedUnsub / N) : 0;
-  // Proportional model — sum of FT credits across eligible terms is the
+  // Proportional model - sum of FT credits across eligible terms is the
   // weighting denominator.
   const eligibleFtSum = eligible.reduce((s, t) => s + t.ftCredits, 0);
 
@@ -263,7 +263,7 @@ export function StepWalkthrough({
                 return (
                   <li key={t.key} className="text-muted-foreground">
                     <span className="font-semibold text-foreground">{t.label}:</span>{" "}
-                    Below half-time ({t.effectiveCredits}/{t.ftCredits}). Ineligible —
+                    Below half-time ({t.effectiveCredits}/{t.ftCredits}). Ineligible -
                     share forwards to next eligible term.
                   </li>
                 );

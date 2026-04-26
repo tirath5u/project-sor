@@ -1,5 +1,5 @@
 /**
- * Single-term quick calculator — one term, derive the maximum Sub/Unsub
+ * Single-term quick calculator - one term, derive the maximum Sub/Unsub
  * disbursement using the same engine. Collapsible.
  */
 import * as React from "react";
@@ -81,7 +81,7 @@ export function QuickTermCalc() {
               Quick single-term calculator
               <span onClick={(e) => e.stopPropagation()}>
                 <InfoTip label="About the quick calculator">
-                  Estimate one term's maximum Sub/Unsub disbursement in isolation — useful for spot-checking a single term without configuring the full annual SOR. Uses the same engine and statutory limits.
+                  Estimate one term's maximum Sub/Unsub disbursement in isolation - useful for spot-checking a single term without configuring the full annual SOR. Uses the same engine and statutory limits.
                 </InfoTip>
               </span>
             </div>

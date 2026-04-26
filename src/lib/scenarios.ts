@@ -111,7 +111,7 @@ export const SCENARIOS: Scenario[] = [
       "Total credits add up to a full academic year, so there's no AY-% reduction. The summer term carries an overload.",
     summary: "Sub $2,000 · Fall 9 / Spring 12 / Summer 15 · 36 AY FT.",
     expected:
-      "Sub stays at $2,000 (need < cap). Combined-limit shifting fills Unsub from the $5,500 ceiling — Unsub baseline = $3,500. AY % = 100% so neither is reduced.",
+      "Sub stays at $2,000 (need < cap). Combined-limit shifting fills Unsub from the $5,500 ceiling - Unsub baseline = $3,500. AY % = 100% so neither is reduced.",
     expectedTotals: { sub: 2000 },
     build: () =>
       mk(
@@ -138,7 +138,7 @@ export const SCENARIOS: Scenario[] = [
     student:
       "Dependent freshman with $5,500 of need, taking 9 credits in Fall but only 3 in Spring (FT = 12).",
     whatsSpecial:
-      "Spring drops below half-time, so the student becomes ineligible that term — only Fall pays.",
+      "Spring drops below half-time, so the student becomes ineligible that term - only Fall pays.",
     summary: "Fall 9 / Spring 3 (FT 12/12, AY 24).",
     expected:
       "Spring is INELIGIBLE (no disbursement). Fall pays at its share × 75%.",
@@ -340,7 +340,7 @@ export const SCENARIOS: Scenario[] = [
     student:
       "Dependent freshman with $2,000 of need, taking 9 / 12 / 12 across Fall, Spring, and Summer.",
     whatsSpecial:
-      "Just shy of a full year — AY % comes out to 92 %, slightly reducing the annual.",
+      "Just shy of a full year - AY % comes out to 92 %, slightly reducing the annual.",
     summary: "Sub $2,000 · Fall 9 / Spring 12 / Summer 12 · 36 AY FT.",
     expected: "AY % = 92 %, annual $1,840.",
     build: () =>
@@ -395,7 +395,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "v18-a",
     group: "Regression checks (advanced)",
-    title: "v18-A — Two-term LTFT, full Sub + Unsub need",
+    title: "v18-A - Two-term LTFT, full Sub + Unsub need",
     student:
       "Dependent G1 with $5,500 need, taking 6 / 9 across Fall / Spring with 24 AY FT credits.",
     whatsSpecial:
@@ -425,7 +425,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "v18-b",
     group: "Regression checks (advanced)",
-    title: "v18-B — Independent G3 with Winter 1 + Summer",
+    title: "v18-B - Independent G3 with Winter 1 + Summer",
     student:
       "Independent grad student (G3) with $12,500 need, enrolling Fall 12 / Winter1 6 / Spring 9 / Summer 6 across 30 AY FT credits.",
     whatsSpecial:

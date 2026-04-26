@@ -1,6 +1,6 @@
 /**
  * In-memory token-bucket rate limiter keyed by a daily-salted hash of the
- * caller's IP. The raw IP is NEVER stored or logged — only the salted hash
+ * caller's IP. The raw IP is NEVER stored or logged - only the salted hash
  * lives in the bucket map, and the salt rotates daily.
  *
  * This is per-instance state (the Cloudflare Worker recycles); for production
@@ -25,7 +25,7 @@ function dailySalt(): string {
   return `sor-rl-${day}`;
 }
 
-/** Hash function — Web Crypto SHA-256, hex-encoded, truncated. */
+/** Hash function - Web Crypto SHA-256, hex-encoded, truncated. */
 async function saltedHash(value: string): Promise<string> {
   const data = new TextEncoder().encode(`${dailySalt()}|${value}`);
   const buf = await crypto.subtle.digest("SHA-256", data);

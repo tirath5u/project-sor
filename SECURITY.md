@@ -1,7 +1,7 @@
 # Security Policy
 
 Project SOR is a public, open-source calculator for the federal Direct Loan
-Schedule of Reductions (SOR). We take security and correctness seriously —
+Schedule of Reductions (SOR). We take security and correctness seriously -
 especially because financial-aid practitioners may use this tool's outputs as a
 second-opinion check against their SIS.
 
@@ -18,11 +18,11 @@ authoritative reference for what is currently deployed.
 
 Instead, report privately via one of the following channels:
 
-1. **GitHub Security Advisories** (preferred) —
+1. **GitHub Security Advisories** (preferred) -
    [Open a private advisory](https://github.com/tirath5u/project-sor/security/advisories/new)
    on this repository. This is the fastest path and keeps the report
    confidential until a fix is shipped.
-2. **LinkedIn DM** — [Tirath Chhatriwala](https://www.linkedin.com/in/tirath-c-7228b814/)
+2. **LinkedIn DM** - [Tirath Chhatriwala](https://www.linkedin.com/in/tirath-c-7228b814/)
    for cases where a GitHub account isn't convenient.
 
 When reporting, please include:
@@ -49,22 +49,22 @@ You will be credited in the release notes for the fix unless you request otherwi
 
 In scope:
 
-- The calculation engine (`src/lib/sor.ts`) — incorrect outputs that materially
+- The calculation engine (`src/lib/sor.ts`) - incorrect outputs that materially
   diverge from the published methodology (`docs/methodology.md`) and cited
   regulatory sources (`docs/public-source-register.md`).
-- The public API (`/api/public/v1/*`) — input-validation bypasses, injection,
+- The public API (`/api/public/v1/*`) - input-validation bypasses, injection,
   rate-limit bypasses, information disclosure, or auth/authorization issues.
-- The web UI — XSS, CSRF, or any client-side issue that could mislead a user
+- The web UI - XSS, CSRF, or any client-side issue that could mislead a user
   about loan eligibility or amounts.
 - Supply-chain risk in declared dependencies.
 
 Out of scope:
 
-- Disagreements about regulatory interpretation — please open a regular
+- Disagreements about regulatory interpretation - please open a regular
   [Scenario Challenge](https://github.com/tirath5u/project-sor/issues/new?template=scenario-challenge.yml)
   issue instead.
 - Vulnerabilities in third-party services we depend on (Lovable Cloud,
-  Cloudflare, etc.) — please report those upstream.
+  Cloudflare, etc.) - please report those upstream.
 - Denial-of-service via volumetric traffic against the free public API; the
   documented per-IP rate limit is the only DoS mitigation we commit to.
 

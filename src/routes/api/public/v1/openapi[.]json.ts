@@ -55,7 +55,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                 },
               },
               get: {
-                summary: "Not allowed — calculate accepts POST only",
+                summary: "Not allowed - calculate accepts POST only",
                 responses: {
                   "405": { description: "Method not allowed" },
                 },

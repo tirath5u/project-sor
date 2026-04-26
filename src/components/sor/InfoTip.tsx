@@ -16,7 +16,7 @@ interface InfoTipProps {
   className?: string;
   /** Tooltip placement. */
   side?: "top" | "right" | "bottom" | "left";
-  /** Visual size — defaults to xs (12px icon). */
+  /** Visual size - defaults to xs (12px icon). */
   size?: "xs" | "sm";
 }
 

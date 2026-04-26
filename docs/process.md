@@ -3,7 +3,7 @@
 This project is a **public, open implementation** of the Direct Loan
 Schedule of Reductions (SOR) calculation. It exists so that higher-ed
 practitioners, vendor teams, and reviewers can **inspect, use, and challenge**
-the math — not as an authoritative source.
+the math - not as an authoritative source.
 
 ## How the engine was derived
 
@@ -19,7 +19,7 @@ the math — not as an authoritative source.
    that contract on every commit.
 4. **Schema hardening.** `src/lib/sor.schema.ts` defines the public input
    contract with `strictNumber`, which rejects empty strings, `null`, and
-   whitespace for required numeric fields — eliminating the entire class of
+   whitespace for required numeric fields - eliminating the entire class of
    "silent zero" bugs that plague form-driven financial calculators.
 
 ## LLM-assisted critique loop

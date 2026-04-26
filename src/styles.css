@@ -178,7 +178,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Skip-to-content link — visually hidden until focused. */
+  /* Skip-to-content link - visually hidden until focused. */
   .skip-link {
     position: absolute;
     top: -40px;

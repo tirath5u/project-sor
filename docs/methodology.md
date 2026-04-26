@@ -15,14 +15,14 @@ pattern within an award year.
 
 An SOR calculation requires:
 
-1. **Student status** — grade level, dependency status, and whether the
+1. **Student status** - grade level, dependency status, and whether the
    student qualifies for additional unsubsidized eligibility (e.g. parent
    denied PLUS).
-2. **Award-year enrollment pattern** — terms attended and their length in
+2. **Award-year enrollment pattern** - terms attended and their length in
    weeks.
-3. **Annual loan-limit anchors** — base sub/unsub limits for the student's
+3. **Annual loan-limit anchors** - base sub/unsub limits for the student's
    level and dependency status (per 34 CFR 685.203 schedule).
-4. **Optional anchors** — already-paid amounts per term (`paidSub`,
+4. **Optional anchors** - already-paid amounts per term (`paidSub`,
    `paidUnsub`). `null` means "no anchor"; `0` means "explicit zero anchor"
    (the difference matters for downstream proration).
 

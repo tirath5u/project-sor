@@ -3,13 +3,13 @@
 Thank you for considering a contribution. This project is a public,
 open implementation of the Direct Loan **Schedule of Reductions (SOR)**
 calculation. Its value to the community comes from being **inspectable,
-usable, and challengeable** — so the contribution workflow is centered on
+usable, and challengeable** - so the contribution workflow is centered on
 fixtures, citations, and transparent versioning.
 
 ## Ways to contribute
 
 1. **Scenario challenge.** You believe the engine produces a wrong number.
-   Open a **Scenario Challenge** issue using the template — include the
+   Open a **Scenario Challenge** issue using the template - include the
    input JSON, the expected output, and the regulatory citation supporting
    your expected output. Issues without a citation will be asked for one
    before triage.
@@ -40,8 +40,8 @@ The engine follows **semver** under `ENGINE_VERSION` in
 
 Notable major-version-class changes that are **out of scope for v1**:
 
-- **Disbursement-mode calculations** (per-disbursement schedules) — v2.0.
-- **Authenticated / quota endpoints** — v2.0.
+- **Disbursement-mode calculations** (per-disbursement schedules) - v2.0.
+- **Authenticated / quota endpoints** - v2.0.
 - Non-Direct-Loan programs (Pell, TEACH, parent/grad PLUS nuances beyond
   the current engine).
 

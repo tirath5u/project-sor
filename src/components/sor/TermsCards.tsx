@@ -1,5 +1,5 @@
 /**
- * Card view — same data as TermsMatrix, one card per term, side-by-side.
+ * Card view - same data as TermsMatrix, one card per term, side-by-side.
  * Better for narrow viewports.
  */
 import { fmtCurrency, type SORResults } from "@/lib/sor";

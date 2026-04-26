@@ -3,7 +3,7 @@
 _Last updated: 2026-04-25._
 
 This runbook covers the **most likely** failure modes for `sor.myproduct.life`
-and its public API. The system is intentionally simple — a stateless
+and its public API. The system is intentionally simple - a stateless
 TanStack Start app deployed on Cloudflare Workers, with no database, no
 queue, and no third-party calls from `/calculate`. That eliminates most
 normal failure modes by design. What remains is documented below.
@@ -30,7 +30,7 @@ A healthy response returns `200` with:
 ```
 
 If `engineVersion` or `policyYear` is missing, or the response is not `200`,
-the deployment is broken — go to **Section 2**.
+the deployment is broken - go to **Section 2**.
 
 ## 2. Triage matrix
 
@@ -63,7 +63,7 @@ Expected for `fixture-v19-001`:
 { "engineVersion": "1.0.0", "totalFinalSub": 2205, "totalFinalUnsub": 1260 }
 ```
 
-Any drift in those two dollar figures is a P0 — the engine is the product.
+Any drift in those two dollar figures is a P0 - the engine is the product.
 
 ## 4. Rollback
 
@@ -77,7 +77,7 @@ preserve. Rollback is just **redeploy a previous commit**:
 4. Re-run **Section 3** to confirm.
 
 Never hotfix in production by editing files in the Lovable editor without
-a corresponding commit on GitHub — the next CI run will overwrite it.
+a corresponding commit on GitHub - the next CI run will overwrite it.
 
 ## 5. Known limitations (not incidents)
 
@@ -104,6 +104,6 @@ suspected vulnerabilities.
 
 ## 7. Escalation contact
 
-Maintainer: **Tirath Chhatriwala** — see the contact line in
+Maintainer: **Tirath Chhatriwala** - see the contact line in
 [`README.md`](../README.md). This is a personal open-source project; there
 is no on-call rotation. Best-effort response, no SLA.

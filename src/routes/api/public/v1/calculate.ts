@@ -16,8 +16,8 @@ import {
 } from "../../../../lib/api-errors";
 import { checkRateLimit } from "../../../../lib/rate-limit";
 
-/** 1 MB cap on JSON request bodies. The largest legitimate payload — a fully
- *  populated 8-term BBAY2 input — is well under 20 KB; anything beyond 1 MB
+/** 1 MB cap on JSON request bodies. The largest legitimate payload - a fully
+ *  populated 8-term BBAY2 input - is well under 20 KB; anything beyond 1 MB
  *  is either malicious or a serialization bug. */
 const MAX_BODY_BYTES = 1_000_000;
 
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/public/v1/calculate")({
       POST: async ({ request }) => {
         const requestId = resolveRequestId(request);
 
-        // 1) Rate limit (salted-hash key only — no raw IP storage).
+        // 1) Rate limit (salted-hash key only - no raw IP storage).
         const rl = await checkRateLimit(request);
         if (!rl.allowed) {
           return errorResponse(
@@ -155,7 +155,7 @@ export const Route = createFileRoute("/api/public/v1/calculate")({
         }
 
         // 7) Build response. citations[] is intentionally NOT populated for
-        //    arbitrary input — the engine cannot map every scenario to a
+        //    arbitrary input - the engine cannot map every scenario to a
         //    specific rule tag. Use sourceSet for the general framework.
         const ay = parsed.data.awardYear ?? POLICY_YEAR;
         return jsonResponse({

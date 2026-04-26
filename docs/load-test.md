@@ -6,7 +6,7 @@ _Run date: 2026-04-25 against `https://sor.myproduct.life` (production)._
 
 Three [`autocannon`](https://github.com/mcollina/autocannon) runs from a
 single client over HTTPS, hitting the live Cloudflare Workers deployment.
-No warm-up, no caching tricks — just sustained load against the public
+No warm-up, no caching tricks - just sustained load against the public
 endpoints anyone can hit.
 
 `/calculate` was driven with the real `fixture-v19-001` input payload
@@ -18,7 +18,7 @@ endpoints anyone can hit.
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|
 | `GET /api/public/v1/health` | 50 × 20s | 8,874 | 444 req/s | 108 ms | 120 ms | 164 ms | 586 ms | 0 | All 200. |
 | `GET /api/public/v1/scenarios` | 25 × 15s | 3,418 | 228 req/s | 105 ms | 116 ms | 172 ms | 451 ms | 0 | All 200; ~5.2 MB/s out. |
-| `POST /api/public/v1/calculate` | 25 × 20s | 4,383 | 219 req/s | 111 ms | 122 ms | 173 ms | 481 ms | 0 | 975×200 + 3,408×429 — see below. |
+| `POST /api/public/v1/calculate` | 25 × 20s | 4,383 | 219 req/s | 111 ms | 122 ms | 173 ms | 481 ms | 0 | 975×200 + 3,408×429 - see below. |
 
 ## Interpretation
 
@@ -39,7 +39,7 @@ endpoints anyone can hit.
 ## Limitations
 
 - Single-client, single-region test. A real DDoS or distributed load
-  pattern would behave differently — particularly because the rate limiter
+  pattern would behave differently - particularly because the rate limiter
   is per-isolate, not global. Bursts hitting multiple isolates would each
   get their own bucket.
 - No long-duration soak test (hours/days). Cloudflare Workers recycle

@@ -1,7 +1,7 @@
 /**
- * /lifecycle — 4-year academic-career tracker. Each row = an AY; columns =
+ * /lifecycle - 4-year academic-career tracker. Each row = an AY; columns =
  * up to 5 terms. Tracks cumulative Sub/Unsub against OBBBA aggregate caps.
- * Persisted in localStorage (browser-only — SSR-safe via lazy load).
+ * Persisted in localStorage (browser-only - SSR-safe via lazy load).
  */
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";

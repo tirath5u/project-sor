@@ -42,7 +42,7 @@ const ROWS: RowDef[] = [
   {
     label: "Term %",
     hint: "Term enrollment %: enrolled ÷ FT (informational only; SOR uses the Academic Year %).",
-    tip: "Term enrollment % = enrolled credits ÷ term full-time credits. Informational — the engine drives reductions from the Academic Year enrollment %.",
+    tip: "Term enrollment % = enrolled credits ÷ term full-time credits. Informational - the engine drives reductions from the Academic Year enrollment %.",
     format: "pct",
     get: (t) => t.termPct,
     total: () => null,

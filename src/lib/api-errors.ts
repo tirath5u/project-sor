@@ -1,6 +1,6 @@
 /**
  * Uniform error envelope for the public API. Never leaks raw exception
- * messages from internal modules — only the typed code + safe message.
+ * messages from internal modules - only the typed code + safe message.
  */
 
 export type ApiErrorCode =
