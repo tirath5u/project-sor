@@ -995,7 +995,7 @@ function assemble(args: {
   const reducedSubRaw = round2(subBaseline * pct);
   const reducedUnsubRaw = round2(unsubBaseline * pct);
   const additionalUnsubReduced = round2(additionalUnsubBase * pct);
-  let reducedSub = reducedSubRaw;
+  const reducedSub = reducedSubRaw;
   let reducedUnsub = reducedUnsubRaw;
   let shiftedToUnsub = 0;
   if (inp.applySubUnsubShift) {
