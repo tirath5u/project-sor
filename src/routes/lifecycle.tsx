@@ -31,8 +31,7 @@ export const Route = createFileRoute("/lifecycle")({
       { property: "og:title", content: "Aid Lifecycle Tracker - SOR" },
       {
         property: "og:description",
-        content:
-          "4-year cumulative aid tracker with OBBBA aggregate cap monitoring.",
+        content: "4-year cumulative aid tracker with OBBBA aggregate cap monitoring.",
       },
     ],
   }),
@@ -172,12 +171,7 @@ function LifecyclePage() {
 
       <main className="mx-auto max-w-6xl space-y-5 px-4 py-6 sm:px-6 lg:py-8">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <CapBar
-            label="Subsidized cumulative"
-            used={totalSub}
-            cap={cap.sub}
-            pct={subPct}
-          />
+          <CapBar label="Subsidized cumulative" used={totalSub} cap={cap.sub} pct={subPct} />
           <CapBar
             label="Total (Sub + Unsub) cumulative"
             used={totalAll}
@@ -233,20 +227,18 @@ function LifecyclePage() {
           </div>
           <div className="grid grid-cols-2 gap-3 border-t border-border bg-primary/5 px-4 py-3 text-sm font-semibold tabular-nums">
             <div>
-              Total Sub:{" "}
-              <span className="text-primary">{fmtCurrency(totalSub)}</span>
+              Total Sub: <span className="text-primary">{fmtCurrency(totalSub)}</span>
             </div>
             <div>
-              Total Unsub:{" "}
-              <span className="text-primary">{fmtCurrency(totalUnsub)}</span>
+              Total Unsub: <span className="text-primary">{fmtCurrency(totalUnsub)}</span>
             </div>
           </div>
         </div>
 
         <p className="rounded-xl border border-border bg-card px-4 py-3 text-[11px] text-muted-foreground">
-          Aggregate caps per OBBBA: Undergraduate dependent ${cap.sub.toLocaleString()} Sub /{" "}
-          ${cap.total.toLocaleString()} total. Tracker is informational only;
-          confirm against COD before disbursing.
+          Aggregate caps per OBBBA: Undergraduate dependent ${cap.sub.toLocaleString()} Sub / $
+          {cap.total.toLocaleString()} total. Tracker is informational only; confirm against COD
+          before disbursing.
         </p>
       </main>
     </div>
@@ -286,9 +278,7 @@ function CapBar({
           style={{ width: `${Math.round(pct * 100)}%` }}
         />
       </div>
-      <div className="mt-1 text-[10px] text-muted-foreground">
-        {Math.round(pct * 100)}% of cap
-      </div>
+      <div className="mt-1 text-[10px] text-muted-foreground">{Math.round(pct * 100)}% of cap</div>
     </div>
   );
 }

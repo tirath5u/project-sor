@@ -41,14 +41,15 @@ export function TermsCards({ results }: { results: SORResults }) {
             <dl className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
               <dt className="flex items-center gap-1 text-muted-foreground">
                 FT / Enrolled
-                <InfoTip>Term FT credit threshold / student's effective enrolled credits this term.</InfoTip>
+                <InfoTip>
+                  Term FT credit threshold / student's effective enrolled credits this term.
+                </InfoTip>
               </dt>
               <dd className="text-right tabular-nums text-foreground">
                 {t.ftCredits} / {t.effectiveCredits}
               </dd>
               <dt className="flex items-center gap-1 text-muted-foreground">
-                Term %
-                <InfoTip>Enrolled ÷ FT for this single term. Informational only.</InfoTip>
+                Term %<InfoTip>Enrolled ÷ FT for this single term. Informational only.</InfoTip>
               </dt>
               <dd
                 className={cn(
@@ -60,7 +61,11 @@ export function TermsCards({ results }: { results: SORResults }) {
               </dd>
               <dt className="flex items-center gap-1 text-muted-foreground">
                 Enrollment Intensity (EI) %
-                <InfoTip>EI = (Enrolled + lapsed credits from prior below-half-time terms) ÷ FT. May exceed 100% (balloon). Distinct from Term enrollment %, which counts only this term's enrolled credits.</InfoTip>
+                <InfoTip>
+                  EI = (Enrolled + lapsed credits from prior below-half-time terms) ÷ FT. May exceed
+                  100% (balloon). Distinct from Term enrollment %, which counts only this term's
+                  enrolled credits.
+                </InfoTip>
               </dt>
               <dd
                 className={cn(
@@ -72,11 +77,12 @@ export function TermsCards({ results }: { results: SORResults }) {
               </dd>
               <dt className="flex items-center gap-1 text-muted-foreground">
                 Share Sub
-                <InfoTip>This term's slice of the running annual Sub pool, after subtracting locked/paid amounts from prior terms.</InfoTip>
+                <InfoTip>
+                  This term's slice of the running annual Sub pool, after subtracting locked/paid
+                  amounts from prior terms.
+                </InfoTip>
               </dt>
-              <dd className="text-right tabular-nums text-foreground">
-                {fmtCurrency(t.shareSub)}
-              </dd>
+              <dd className="text-right tabular-nums text-foreground">{fmtCurrency(t.shareSub)}</dd>
               <dt className="text-muted-foreground">Share Unsub</dt>
               <dd className="text-right tabular-nums text-foreground">
                 {fmtCurrency(t.shareUnsub)}
@@ -95,10 +101,7 @@ export function TermsCards({ results }: { results: SORResults }) {
             </dl>
             <div className="mt-2 grid grid-cols-2 gap-2 border-t border-border pt-2">
               <div
-                className={cn(
-                  "rounded-md bg-primary/5 px-2 py-1.5",
-                  subCapped && "bg-warning/15",
-                )}
+                className={cn("rounded-md bg-primary/5 px-2 py-1.5", subCapped && "bg-warning/15")}
               >
                 <div className="text-[9px] uppercase tracking-wide text-muted-foreground">
                   Final Sub
@@ -123,8 +126,7 @@ export function TermsCards({ results }: { results: SORResults }) {
             </div>
             {hasAdj ? (
               <div className="mt-2 rounded-md bg-accent/20 px-2 py-1 text-[10px] text-accent-foreground">
-                Adj: {fmtCurrency(t.adjustmentSub)} Sub /{" "}
-                {fmtCurrency(t.adjustmentUnsub)} Unsub
+                Adj: {fmtCurrency(t.adjustmentSub)} Sub / {fmtCurrency(t.adjustmentUnsub)} Unsub
               </div>
             ) : null}
           </div>

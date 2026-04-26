@@ -5,12 +5,7 @@
 
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import {
-  fmtCurrency,
-  type SORInputs,
-  type SORResults,
-  type TermResult,
-} from "./sor";
+import { fmtCurrency, type SORInputs, type SORResults, type TermResult } from "./sor";
 import { GRADE_LABELS } from "./loanLimits";
 
 interface ExportArgs {
@@ -114,7 +109,7 @@ export function exportSORCaseFile({
         1: { textColor: COLOR_INK, fontStyle: "bold" },
       },
     });
-    
+
     y = (doc as any).lastAutoTable.finalY + 14;
   };
 
@@ -166,7 +161,9 @@ export function exportSORCaseFile({
   if (results.additionalUnsubBase > 0) {
     doc.setTextColor(...COLOR_PRIMARY);
     doc.text(
-      safe(`+ ${fmtCurrency(results.additionalUnsubBase)} additional Unsub from PLUS-denial uplift.`),
+      safe(
+        `+ ${fmtCurrency(results.additionalUnsubBase)} additional Unsub from PLUS-denial uplift.`,
+      ),
       margin,
       y,
     );
@@ -188,16 +185,18 @@ export function exportSORCaseFile({
       fmtCurrency(t.paidSub),
       fmtCurrency(t.paidUnsub),
       `${fmtCurrency(t.refundSub)} / ${fmtCurrency(t.refundUnsub)}`,
-      safe(`${t.coaCapSub ? fmtCurrency(t.coaCapSub) : "—"} / ${
-        t.coaCapUnsub ? fmtCurrency(t.coaCapUnsub) : "—"
-      }`),
+      safe(
+        `${t.coaCapSub ? fmtCurrency(t.coaCapSub) : "—"} / ${
+          t.coaCapUnsub ? fmtCurrency(t.coaCapUnsub) : "—"
+        }`,
+      ),
     ]),
     headStyles: { fillColor: COLOR_PRIMARY, textColor: 255, fontSize: 9 },
     bodyStyles: { fontSize: 8.5, textColor: COLOR_INK },
     alternateRowStyles: { fillColor: [248, 246, 252] },
     styles: { cellPadding: 4 },
   });
-  
+
   y = (doc as any).lastAutoTable.finalY + 18;
 
   // ---------- 4. RESULTS MATRIX ----------
@@ -234,7 +233,7 @@ export function exportSORCaseFile({
     alternateRowStyles: { fillColor: [248, 246, 252] },
     styles: { cellPadding: 4 },
   });
-  
+
   y = (doc as any).lastAutoTable.finalY + 18;
 
   // ---------- 5. ANNUAL TOTALS ----------
@@ -254,9 +253,7 @@ export function exportSORCaseFile({
   const eligibleTerms = results.termResults.filter((t) => t.eligible);
   const enabledTerms = results.termResults.filter((t) => t.enabled);
   const ayPctRoundedPct = Math.round(results.sorPctRounded * 100);
-  const shareSubLine = eligibleTerms
-    .map((t) => `${t.label} ${fmtCurrency(t.shareSub)}`)
-    .join(", ");
+  const shareSubLine = eligibleTerms.map((t) => `${t.label} ${fmtCurrency(t.shareSub)}`).join(", ");
   const shareUnsubLine = eligibleTerms
     .map((t) => `${t.label} ${fmtCurrency(t.shareUnsub)}`)
     .join(", ");

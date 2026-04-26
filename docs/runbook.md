@@ -34,15 +34,15 @@ the deployment is broken - go to **Section 2**.
 
 ## 2. Triage matrix
 
-| Symptom | First check | Likely cause | Action |
-|---|---|---|---|
-| `/health` returns 5xx or times out | [Cloudflare status](https://www.cloudflarestatus.com/) | Edge or Workers outage | Wait; nothing to fix on our side. |
-| `/health` 200 but `sourceCommit` looks wrong | GitHub Actions latest run on `main` | Deploy not propagated | Re-run the latest CI workflow, or push an empty commit to trigger redeploy. |
-| `/calculate` returns 5xx for valid fixture inputs | Run a fixture replay (Section 3) | Engine regression | Roll back to the previous commit on `main` and open a bug. |
-| `/calculate` returns 422 for inputs that worked yesterday | Diff `src/lib/sor.schema.ts` against last green commit | Schema tightened without a migration note | Revert the schema change or relax the new constraint. |
-| Many `429 rate_limited` responses from a single IP | Expected | In-process token bucket (30 req/min) | This is by design. Tell the caller to back off or run their own copy. |
-| UI loads but shows blank results panel | Browser console for runtime errors | Front-end regression | Roll back the most recent UI commit. |
-| `/api/public/v1/scenarios` returns `count: 0` | `src/lib/sor.fixtures.ts` exports | Fixture file was emptied or build skipped it | Restore from `main`; never edit fixtures in a hotfix. |
+| Symptom                                                   | First check                                            | Likely cause                                 | Action                                                                      |
+| --------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------- | --------------------------------------------------------------------------- |
+| `/health` returns 5xx or times out                        | [Cloudflare status](https://www.cloudflarestatus.com/) | Edge or Workers outage                       | Wait; nothing to fix on our side.                                           |
+| `/health` 200 but `sourceCommit` looks wrong              | GitHub Actions latest run on `main`                    | Deploy not propagated                        | Re-run the latest CI workflow, or push an empty commit to trigger redeploy. |
+| `/calculate` returns 5xx for valid fixture inputs         | Run a fixture replay (Section 3)                       | Engine regression                            | Roll back to the previous commit on `main` and open a bug.                  |
+| `/calculate` returns 422 for inputs that worked yesterday | Diff `src/lib/sor.schema.ts` against last green commit | Schema tightened without a migration note    | Revert the schema change or relax the new constraint.                       |
+| Many `429 rate_limited` responses from a single IP        | Expected                                               | In-process token bucket (30 req/min)         | This is by design. Tell the caller to back off or run their own copy.       |
+| UI loads but shows blank results panel                    | Browser console for runtime errors                     | Front-end regression                         | Roll back the most recent UI commit.                                        |
+| `/api/public/v1/scenarios` returns `count: 0`             | `src/lib/sor.fixtures.ts` exports                      | Fixture file was emptied or build skipped it | Restore from `main`; never edit fixtures in a hotfix.                       |
 
 ## 3. Fixture replay (golden-path smoke test)
 

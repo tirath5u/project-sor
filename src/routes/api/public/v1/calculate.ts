@@ -50,11 +50,7 @@ export const Route = createFileRoute("/api/public/v1/calculate")({
 
         // 2) Validate Accept header (we only return JSON).
         const accept = request.headers.get("accept") || "";
-        if (
-          accept &&
-          accept !== "*/*" &&
-          !accept.includes("application/json")
-        ) {
+        if (accept && accept !== "*/*" && !accept.includes("application/json")) {
           return errorResponse(
             "not_acceptable",
             "Only application/json responses are supported.",
@@ -158,20 +154,23 @@ export const Route = createFileRoute("/api/public/v1/calculate")({
         //    arbitrary input - the engine cannot map every scenario to a
         //    specific rule tag. Use sourceSet for the general framework.
         const ay = parsed.data.awardYear ?? POLICY_YEAR;
-        return jsonResponse({
-          data: results,
-          meta: {
-            engineVersion: ENGINE_VERSION,
-            policyYear: ay,
-            policySnapshotDate: POLICY_SNAPSHOT_DATE,
-            sourceCommit: SOURCE_COMMIT,
-            policyStatus: ay === "2026-27" ? "supported-preliminary" : "confirmed",
-            sourceSet: ["direct-loan-sor-v1"],
-            citations: [],
-            computedAt: new Date().toISOString(),
-            requestId,
+        return jsonResponse(
+          {
+            data: results,
+            meta: {
+              engineVersion: ENGINE_VERSION,
+              policyYear: ay,
+              policySnapshotDate: POLICY_SNAPSHOT_DATE,
+              sourceCommit: SOURCE_COMMIT,
+              policyStatus: ay === "2026-27" ? "supported-preliminary" : "confirmed",
+              sourceSet: ["direct-loan-sor-v1"],
+              citations: [],
+              computedAt: new Date().toISOString(),
+              requestId,
+            },
           },
-        }, { headers: { "X-Request-Id": requestId } });
+          { headers: { "X-Request-Id": requestId } },
+        );
       },
     },
   },

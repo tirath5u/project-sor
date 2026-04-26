@@ -395,9 +395,7 @@ function activeKeys(inp: SORInputs): TermKey[] {
     term3: false,
     term4: false,
   };
-  return TERM_ORDER.filter(
-    (k) => (standardSet.has(k) || optional[k]) && inp.terms[k]?.enabled,
-  );
+  return TERM_ORDER.filter((k) => (standardSet.has(k) || optional[k]) && inp.terms[k]?.enabled);
 }
 
 /** Split annual into N equal whole-dollar shares; last term takes the remainder. */
@@ -467,8 +465,7 @@ function distributeRunningPoolDetailed(
           ? remainingPool
           : Math.round((remainingPool * currentWeight) / totalWeight);
     } else {
-      payout =
-        isLast ? remainingPool : Math.floor(remainingPool / remainingEligibleIdx.length);
+      payout = isLast ? remainingPool : Math.floor(remainingPool / remainingEligibleIdx.length);
     }
 
     share[i] = payout;
@@ -578,9 +575,7 @@ function computeSnapshot(
 
   // Step 3 - per-term SHARE across all enabled terms. Historical anchoring
   // and balance-forward catch-up are reconciled later in distributeRemainingPool.
-  const enabledIdx = termsInOrder
-    .map((_, i) => i)
-    .filter((i) => termsInOrder[i].enabled);
+  const enabledIdx = termsInOrder.map((_, i) => i).filter((i) => termsInOrder[i].enabled);
   const enabledCount = enabledIdx.length;
 
   let shareSubFlat: number[] = [];
@@ -995,8 +990,7 @@ function assemble(args: {
     ? Math.min(unsubNeed, Math.round(unsubNeed * pct))
     : unsubNeed;
   const doubleReductionApplied =
-    inp.applyDoubleReduction &&
-    (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);
+    inp.applyDoubleReduction && (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);
 
   const reducedSubRaw = round2(subBaseline * pct);
   const reducedUnsubRaw = round2(unsubBaseline * pct);
@@ -1076,8 +1070,7 @@ function assemble(args: {
   const activeTermCount = ordered.length;
   const perTermCapSub = activeTermCount > 0 ? round2(reducedSub / activeTermCount) : 0;
   const perTermCapUnsub = activeTermCount > 0 ? round2(reducedUnsub / activeTermCount) : 0;
-  const perTermCapGradPlus =
-    activeTermCount > 0 ? round2(reducedGradPlus / activeTermCount) : 0;
+  const perTermCapGradPlus = activeTermCount > 0 ? round2(reducedGradPlus / activeTermCount) : 0;
 
   const termResults: TermResult[] = ordered.map((t, i) => {
     const eff = effectiveCreditsBy(t);
@@ -1089,19 +1082,14 @@ function assemble(args: {
     // Final = MIN(Step 5 Calc, COA cap). No averaging, no override -
     // Final must rigidly mirror the Step-5 output to preserve history anchoring.
     const cappedSub = round2(t.coaCapSub > 0 ? Math.min(calcSub, t.coaCapSub) : calcSub);
-    const cappedUnsub = round2(
-      t.coaCapUnsub > 0 ? Math.min(calcUnsub, t.coaCapUnsub) : calcUnsub,
-    );
+    const cappedUnsub = round2(t.coaCapUnsub > 0 ? Math.min(calcUnsub, t.coaCapUnsub) : calcUnsub);
     const coaCapGradPlus = t.coaCapGradPlus ?? 0;
     const cappedGradPlus = round2(
       coaCapGradPlus > 0 ? Math.min(calcGradPlus, coaCapGradPlus) : calcGradPlus,
     );
     const netPaidSub = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
     const netPaidUnsub = Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0));
-    const netPaidGradPlus = Math.max(
-      0,
-      (t.paidGradPlus || 0) - (t.refundGradPlus || 0),
-    );
+    const netPaidGradPlus = Math.max(0, (t.paidGradPlus || 0) - (t.refundGradPlus || 0));
     const termPct = t.ftCredits > 0 ? eff / t.ftCredits : 0;
     return {
       key: t.key,

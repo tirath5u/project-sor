@@ -3,13 +3,13 @@
 All monetary outputs from the SOR engine use **half-up rounding to the
 nearest whole dollar** unless explicitly noted below.
 
-| Field                       | Rule                                  |
-|-----------------------------|---------------------------------------|
-| `subBaseline`, `unsubBaseline` | Whole dollars (input anchors).     |
-| `effectiveCombinedLimit`    | Whole dollars.                        |
-| `sorPctRounded`             | Percentage, rounded **half-up to 4 decimal places** (e.g. `0.4286`). |
-| `reducedSub`, `reducedUnsub`, `reducedGradPlus` | Whole dollars, half-up. |
-| `totalFinalSub`, `totalFinalUnsub` | Whole dollars; equal to the sum of per-term `finalSub` / `finalUnsub`. |
+| Field                                                   | Rule                                                                                                |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `subBaseline`, `unsubBaseline`                          | Whole dollars (input anchors).                                                                      |
+| `effectiveCombinedLimit`                                | Whole dollars.                                                                                      |
+| `sorPctRounded`                                         | Percentage, rounded **half-up to 4 decimal places** (e.g. `0.4286`).                                |
+| `reducedSub`, `reducedUnsub`, `reducedGradPlus`         | Whole dollars, half-up.                                                                             |
+| `totalFinalSub`, `totalFinalUnsub`                      | Whole dollars; equal to the sum of per-term `finalSub` / `finalUnsub`.                              |
 | `termResults[].finalSub`, `finalUnsub`, `finalGradPlus` | Whole dollars, half-up; the running total is clamped so it never exceeds the reduced annual amount. |
 
 ## Why half-up (not banker's rounding)

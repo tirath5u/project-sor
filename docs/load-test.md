@@ -14,11 +14,11 @@ endpoints anyone can hit.
 
 ## Results
 
-| Endpoint | Conns × Duration | Total req | Throughput | p50 | p90 | p99 | Max | 5xx | Notes |
-|---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| `GET /api/public/v1/health` | 50 × 20s | 8,874 | 444 req/s | 108 ms | 120 ms | 164 ms | 586 ms | 0 | All 200. |
-| `GET /api/public/v1/scenarios` | 25 × 15s | 3,418 | 228 req/s | 105 ms | 116 ms | 172 ms | 451 ms | 0 | All 200; ~5.2 MB/s out. |
-| `POST /api/public/v1/calculate` | 25 × 20s | 4,383 | 219 req/s | 111 ms | 122 ms | 173 ms | 481 ms | 0 | 975×200 + 3,408×429 - see below. |
+| Endpoint                        | Conns × Duration | Total req | Throughput |    p50 |    p90 |    p99 |    Max | 5xx | Notes                            |
+| ------------------------------- | ---------------- | --------: | ---------: | -----: | -----: | -----: | -----: | --: | -------------------------------- |
+| `GET /api/public/v1/health`     | 50 × 20s         |     8,874 |  444 req/s | 108 ms | 120 ms | 164 ms | 586 ms |   0 | All 200.                         |
+| `GET /api/public/v1/scenarios`  | 25 × 15s         |     3,418 |  228 req/s | 105 ms | 116 ms | 172 ms | 451 ms |   0 | All 200; ~5.2 MB/s out.          |
+| `POST /api/public/v1/calculate` | 25 × 20s         |     4,383 |  219 req/s | 111 ms | 122 ms | 173 ms | 481 ms |   0 | 975×200 + 3,408×429 - see below. |
 
 ## Interpretation
 
@@ -31,7 +31,7 @@ endpoints anyone can hit.
   its job**, not a failure. The in-process token bucket caps a single IP at
   30 req/min sustained (see `src/lib/rate-limit.ts`). Once budget was
   exhausted, the limiter correctly rejected requests with `429
-  rate_limited` and a `Retry-After` header. The 975 successful 200s
+rate_limited` and a `Retry-After` header. The 975 successful 200s
   represent the refill across the 20-second window.
 - **The `GET` endpoints have no rate limit** and sustained hundreds of
   req/s without distress.

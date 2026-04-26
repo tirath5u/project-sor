@@ -32,10 +32,10 @@ bun run build       # production build
 The engine follows **semver** under `ENGINE_VERSION` in
 `src/lib/sor.version.ts`:
 
-| Change                                                | Bump   |
-|-------------------------------------------------------|--------|
-| Bug fix that brings outputs back in line with sources | patch  |
-| Additive output field, new optional input field       | minor  |
+| Change                                                         | Bump  |
+| -------------------------------------------------------------- | ----- |
+| Bug fix that brings outputs back in line with sources          | patch |
+| Additive output field, new optional input field                | minor |
 | Changed input/output meaning, removed field, new rounding rule | major |
 
 Notable major-version-class changes that are **out of scope for v1**:

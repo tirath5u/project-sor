@@ -313,14 +313,14 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
                                 row.label === "Final Sub"
                                   ? results.perTermCapSub
                                   : row.label === "Final Unsub"
-                                  ? results.perTermCapUnsub
-                                  : results.perTermCapGradPlus,
+                                    ? results.perTermCapUnsub
+                                    : results.perTermCapGradPlus,
                               )})`
                             : adj
-                            ? row.label === "Final Sub"
-                              ? `Adjustment: ${fmtCurrency(t.adjustmentSub)}`
-                              : `Adjustment: ${fmtCurrency(t.adjustmentUnsub)}`
-                            : undefined
+                              ? row.label === "Final Sub"
+                                ? `Adjustment: ${fmtCurrency(t.adjustmentSub)}`
+                                : `Adjustment: ${fmtCurrency(t.adjustmentUnsub)}`
+                              : undefined
                         }
                       >
                         {fmtVal(v, row.format)}
@@ -342,25 +342,16 @@ export function TermsMatrix({ results, scenario }: TermsMatrixProps) {
         </table>
       </div>
 
-      {scenario?.expectedTerms ? (
-        <RegressionStrip results={results} scenario={scenario} />
-      ) : null}
+      {scenario?.expectedTerms ? <RegressionStrip results={results} scenario={scenario} /> : null}
     </div>
   );
 }
 
-function RegressionStrip({
-  results,
-  scenario,
-}: {
-  results: SORResults;
-  scenario: Scenario;
-}) {
+function RegressionStrip({ results, scenario }: { results: SORResults; scenario: Scenario }) {
   const checks = Object.entries(scenario.expectedTerms ?? {}).map(([key, exp]) => {
     const r = results.termResults.find((x) => x.key === key);
     const subOk = exp?.sub === undefined || (r && Math.abs(r.finalSub - exp.sub) <= 1);
-    const unsubOk =
-      exp?.unsub === undefined || (r && Math.abs(r.finalUnsub - exp.unsub) <= 1);
+    const unsubOk = exp?.unsub === undefined || (r && Math.abs(r.finalUnsub - exp.unsub) <= 1);
     return { key, label: r?.label ?? key, exp, subOk, unsubOk, r };
   });
   const allOk = checks.every((c) => c.subOk && c.unsubOk);

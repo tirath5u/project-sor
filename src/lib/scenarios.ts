@@ -140,8 +140,7 @@ export const SCENARIOS: Scenario[] = [
     whatsSpecial:
       "Spring drops below half-time, so the student becomes ineligible that term - only Fall pays.",
     summary: "Fall 9 / Spring 3 (FT 12/12, AY 24).",
-    expected:
-      "Spring is INELIGIBLE (no disbursement). Fall pays at its share × 75%.",
+    expected: "Spring is INELIGIBLE (no disbursement). Fall pays at its share × 75%.",
     build: () =>
       mk(
         {
@@ -289,8 +288,7 @@ export const SCENARIOS: Scenario[] = [
     whatsSpecial:
       "Total credits hit a full year, so AY % stays at 100 %. Fall pays only 50 %, leaving a big balloon for Spring.",
     summary: "Sub $3,500 · Fall 6 / Spring 18 (FT 12/12) · 24 AY FT.",
-    expected:
-      "AY % = 100 %, annual $3,500. Fall pays $875. Spring absorbs the rest: $2,625.",
+    expected: "AY % = 100 %, annual $3,500. Fall pays $875. Spring absorbs the rest: $2,625.",
     expectedTotals: { sub: 3500 },
     build: () =>
       mk(
@@ -339,8 +337,7 @@ export const SCENARIOS: Scenario[] = [
     title: "Three terms, near-full enrollment",
     student:
       "Dependent freshman with $2,000 of need, taking 9 / 12 / 12 across Fall, Spring, and Summer.",
-    whatsSpecial:
-      "Just shy of a full year - AY % comes out to 92 %, slightly reducing the annual.",
+    whatsSpecial: "Just shy of a full year - AY % comes out to 92 %, slightly reducing the annual.",
     summary: "Sub $2,000 · Fall 9 / Spring 12 / Summer 12 · 36 AY FT.",
     expected: "AY % = 92 %, annual $1,840.",
     build: () =>
@@ -370,8 +367,7 @@ export const SCENARIOS: Scenario[] = [
     whatsSpecial:
       "Spring is a shorter term with a lower FT count. The proportional model weights each term by its FT credits, so Fall gets ~⅔ and Spring ~⅓.",
     summary: "Independent G2 · Need $10,500 · Fall 12 (FT 12) / Spring 6 (FT 6) · 18 AY FT.",
-    expected:
-      "AY % = 100 %. Equal model would split 50 / 50; proportional gives roughly ⅔ / ⅓.",
+    expected: "AY % = 100 %. Equal model would split 50 / 50; proportional gives roughly ⅔ / ⅓.",
     build: () =>
       mk(
         {
@@ -400,10 +396,8 @@ export const SCENARIOS: Scenario[] = [
       "Dependent G1 with $5,500 need, taking 6 / 9 across Fall / Spring with 24 AY FT credits.",
     whatsSpecial:
       "Mirrors the v18 master spreadsheet default. Used to verify the engine matches dollar-for-dollar.",
-    summary:
-      "Grade 1 dep, Need $5,500 · Fall 6 / Spring 9 · 24 AY FT.",
-    expected:
-      "AY % 63 %. Annual Sub $2,205 / Unsub $1,260. Final Sub 551 / 827, Unsub 315 / 472.",
+    summary: "Grade 1 dep, Need $5,500 · Fall 6 / Spring 9 · 24 AY FT.",
+    expected: "AY % 63 %. Annual Sub $2,205 / Unsub $1,260. Final Sub 551 / 827, Unsub 315 / 472.",
     expectedTotals: { sub: 2205, unsub: 1260 },
     build: () =>
       mk(
@@ -430,10 +424,8 @@ export const SCENARIOS: Scenario[] = [
       "Independent grad student (G3) with $12,500 need, enrolling Fall 12 / Winter1 6 / Spring 9 / Summer 6 across 30 AY FT credits.",
     whatsSpecial:
       "Four-term mid-year structure. Verifies that Winter terms slot into the distribution correctly.",
-    summary:
-      "Indep g3 · Need $12,500 · Fall 12 / Winter1 6 / Spring 9 / Summer 6 · 30 AY FT.",
-    expected:
-      "Winter 1 enabled mid-year. Distribution shares the annual across 4 eligible terms.",
+    summary: "Indep g3 · Need $12,500 · Fall 12 / Winter1 6 / Spring 9 / Summer 6 · 30 AY FT.",
+    expected: "Winter 1 enabled mid-year. Distribution shares the annual across 4 eligible terms.",
     build: () =>
       mk(
         {

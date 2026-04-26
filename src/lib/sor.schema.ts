@@ -91,18 +91,16 @@ const TermInputSchema = z.object({
   coaCapGradPlus: optionalMoney,
 });
 
-const TermsRecordSchema = z
-  .record(TermKeySchema, TermInputSchema)
-  .superRefine((rec, ctx) => {
-    for (const k of TERM_ORDER as TermKey[]) {
-      if (!rec[k]) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Missing term entry: ${k}`,
-        });
-      }
+const TermsRecordSchema = z.record(TermKeySchema, TermInputSchema).superRefine((rec, ctx) => {
+  for (const k of TERM_ORDER as TermKey[]) {
+    if (!rec[k]) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Missing term entry: ${k}`,
+      });
     }
-  });
+  }
+});
 
 export const CalculateInputSchema = z
   .object({

@@ -54,7 +54,9 @@ export interface ParityFixture {
     effectiveCombinedLimit?: number;
     subBaseline?: number;
     unsubBaseline?: number;
-    terms?: Partial<Record<TermKey, { finalSub?: number; finalUnsub?: number; finalGradPlus?: number }>>;
+    terms?: Partial<
+      Record<TermKey, { finalSub?: number; finalUnsub?: number; finalGradPlus?: number }>
+    >;
   };
 }
 
@@ -141,8 +143,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   },
   {
     id: "fixture-v19-003",
-    description:
-      "Three terms, near-full enrollment 9/12/12 - AY% = 92, annual Sub $1,840.",
+    description: "Three terms, near-full enrollment 9/12/12 - AY% = 92, annual Sub $1,840.",
     sourceRefs: ["psr-001"],
     input: build(
       {
@@ -193,8 +194,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   },
   {
     id: "fixture-v19-005",
-    description:
-      "Award Year 2025-26 - SOR is NOT applicable (gate). Reduced caps equal baselines.",
+    description: "Award Year 2025-26 - SOR is NOT applicable (gate). Reduced caps equal baselines.",
     sourceRefs: ["psr-003"],
     input: build(
       {
