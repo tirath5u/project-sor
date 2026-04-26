@@ -74,7 +74,25 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 
 **Rate limit:** 30 requests per minute and 5,000 per day per IP, best-effort per edge isolate. No keys, no signup. Header `X-RateLimit-Policy: best-effort-per-isolate` documents the constraint honestly.
 
-**Response envelope:** every successful response carries `meta.engineVersion`, `meta.policyVersion`, `meta.requestId`, and `meta.sourceRepo` so a consumer can reproduce a calculation against a specific snapshot of the rules.
+**Response envelope:** every successful response carries the metadata needed to
+reproduce a calculation against a specific snapshot of the rules. Top-level
+keys: `data` and `meta`. The `meta` object includes:
+
+- `engineVersion` - semantic version of the calculation engine (e.g. `1.0.0`)
+- `policyYear` - award year the engine was evaluated against (e.g. `2026-27`)
+- `policySnapshotDate` - ISO date of the policy snapshot used
+- `policyStatus` - `confirmed` or `supported-preliminary`
+- `sourceCommit` - Git SHA of the deployed engine, or `local-dev` for
+  non-CI builds (see note below)
+- `sourceSet` - identifiers of the rule packs used (e.g. `["direct-loan-sor-v1"]`)
+- `citations` - regulatory citations applicable to the result (may be empty)
+- `computedAt` - ISO timestamp the response was produced
+- `requestId` - correlation ID; also returned in the `X-Request-Id` response header
+
+> **`sourceCommit` note.** GitHub CI injects the real commit SHA via
+> `VITE_COMMIT_SHA` at build time. Deployments triggered from the Lovable
+> editor do not set that variable and will return `sourceCommit: "local-dev"`.
+> For source-reproducible results, pin against a CI-built deployment.
 
 **Error contract:** uniform `{ error: { code, message, details? } }` envelope. Status codes are RFC-correct: 400 for malformed JSON, 415 for wrong content type, 422 for valid JSON that fails schema, 429 for rate limit, 405 for wrong method, 413 for oversized body.
 
