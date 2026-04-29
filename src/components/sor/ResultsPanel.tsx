@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { InfoTip } from "./InfoTip";
 import { exportSORCaseFile } from "@/lib/pdfExport";
 import { Button } from "@/components/ui/button";
+import { isGradOrProf } from "@/lib/loanLimits";
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -47,6 +48,12 @@ export function ResultsPanel({
   scenarioId?: string;
 }) {
   const visibleTerms = results.termResults.filter((t) => t.enabled);
+  const gradPlusEliminated =
+    Boolean(inputs) &&
+    results.awardYear === "2026-27" &&
+    !results.loanLimitException &&
+    isGradOrProf(inputs.gradeLevel);
+  const showGradPlusSection = results.initialGradPlus > 0 || gradPlusEliminated;
   return (
     <div
       id="results-region"
@@ -287,30 +294,43 @@ export function ResultsPanel({
         ) : null}
       </div>
 
-      {results.initialGradPlus > 0 ? (
+      {showGradPlusSection ? (
         <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
           <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
             Grad PLUS (DLGP)
             <InfoTip label="About Grad PLUS">
               Third parallel disbursement bucket for graduate / professional borrowers. Capped at
               Cost of Attendance minus all other aid (Pell, grants, scholarships, Sub, Unsub).
-              Subject to the SOR % for award year 2026-27 and later. Grade Level is the only access
-              gate - the Loan Limit Exception (grandfathering) does NOT affect Grad PLUS access.
+              For 2026-27 non-grandfathered borrowers (LLE = No), Grad PLUS is eliminated and
+              DLGP remains $0.
             </InfoTip>
           </h3>
+          {gradPlusEliminated ? (
+            <div className="mb-3 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-[11px] text-warning-foreground">
+              <span className="font-semibold">Grad PLUS eliminated:</span> For 2026-27
+              non-grandfathered borrowers (LLE = No), DLGP = $0 is the correct result. Aggregate,
+              lifetime maximum, and NSLDS validation remain outside this calculator.
+            </div>
+          ) : null}
           <div className="grid grid-cols-2 gap-2">
             <Stat
               label="Initial Max DLGP"
               value={fmtCurrencyCents(results.initialGradPlus)}
-              sub={`COA ${fmtCurrency(results.coa)} − aid ${fmtCurrency(results.otherAid)}`}
+              sub={
+                gradPlusEliminated
+                  ? "Eliminated for 2026-27 non-grandfathered borrowers"
+                  : `COA minus aid: ${fmtCurrency(results.coa)} / ${fmtCurrency(results.otherAid)}`
+              }
             />
             <Stat
               label="Reduced Annual DLGP"
               value={fmtCurrencyCents(results.reducedGradPlus)}
               sub={
                 results.sorApplicable
-                  ? `× ${Math.round(results.sorPctRounded * 100)}% SOR`
-                  : "no SOR (pre-2026-27)"
+                  ? `x ${Math.round(results.sorPctRounded * 100)}% SOR`
+                  : results.awardYear === "2025-26"
+                    ? "no SOR (pre-2026-27)"
+                    : "no SOR (non-term)"
               }
             />
           </div>

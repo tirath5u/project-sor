@@ -339,13 +339,16 @@ describe("SOR engine - v19 Grad PLUS bucket", () => {
     expect(t1.finalGradPlus + t2.finalGradPlus).toBe(14500);
   });
 
-  it("Scenario 8 - LLE = false (non-grandfathered) does NOT zero Grad PLUS", () => {
+  it("Scenario 8 - LLE = false (non-grandfathered) zeroes Grad PLUS", () => {
     const grandfathered = calculateSOR(gradTwoTerm({ loanLimitException: true }));
     const nonGrandfathered = calculateSOR(gradTwoTerm({ loanLimitException: false }));
-    // Placeholder OBBB table mirrors Legacy → identical result
-    expect(nonGrandfathered.initialGradPlus).toBe(grandfathered.initialGradPlus);
-    expect(nonGrandfathered.reducedGradPlus).toBe(grandfathered.reducedGradPlus);
-    expect(nonGrandfathered.initialGradPlus).toBeGreaterThan(0);
+    expect(grandfathered.initialGradPlus).toBeGreaterThan(0);
+    expect(nonGrandfathered.initialGradPlus).toBe(0);
+    expect(nonGrandfathered.reducedGradPlus).toBe(0);
+    expect(nonGrandfathered.totalFinalGradPlus).toBe(0);
+    expect(nonGrandfathered.warnings).toContain(
+      "For 2026-27 non-grandfathered borrowers (LLE = No), Grad PLUS is eliminated. DLGP = $0 is expected.",
+    );
   });
 
   it("Scenario 9 - Undergrad with Requested Grad PLUS = $5,000 returns 0", () => {
@@ -370,6 +373,23 @@ describe("SOR engine - v19 Grad PLUS bucket", () => {
     expect(Math.round(r.sorPctRounded * 100)).toBe(78);
     // 78% × 14500 = 11310
     expect(r.reducedGradPlus).toBe(11310);
+  });
+
+  it("historical Grad PLUS entries are ignored when 2026-27 borrower is non-grandfathered", () => {
+    const inp = gradTwoTerm({ loanLimitException: false });
+    inp.terms.term1 = {
+      ...inp.terms.term1,
+      paidGradPlus: 1000,
+      refundGradPlus: 0,
+    };
+    const r = calculateSOR(inp);
+    const t1 = r.termResults.find((t) => t.key === "term1")!;
+    expect(r.initialGradPlus).toBe(0);
+    expect(r.reducedGradPlus).toBe(0);
+    expect(r.paidGradPlusTotal).toBe(0);
+    expect(r.totalFinalGradPlus).toBe(0);
+    expect(t1.finalGradPlus).toBe(0);
+    expect(t1.paidGradPlus).toBe(0);
   });
 });
 
@@ -405,5 +425,39 @@ describe("SOR engine - v19 Award Year gate", () => {
     expect(r.sorApplicable).toBe(true);
     // SOR% = 63 → 3500 × 0.63 = 2205
     expect(r.reducedSub).toBe(2205);
+  });
+
+  it("AY 2026-27 AC4 non-term bypasses the SOR reduction", () => {
+    const inp = defaultInputs();
+    inp.awardYear = "2026-27";
+    inp.calType = 4;
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.annualNeed = 5500;
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 24;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 6 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 9 };
+    const r = calculateSOR(inp);
+    expect(r.sorApplicable).toBe(false);
+    expect(r.reducedSub).toBe(3500);
+    expect(r.reducedUnsub).toBe(2000);
+  });
+
+  it("AY 2026-27 AC3 non-standard term-based still applies SOR", () => {
+    const inp = defaultInputs();
+    inp.awardYear = "2026-27";
+    inp.calType = 3;
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.annualNeed = 5500;
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 24;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 6 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 9 };
+    const r = calculateSOR(inp);
+    expect(r.sorApplicable).toBe(true);
+    expect(r.reducedSub).toBe(2205);
+    expect(r.reducedUnsub).toBe(1260);
   });
 });

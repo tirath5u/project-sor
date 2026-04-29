@@ -120,7 +120,7 @@ bun install
 bun test
 ```
 
-42 tests pass cent-exact against published fixtures: 7 SOR parity scenarios plus schema validation plus numeric coercion edges. CI runs the same suite on every push and pull request.
+47 tests pass cent-exact against published fixtures: 9 SOR parity scenarios plus schema validation plus numeric coercion edges. CI runs the same suite on every push and pull request.
 
 A second verification path is executable contract testing: CI pulls the documented request example from `/api/public/v1/openapi.json`, posts it to `/api/public/v1/calculate`, and checks the documented stable fields. The exported Postman collection in `postman/` runs nightly through Newman against the live API.
 
@@ -166,6 +166,8 @@ A second verification path is executable contract testing: CI pulls the document
 - **Round to dollar at the term level**, not the annual level. Per-term values are integer dollars; the rounding residual lands in the last eligible term.
 - **Mid-cycle disbursement requires history.** Once any term is marked Disbursed, the engine treats that term's Paid amounts as locked and only adjusts future terms.
 - **Grad/Prof has no Sub.** Sub baseline is forced to 0 for graduate and professional grade levels regardless of override.
+- **2026-27 non-grandfathered Grad PLUS is eliminated.** For borrowers with `LoanLimitException = false`, DLGP is expected to remain $0.
+- **Non-term calendars do not take the SOR reduction in this app.** `AC4` bypasses the enrollment-based reduction even when the student is less than full-time.
 
 ---
 

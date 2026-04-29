@@ -39,15 +39,10 @@ export interface LoanLimitRow {
 }
 
 /**
- * 2026-27 limits per OBBBA. Combined column = Sub + Unsub maximum.
- * Independent (and PLUS-denied dependent) undergrads get the higher
- * combined cap; grad/professional borrowers are independent by definition.
- *
- * Codes 10-13 are the Title-IV "preparatory coursework" rows from v18 - they
- * use the same caps as the corresponding regular tier (1st-yr undergrad for
- * 10/11, graduate for 13, etc.) per ED guidance.
+ * Legacy / grandfathered annual limits. These apply when Loan Limit Exception
+ * is true. Professional rows remain at the legacy $20,500 annual Unsub limit.
  */
-export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
+export const LEGACY_LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
   g0: {
     dependent: { sub: 3500, combined: 5500 },
     independent: { sub: 3500, combined: 9500 },
@@ -91,6 +86,69 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
     independent: { sub: 0, combined: 20500 },
   },
   g10: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g11: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g12: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g13: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+};
+
+/**
+ * OBBB / non-grandfathered annual limits for 2026-27. Professional rows use
+ * the updated $50,000 annual Unsub limit.
+ */
+export const OBBB_LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
+  g0: {
+    dependent: { sub: 3500, combined: 5500 },
+    independent: { sub: 3500, combined: 9500 },
+  },
+  g1: {
+    dependent: { sub: 3500, combined: 5500 },
+    independent: { sub: 3500, combined: 9500 },
+  },
+  g2: {
+    dependent: { sub: 4500, combined: 6500 },
+    independent: { sub: 4500, combined: 10500 },
+  },
+  g3: {
+    dependent: { sub: 5500, combined: 7500 },
+    independent: { sub: 5500, combined: 12500 },
+  },
+  g4: {
+    dependent: { sub: 5500, combined: 7500 },
+    independent: { sub: 5500, combined: 12500 },
+  },
+  g5: {
+    dependent: { sub: 5500, combined: 7500 },
+    independent: { sub: 5500, combined: 12500 },
+  },
+  g6: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g7: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g8: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g9: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g10: {
     dependent: { sub: 0, combined: 50000 },
     independent: { sub: 0, combined: 50000 },
   },
@@ -108,13 +166,8 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
   },
 };
 
-/**
- * Two parallel limit tables. `LEGACY_LIMITS` is used for grandfathered
- * students (Loan Limit Exception = Yes). `OBBB_LIMITS` is used for
- * non-grandfathered students under the post-OBBB 2026-27 rules.
- */
-export const LEGACY_LIMITS = LIMITS;
-export const OBBB_LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = LIMITS;
+/** Default key registry for grade validation and legacy caller compatibility. */
+export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = OBBB_LIMITS;
 
 /** Reserved for any future UI banner about the OBBB limit table. */
 export const OBBB_TABLE_IS_PLACEHOLDER = false;

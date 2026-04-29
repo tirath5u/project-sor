@@ -272,6 +272,60 @@ export const PARITY_FIXTURES: ParityFixture[] = [
       reducedGradPlus: 11310,
     },
   },
+  {
+    id: "fixture-v19-008",
+    description:
+      "Grad PLUS eliminated for 2026-27 non-grandfathered grad/prof borrowers - DLGP stays at $0.",
+    sourceRefs: ["psr-002", "psr-004"],
+    input: build(
+      {
+        gradeLevel: "g8",
+        dependency: "independent",
+        loanLimitException: false,
+        numStandardTerms: 2,
+        ayFtCredits: 18,
+        annualNeed: 20500,
+        coa: 40000,
+        otherAid: 5000,
+        requestedGradPlus: 15000,
+      },
+      {
+        term1: { enabled: true, ftCredits: 9, enrolledCredits: 9 },
+        term2: { enabled: true, ftCredits: 9, enrolledCredits: 9 },
+      },
+    ),
+    expected: {
+      initialGradPlus: 0,
+      reducedGradPlus: 0,
+      subBaseline: 0,
+      unsubBaseline: 20500,
+    },
+  },
+  {
+    id: "fixture-v19-009",
+    description:
+      "AC4 non-term in 2026-27 bypasses the SOR reduction even when credits are less than full-time.",
+    sourceRefs: ["psr-001", "psr-003"],
+    input: build(
+      {
+        calType: 4,
+        numStandardTerms: 2,
+        ayFtCredits: 24,
+        gradeLevel: "g1",
+        dependency: "dependent",
+        annualNeed: 5500,
+      },
+      {
+        term1: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
+        term2: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
+      },
+    ),
+    expected: {
+      sorApplicable: false,
+      reducedSub: 3500,
+      reducedUnsub: 2000,
+    },
+  },
 ];
 
 /** Public-facing serialization (used by /api/public/v1/scenarios). */

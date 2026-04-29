@@ -120,10 +120,10 @@ export interface SORInputs {
   terms: Record<TermKey, TermInput>;
   /** v19 - Award Year. SOR only applies to "2026-27"+. "2025-26" disables the SOR%. */
   awardYear?: "2025-26" | "2026-27";
-  /** v19 - Loan Limit Exception (grandfathered). Switches Sub/Unsub limit table only.
-   *  Does NOT gate Grad PLUS access. */
+  /** v19 - Loan Limit Exception (grandfathered). Switches Sub/Unsub limit tables.
+   *  For award year 2026-27, non-grandfathered borrowers also lose Grad PLUS. */
   loanLimitException?: boolean;
-  /** v19 - Cost of Attendance (Section B). Drives Grad PLUS cap. */
+  /** v19 - Cost of Attendance (Section B). Used here for Grad PLUS capacity only. */
   coa?: number;
   /** v19 - Other Non-PLUS Aid (Pell, grants, scholarships, outside loans).
    *  Excludes Sub/Unsub/PLUS by definition. */
@@ -667,23 +667,34 @@ export function resolveCaps(inp: SORInputs): {
     const unsub = Math.max(0, inp.unsubStatutory);
     return { sub, unsub, combined: sub + unsub };
   }
-  // v19 - Loan Limit Exception (grandfathered) flag selects which table to use.
-  // LLE = true → Legacy table; LLE = false → OBBB table (currently a Legacy mirror).
+  // Loan Limit Exception (grandfathered) selects which annual limit table to use.
   const useLegacy = inp.loanLimitException !== false; // default true (legacy) when undefined
   const lim = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied, useLegacy);
   return { sub: lim.sub, unsub: lim.unsub, combined: lim.sub + lim.unsub };
 }
 
+function isSorApplicableForInput(inp: SORInputs): boolean {
+  const awardYear: "2025-26" | "2026-27" = inp.awardYear ?? "2026-27";
+  return awardYear === "2026-27" && inp.calType !== 4;
+}
+
 export function calculateSOR(inp: SORInputs): SORResults {
   const warnings: string[] = [];
-  if (inp.calType === 3 || inp.calType === 4) {
+  const awardYear: "2025-26" | "2026-27" = inp.awardYear ?? "2026-27";
+  const sorApplicable = isSorApplicableForInput(inp);
+  if (awardYear === "2026-27" && inp.calType === 4) {
     warnings.push(
-      `Academic Calendar ${inp.calType} (non-standard) - confirm SOR applicability with the FSA Handbook.`,
+      "Academic Calendar 4 is non-term. This calculator does not apply the SOR reduction for non-term, clock-hour, or subscription-based programs.",
     );
   }
   if (isGradOrProf(inp.gradeLevel) && inp.programLevel === "undergraduate") {
     warnings.push(
       "Grade Level is graduate/professional but Program Level is Undergraduate - review.",
+    );
+  }
+  if (awardYear === "2026-27" && inp.loanLimitException === false && isGradOrProf(inp.gradeLevel)) {
+    warnings.push(
+      "For 2026-27 non-grandfathered borrowers (LLE = No), Grad PLUS is eliminated. DLGP = $0 is expected.",
     );
   }
 
@@ -975,10 +986,10 @@ function assemble(args: {
     finalSnap,
   } = args;
 
-  // v19 - Award Year gate: SOR only applies for "2026-27"+. For 2025-26
-  // the SOR% effectively reverts to 100% so reduced limits = initial max.
+  // Award Year plus calendar gate: SOR applies only to 2026-27 term-based
+  // calendars. Pre-2026-27 and non-term calendars bypass the SOR reduction.
   const awardYear: "2025-26" | "2026-27" = inp.awardYear ?? "2026-27";
-  const sorApplicable = awardYear === "2026-27";
+  const sorApplicable = isSorApplicableForInput(inp);
   const pct = sorApplicable ? finalSnap.ayPctRounded : 1;
 
   const subStatBaseline = caps.sub;
@@ -1009,12 +1020,13 @@ function assemble(args: {
 
   // v19 - Grad PLUS bucket (DLGP). Third parallel track alongside Sub/Unsub.
   // Initial Max DLGP = MAX(0, MIN(requested, COA - otherAid - subBaseline - unsubBaseline))
-  // Gated on grade level (SLC >= 8), NOT on LLE/grandfathering (spec §4.3).
+  // Gated on grad/prof grade level and, for 2026-27, grandfathering status.
   const coa = Math.max(0, inp.coa ?? 0);
   const otherAid = Math.max(0, inp.otherAid ?? 0);
   const requestedGradPlus = Math.max(0, inp.requestedGradPlus ?? 0);
   const isGP = isGradOrProf(inp.gradeLevel);
-  const initialGradPlus = isGP
+  const gradPlusAllowed = isGP && !(awardYear === "2026-27" && inp.loanLimitException === false);
+  const initialGradPlus = gradPlusAllowed
     ? Math.max(0, Math.min(requestedGradPlus, coa - otherAid - subBaseline - unsubBaseline))
     : 0;
   const reducedGradPlus = round2(initialGradPlus * pct);
@@ -1052,11 +1064,13 @@ function assemble(args: {
   });
 
   // Grad PLUS distribution - same balance-forward distributor as Sub/Unsub.
-  const lockedGradPlusDisplay = ordered.map((t) =>
-    t.paidGradPlus !== null && t.paidGradPlus !== undefined
-      ? netAmount(t.paidGradPlus ?? null, t.refundGradPlus ?? null)
-      : null,
-  );
+  const lockedGradPlusDisplay = gradPlusAllowed
+    ? ordered.map((t) =>
+        t.paidGradPlus !== null && t.paidGradPlus !== undefined
+          ? netAmount(t.paidGradPlus ?? null, t.refundGradPlus ?? null)
+          : null,
+      )
+    : ordered.map(() => null);
   const displayGradPlus = computeDisplayRows({
     annual: reducedGradPlus,
     termsInOrder: ordered,
@@ -1083,13 +1097,15 @@ function assemble(args: {
     // Final must rigidly mirror the Step-5 output to preserve history anchoring.
     const cappedSub = round2(t.coaCapSub > 0 ? Math.min(calcSub, t.coaCapSub) : calcSub);
     const cappedUnsub = round2(t.coaCapUnsub > 0 ? Math.min(calcUnsub, t.coaCapUnsub) : calcUnsub);
-    const coaCapGradPlus = t.coaCapGradPlus ?? 0;
+    const coaCapGradPlus = gradPlusAllowed ? (t.coaCapGradPlus ?? 0) : 0;
     const cappedGradPlus = round2(
       coaCapGradPlus > 0 ? Math.min(calcGradPlus, coaCapGradPlus) : calcGradPlus,
     );
     const netPaidSub = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
     const netPaidUnsub = Math.max(0, (t.paidUnsub || 0) - (t.refundUnsub || 0));
-    const netPaidGradPlus = Math.max(0, (t.paidGradPlus || 0) - (t.refundGradPlus || 0));
+    const netPaidGradPlus = gradPlusAllowed
+      ? Math.max(0, (t.paidGradPlus || 0) - (t.refundGradPlus || 0))
+      : 0;
     const termPct = t.ftCredits > 0 ? eff / t.ftCredits : 0;
     return {
       key: t.key,
@@ -1124,8 +1140,8 @@ function assemble(args: {
       shareGradPlus: displayGradPlus.share[i],
       calcGradPlus,
       finalGradPlus: cappedGradPlus,
-      paidGradPlus: t.paidGradPlus ?? 0,
-      refundGradPlus: t.refundGradPlus ?? 0,
+      paidGradPlus: gradPlusAllowed ? (t.paidGradPlus ?? 0) : 0,
+      refundGradPlus: gradPlusAllowed ? (t.refundGradPlus ?? 0) : 0,
       netPaidGradPlus,
       coaCapGradPlus,
       adjustmentGradPlus: 0,
@@ -1149,8 +1165,12 @@ function assemble(args: {
   const refundUnsubTotal = ordered.reduce((s, t) => s + (t.refundUnsub || 0), 0);
   const netPaidSubTotal = Math.max(0, paidSubTotal - refundSubTotal);
   const netPaidUnsubTotal = Math.max(0, paidUnsubTotal - refundUnsubTotal);
-  const paidGradPlusTotal = ordered.reduce((s, t) => s + (t.paidGradPlus || 0), 0);
-  const refundGradPlusTotal = ordered.reduce((s, t) => s + (t.refundGradPlus || 0), 0);
+  const paidGradPlusTotal = gradPlusAllowed
+    ? ordered.reduce((s, t) => s + (t.paidGradPlus || 0), 0)
+    : 0;
+  const refundGradPlusTotal = gradPlusAllowed
+    ? ordered.reduce((s, t) => s + (t.refundGradPlus || 0), 0)
+    : 0;
   const netPaidGradPlusTotal = Math.max(0, paidGradPlusTotal - refundGradPlusTotal);
 
   const totalFinalSub = termResults.reduce((s, t) => s + t.finalSub, 0);

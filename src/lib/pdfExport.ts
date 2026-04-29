@@ -124,7 +124,7 @@ export function exportSORCaseFile({
   writeKV([
     ["Grade level", GRADE_LABELS[inputs.gradeLevel] ?? inputs.gradeLevel],
     ["Dependency", inputs.dependency],
-    ["Annual financial need", fmtCurrency(inputs.annualNeed)],
+    ["Annual financial need input", fmtCurrency(inputs.annualNeed)],
     ["AY full-time credits", String(inputs.ayFtCredits)],
     ["Standard terms", String(inputs.numStandardTerms)],
     ["Calendar / AY type", `AC${inputs.calType} · ${inputs.ayType}`],
@@ -183,7 +183,7 @@ export function exportSORCaseFile({
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
-    head: [["Term", "FT", "Enrolled", "Paid Sub", "Paid Unsub", "Refund S/U", "COA cap S/U"]],
+    head: [["Term", "FT", "Enrolled", "Paid Sub", "Paid Unsub", "Refund S/U", "Final cap S/U"]],
     body: visibleTerms.map((t) => [
       safe(t.label),
       String(t.ftCredits),
@@ -319,7 +319,7 @@ export function exportSORCaseFile({
           )}%${t.eligible ? "" : " (ineligible, below half-time)"}`,
       )
       .join("; ")}.`,
-    `Step 5 - Disbursement = share x min(term %, 100%); over/underflow carries forward; finals clamped to per-term COA caps. ${enabledTerms
+    `Step 5 - Disbursement = share x min(term %, 100%); over/underflow carries forward; finals clamped to per-term final caps. ${enabledTerms
       .filter((t) => t.eligible)
       .map((t) => {
         const pctCapped = Math.min(100, Math.round(t.termPct * 100));

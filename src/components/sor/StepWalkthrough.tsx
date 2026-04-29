@@ -59,7 +59,8 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
           tip="Combined Limit Shifting Rule (34 CFR 685.203): Sub = MIN(stat cap, need). Unsub fills the remaining Combined Limit headroom, NOT remaining need."
         />
         <p className="mb-2 text-xs text-muted-foreground">
-          Annual Need {fmtCurrency(inputs.annualNeed)} is split using the effective statutory caps
+          Annual Need {fmtCurrency(inputs.annualNeed)} is treated as the school-determined
+          eligibility input for the Sub/Unsub split, using the effective statutory caps
           (Sub {fmtCurrency(results.effectiveSubStatutory)} + Unsub{" "}
           {fmtCurrency(results.effectiveUnsubStatutory)} = Combined{" "}
           {fmtCurrency(results.effectiveCombinedLimit)}). Sub takes the lesser of need and the Sub

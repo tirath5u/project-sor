@@ -379,8 +379,8 @@ function SORCalculatorPage() {
         <Section
           letter="A"
           title="Student & Loan Period"
-          description="Grade, dependency, and the single Annual Financial Need that drives Sub/Unsub split."
-          tooltip="Inputs that determine the statutory loan ceilings and baseline Sub/Unsub split per the Combined Limit Shifting Rule (34 CFR 685.203)."
+          description="Grade, dependency, and the school-determined annual need input that drives the Sub/Unsub split."
+          tooltip="Inputs that determine the statutory loan ceilings and baseline Sub/Unsub split per the Combined Limit Shifting Rule (34 CFR 685.203). Annual Financial Need is treated here as the packaged eligibility amount after COA, SAI, other aid, and school review."
         >
           {/* Row 1 - Award Year drives which Grade Levels are valid, so it
               MUST be selected first. */}
@@ -416,8 +416,8 @@ function SORCalculatorPage() {
                 <Label className="text-xs font-medium">Loan Limit Exception</Label>
                 <InfoTip>
                   Grandfathered? Switches the Sub/Unsub annual limit table between the legacy
-                  (pre-OBBB) values and the OBBB 2026-27 values. Does NOT gate Grad PLUS - Grad PLUS
-                  access is determined by Grade Level only.
+                  (pre-OBBB) values and the OBBB 2026-27 values. For 2026-27,
+                  non-grandfathered borrowers (LLE = No) also lose Grad PLUS.
                 </InfoTip>
               </div>
               <Label className="flex h-9 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-xs">
@@ -512,7 +512,7 @@ function SORCalculatorPage() {
               value={inputs.annualNeed}
               onChange={(v) => update({ annualNeed: v })}
               hint={`Sub baseline ${fmtCurrency(results.subBaseline)} · Unsub baseline ${fmtCurrency(results.unsubBaseline)}`}
-              tooltip="Cost of Attendance minus EFC/SAI minus other aid. Drives the Sub baseline. Unsub is NOT need-based - it is calculated from the Combined Limit Shifting Rule."
+              tooltip="Enter the school-determined annual need or eligibility amount for Sub/Unsub after COA, SAI, other aid, and packaging review. This drives the Sub baseline. Unsub then fills the remaining combined-limit headroom."
             />
 
             <NumberField
@@ -520,14 +520,14 @@ function SORCalculatorPage() {
               prefix="$"
               value={inputs.coa ?? 0}
               onChange={(v) => update({ coa: v })}
-              tooltip="Total COA for the academic year. Drives the Grad PLUS cap: COA minus other aid minus Sub minus Unsub."
+              tooltip="Used here for Grad PLUS capacity only: COA minus other aid minus Sub minus Unsub."
             />
             <NumberField
               label="Other Non-PLUS Aid"
               prefix="$"
               value={inputs.otherAid ?? 0}
               onChange={(v) => update({ otherAid: v })}
-              tooltip="Pell, grants, scholarships, outside loans. Excludes Sub/Unsub/PLUS by definition."
+              tooltip="Used here for Grad PLUS capacity only. Pell, grants, scholarships, outside loans. Excludes Sub/Unsub/PLUS by definition."
             />
             <NumberField
               label="Requested Grad PLUS"
@@ -539,15 +539,16 @@ function SORCalculatorPage() {
                   ? `Initial Max DLGP: ${fmtCurrency(results.initialGradPlus)}`
                   : "Grad/Professional only"
               }
-              tooltip="Student-requested Grad PLUS amount. Eligibility is COA minus all other estimated aid. Only available for graduate/professional Grade Levels."
+              tooltip="Student-requested Grad PLUS amount. Eligibility is COA minus all other estimated aid. For 2026-27 non-grandfathered borrowers (LLE = No), Grad PLUS is eliminated and DLGP remains $0."
             />
           </div>
 
           {!results.sorApplicable ? (
             <div className="mt-2 rounded-lg border border-muted bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
-              <span className="font-semibold text-foreground">SOR not applicable</span> for award
-              year {results.awardYear} - pre-OBBB rules in effect, no enrollment-based reduction
-              applied.
+              <span className="font-semibold text-foreground">SOR not applicable.</span>{" "}
+              {results.awardYear === "2025-26"
+                ? `Award year ${results.awardYear} uses pre-2026-27 rules, so no SOR reduction is applied.`
+                : "This calendar is non-term, so the SOR reduction is not applied in this calculator."}
             </div>
           ) : null}
 
@@ -582,7 +583,7 @@ function SORCalculatorPage() {
                 <InfoTip>
                   AC1 = Standard term, Scheduled AY · AC2 = Standard term, Borrower-Based AY · AC3 =
                   Non-standard, term-based · AC4 = Non-standard, non-term (clock-hour or credit-hour
-                  without terms).
+                  without terms). AC4 bypasses the SOR reduction in this calculator.
                 </InfoTip>
               </div>
               <Select
@@ -816,10 +817,10 @@ function SORCalculatorPage() {
                     </th>
                     <th className="px-2 py-2 font-medium">
                       <span className="inline-flex items-center gap-1">
-                        COA cap S/U
+                        Final cap S/U
                         <InfoTip>
-                          Per-term Cost of Attendance cap (Sub / Unsub). Final values are clamped to
-                          this.
+                          Optional final term cap for Sub / Unsub. Leave at 0 for no cap. Caps final
+                          payout only and does not change annual limits or the SOR percentage.
                         </InfoTip>
                       </span>
                     </th>
