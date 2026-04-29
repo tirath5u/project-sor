@@ -116,6 +116,31 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
 export const LEGACY_LIMITS = LIMITS;
 export const OBBB_LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = LIMITS;
 
+/**
+ * Legacy (pre-OBBB) annual limits. Used when Loan Limit Exception = Yes
+ * (grandfathered borrower). All graduate/professional codes - including the
+ * new 2026-27 codes 10/11/13 - revert to the pre-OBBB $20,500 combined cap.
+ * Undergraduate rows are unchanged from current statutory limits.
+ */
+const LEGACY_OVERRIDES: Partial<Record<GradeLevel, Record<Dependency, LoanLimitRow>>> = {
+  g10: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g11: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g13: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+};
+const LEGACY_TABLE: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
+  ...LIMITS,
+  ...LEGACY_OVERRIDES,
+} as Record<GradeLevel, Record<Dependency, LoanLimitRow>>;
+
 /** Reserved for any future UI banner about the OBBB limit table. */
 export const OBBB_TABLE_IS_PLACEHOLDER = false;
 
@@ -210,7 +235,7 @@ export function lookupLimits(
   // Grad/Prof are independent by definition; PLUS denial doesn't apply.
   const effectiveDep: Dependency =
     isGP || dependency === "independent" || parentPlusDenied ? "independent" : "dependent";
-  const table = useLegacyTable ? LEGACY_LIMITS : OBBB_LIMITS;
+  const table = useLegacyTable ? LEGACY_TABLE : OBBB_LIMITS;
   const row = table[safeGrade][effectiveDep];
   const baseRow = table[safeGrade]["dependent"];
   const baseUnsub = Math.max(0, baseRow.combined - baseRow.sub);

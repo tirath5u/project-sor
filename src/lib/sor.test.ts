@@ -409,3 +409,86 @@ describe("SOR engine - v19 Award Year gate", () => {
     expect(r.reducedSub).toBe(2205);
   });
 });
+
+describe("SOR engine - Jennifer-scope regressions", () => {
+  function profTwoTerm(grade: "g8" | "g9" | "g10" | "g11" | "g12" | "g13") {
+    const inp = defaultInputs();
+    inp.awardYear = "2026-27";
+    inp.gradeLevel = grade;
+    inp.dependency = "independent";
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 18;
+    inp.annualNeed = 100000;
+    inp.coa = 80000;
+    inp.otherAid = 0;
+    inp.requestedGradPlus = 10000;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 9, enrolledCredits: 9 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 9, enrolledCredits: 9 };
+    return inp;
+  }
+
+  it("dependent undergrad canonical SOR is unchanged (g1, half-time term1)", () => {
+    const inp = defaultInputs();
+    inp.awardYear = "2026-27";
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.annualNeed = 5500;
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 24;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 6 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 9 };
+    const r = calculateSOR(inp);
+    expect(r.sorApplicable).toBe(true);
+    expect(r.reducedSub).toBe(2205); // 3500 × 0.63
+  });
+
+  it("2026-27 professional code 10 non-LLE uses $50,000 combined (DLUN cap)", () => {
+    const inp = profTwoTerm("g10");
+    inp.loanLimitException = false;
+    const r = calculateSOR(inp);
+    expect(r.subBaseline).toBe(0);
+    expect(r.unsubBaseline).toBe(50000);
+    expect(r.effectiveCombinedLimit).toBe(50000);
+  });
+
+  it("2026-27 professional code 10 with LLE uses legacy $20,500", () => {
+    const inp = profTwoTerm("g10");
+    inp.loanLimitException = true;
+    const r = calculateSOR(inp);
+    expect(r.unsubBaseline).toBe(20500);
+    expect(r.effectiveCombinedLimit).toBe(20500);
+  });
+
+  it("2026-27 graduate codes 8/9/12 keep $20,500 combined", () => {
+    for (const g of ["g8", "g9", "g12"] as const) {
+      const inp = profTwoTerm(g);
+      inp.loanLimitException = false;
+      const r = calculateSOR(inp);
+      expect(r.unsubBaseline, `${g} unsub baseline`).toBe(20500);
+    }
+  });
+
+  it("2026-27 non-LLE Grad PLUS returns $0 with NSLDS warning", () => {
+    const inp = profTwoTerm("g10");
+    inp.loanLimitException = false;
+    inp.requestedGradPlus = 25000;
+    const r = calculateSOR(inp);
+    expect(r.initialGradPlus).toBe(0);
+    expect(r.reducedGradPlus).toBe(0);
+    expect(r.totalFinalGradPlus).toBe(0);
+    expect(r.remainingGradPlus).toBe(0);
+    expect(r.warnings.some((w) => w.includes("Grad PLUS is not calculated"))).toBe(true);
+  });
+
+  it("LLE Grad PLUS preview still calculates and emits NSLDS-not-modeled warning", () => {
+    const inp = profTwoTerm("g10");
+    inp.loanLimitException = true;
+    inp.requestedGradPlus = 25000;
+    const r = calculateSOR(inp);
+    expect(r.initialGradPlus).toBeGreaterThan(0);
+    expect(r.reducedGradPlus).toBeGreaterThan(0);
+    expect(
+      r.warnings.some((w) => w.includes("aggregate") || w.includes("lifetime")),
+    ).toBe(true);
+  });
+});
