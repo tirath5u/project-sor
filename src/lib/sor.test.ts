@@ -407,3 +407,34 @@ describe("SOR engine - v19 Award Year gate", () => {
     expect(r.reducedSub).toBe(2205);
   });
 });
+
+describe("SOR engine - v21 OBBB Professional Caps", () => {
+  function profIndependent(): ReturnType<typeof defaultInputs> {
+    const inp = defaultInputs();
+    inp.gradeLevel = "g10"; // Professional Code 10
+    inp.dependency = "independent";
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 18;
+    inp.annualNeed = 50000;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 9, enrolledCredits: 9 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 9, enrolledCredits: 9 };
+    return inp;
+  }
+
+  it("Non-grandfathered (LLE=false) Prof Code 10 uses $50,000 limit", () => {
+    const inp = profIndependent();
+    inp.loanLimitException = false;
+    const r = calculateSOR(inp);
+    expect(r.effectiveUnsubStatutory).toBe(50000);
+    expect(r.unsubBaseline).toBe(50000);
+    expect(r.obbbTableIsPlaceholder).toBe(false);
+  });
+
+  it("Grandfathered (LLE=true) Prof Code 10 uses legacy $20,500 limit", () => {
+    const inp = profIndependent();
+    inp.loanLimitException = true;
+    const r = calculateSOR(inp);
+    expect(r.effectiveUnsubStatutory).toBe(20500);
+    expect(r.unsubBaseline).toBe(20500);
+  });
+});

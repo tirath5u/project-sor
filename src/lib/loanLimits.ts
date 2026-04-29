@@ -47,7 +47,11 @@ export interface LoanLimitRow {
  * use the same caps as the corresponding regular tier (1st-yr undergrad for
  * 10/11, graduate for 13, etc.) per ED guidance.
  */
-export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
+/**
+ * OBBB 2026-27 limits (Non-Grandfathered). Professional codes (10, 11, 13)
+ * have the increased $50,000 combined limit.
+ */
+export const OBBB_LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
   g0: {
     dependent: { sub: 3500, combined: 5500 },
     independent: { sub: 3500, combined: 9500 },
@@ -72,7 +76,6 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
     dependent: { sub: 5500, combined: 7500 },
     independent: { sub: 5500, combined: 12500 },
   },
-  // 2025-26 ONLY graduate/professional codes (retired for 2026-27 per COD Edit 208).
   g6: {
     dependent: { sub: 0, combined: 20500 },
     independent: { sub: 0, combined: 20500 },
@@ -81,7 +84,6 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
     dependent: { sub: 0, combined: 20500 },
     independent: { sub: 0, combined: 20500 },
   },
-  // 2026-27 ONLY graduate/professional codes (new per OBBB).
   g8: {
     dependent: { sub: 0, combined: 20500 },
     independent: { sub: 0, combined: 20500 },
@@ -109,12 +111,27 @@ export const LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
 };
 
 /**
- * Two parallel limit tables. `LEGACY_LIMITS` is used for grandfathered
- * students (Loan Limit Exception = Yes). `OBBB_LIMITS` is used for
- * non-grandfathered students under the post-OBBB 2026-27 rules.
+ * Legacy / Grandfathered limits (LLE = Yes). Professional codes (10, 11, 13)
+ * maintain the legacy $20,500 combined limit.
  */
-export const LEGACY_LIMITS = LIMITS;
-export const OBBB_LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = LIMITS;
+export const LEGACY_LIMITS: Record<GradeLevel, Record<Dependency, LoanLimitRow>> = {
+  ...OBBB_LIMITS,
+  g10: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g11: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+  g13: {
+    dependent: { sub: 0, combined: 20500 },
+    independent: { sub: 0, combined: 20500 },
+  },
+};
+
+/** Default limits (pointing to OBBB for 2026-27). */
+export const LIMITS = OBBB_LIMITS;
 
 /** Reserved for any future UI banner about the OBBB limit table. */
 export const OBBB_TABLE_IS_PLACEHOLDER = false;

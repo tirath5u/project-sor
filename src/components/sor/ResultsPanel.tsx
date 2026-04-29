@@ -152,7 +152,7 @@ export function ResultsPanel({
             <thead>
               <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="px-2 py-2 font-medium">Term</th>
-                <th className="px-2 py-2 text-right font-medium">Term %</th>
+                <th className="px-2 py-2 text-right font-medium">Term % (EI)</th>
                 <th className="px-2 py-2 text-right font-medium">Final Sub</th>
                 <th className="px-2 py-2 text-right font-medium">Final Unsub</th>
               </tr>
@@ -343,6 +343,40 @@ export function ResultsPanel({
           </div>
         </div>
       ) : null}
+
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
+        <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+          COD 5.0d Compliance
+          <InfoTip label="About COD 5.0d Indicators">
+            Informational flags required for 2026-27 reporting. These do not affect the SOR
+            calculation but are captured for audit and case file reporting.
+          </InfoTip>
+        </h3>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/50 px-3 py-2 text-xs">
+            <span className="text-muted-foreground">Workforce Pell Eligible:</span>
+            <span
+              className={cn(
+                "font-medium",
+                results.workforcePellEligible ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              {results.workforcePellEligible ? "YES" : "NO"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/50 px-3 py-2 text-xs">
+            <span className="text-muted-foreground">Institutional Limit Applied:</span>
+            <span
+              className={cn(
+                "font-medium",
+                results.institutionalLimitApplied ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              {results.institutionalLimitApplied ? "YES" : "NO"}
+            </span>
+          </div>
+        </div>
+      </div>
 
       {results.warnings.length > 0 ? (
         <div className="rounded-2xl border border-warning/40 bg-warning/10 p-4">

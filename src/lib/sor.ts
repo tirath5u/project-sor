@@ -78,6 +78,8 @@ export interface TermInput {
   refundUnsub: number | null;
   coaCapSub: number;
   coaCapUnsub: number;
+  /** v21 - Enrollment Intensity (0-100%). COD 5.0d requirement. */
+  enrollmentIntensity: number;
   /** v19 - Grad PLUS (DLGP) per-term tracking (third parallel bucket). */
   paidGradPlus?: number | null;
   refundGradPlus?: number | null;
@@ -130,6 +132,10 @@ export interface SORInputs {
   otherAid?: number;
   /** v19 - Student-requested Grad PLUS amount (the borrowing ceiling). */
   requestedGradPlus?: number;
+  /** v21 - Workforce Pell indicator (informational). */
+  workforcePellEligible?: boolean;
+  /** v21 - Institutional Limit Applied indicator (informational). */
+  institutionalLimitApplied?: boolean;
 }
 
 export interface TermResult {
@@ -142,6 +148,8 @@ export interface TermResult {
   effectiveCredits: number; // actual if disbursed-mode locked, else planned
   termPct: number; // Step 4 (raw, can exceed 1)
   termPctCapped: number; // min(termPct, 1)
+  /** v21 - Enrollment Intensity (0-100%). */
+  enrollmentIntensity: number;
   intensityPct: number; // display intensity incl. carried LTHT credits
   shareSub: number; // Step 3 share
   shareUnsub: number;
@@ -265,6 +273,10 @@ export interface SORResults {
   perTermCapGradPlus: number;
   /** True when the OBBB table is still mirroring Legacy values (drives banner). */
   obbbTableIsPlaceholder: boolean;
+  /** v21 - Workforce Pell indicator. */
+  workforcePellEligible: boolean;
+  /** v21 - Institutional Limit Applied indicator. */
+  institutionalLimitApplied: boolean;
 }
 
 export const TERM_ORDER: TermKey[] = [
@@ -304,6 +316,7 @@ export function defaultTerm(key: TermKey): TermInput {
     refundUnsub: null,
     coaCapSub: 0,
     coaCapUnsub: 0,
+    enrollmentIntensity: 100,
     paidGradPlus: null,
     refundGradPlus: null,
     coaCapGradPlus: 0,
@@ -349,6 +362,8 @@ export function defaultInputs(): SORInputs {
     coa: 0,
     otherAid: 0,
     requestedGradPlus: 0,
+    workforcePellEligible: false,
+    institutionalLimitApplied: false,
   };
 }
 
@@ -668,8 +683,9 @@ export function resolveCaps(inp: SORInputs): {
     return { sub, unsub, combined: sub + unsub };
   }
   // v19 - Loan Limit Exception (grandfathered) flag selects which table to use.
-  // LLE = true → Legacy table; LLE = false → OBBB table (currently a Legacy mirror).
-  const useLegacy = inp.loanLimitException !== false; // default true (legacy) when undefined
+  // LLE = true → Legacy table; LLE = false → OBBB table ($50k Prof Caps).
+  // v21 - Default to OBBB (false) for 2026-27 if not explicitly set.
+  const useLegacy = inp.loanLimitException ?? (inp.awardYear === "2025-26");
   const lim = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied, useLegacy);
   return { sub: lim.sub, unsub: lim.unsub, combined: lim.sub + lim.unsub };
 }
@@ -1101,6 +1117,7 @@ function assemble(args: {
       effectiveCredits: eff,
       termPct,
       termPctCapped: Math.min(1, termPct),
+      enrollmentIntensity: t.enrollmentIntensity,
       intensityPct: intensityPct[i],
       shareSub: displaySub.share[i],
       shareUnsub: displayUnsub.share[i],
@@ -1226,6 +1243,8 @@ function assemble(args: {
     perTermCapUnsub,
     perTermCapGradPlus,
     obbbTableIsPlaceholder: OBBB_TABLE_IS_PLACEHOLDER,
+    workforcePellEligible: inp.workforcePellEligible ?? false,
+    institutionalLimitApplied: inp.institutionalLimitApplied ?? false,
   };
 }
 

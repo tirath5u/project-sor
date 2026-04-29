@@ -384,7 +384,7 @@ function SORCalculatorPage() {
         >
           {/* Row 1 - Award Year drives which Grade Levels are valid, so it
               MUST be selected first. */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <Label className="text-xs font-medium">Award Year</Label>
@@ -429,6 +429,44 @@ function SORCalculatorPage() {
                 <Switch
                   checked={Boolean(inputs.loanLimitException)}
                   onCheckedChange={(v) => update({ loanLimitException: v })}
+                />
+              </Label>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">Workforce Pell</Label>
+                <InfoTip>
+                  Indicates if the student is eligible for Workforce Pell. This is an informational
+                  indicator for 2026-27 COD 5.0d compliance.
+                </InfoTip>
+              </div>
+              <Label className="flex h-9 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-xs">
+                <span className="font-medium">
+                  {inputs.workforcePellEligible ? "Yes" : "No"}
+                </span>
+                <Switch
+                  checked={Boolean(inputs.workforcePellEligible)}
+                  onCheckedChange={(v) => update({ workforcePellEligible: v })}
+                />
+              </Label>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">Inst. Limit Applied</Label>
+                <InfoTip>
+                  Indicates if an institutional limit has been applied to this student. This is an
+                  informational indicator for 2026-27 COD 5.0d compliance.
+                </InfoTip>
+              </div>
+              <Label className="flex h-9 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-xs">
+                <span className="font-medium">
+                  {inputs.institutionalLimitApplied ? "Yes" : "No"}
+                </span>
+                <Switch
+                  checked={Boolean(inputs.institutionalLimitApplied)}
+                  onCheckedChange={(v) => update({ institutionalLimitApplied: v })}
                 />
               </Label>
             </div>
