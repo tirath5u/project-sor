@@ -294,8 +294,9 @@ export function ResultsPanel({
             <InfoTip label="About Grad PLUS">
               Third parallel disbursement bucket for graduate / professional borrowers. Capped at
               Cost of Attendance minus all other aid (Pell, grants, scholarships, Sub, Unsub).
-              Subject to the SOR % for award year 2026-27 and later. Grade Level is the only access
-              gate - the Loan Limit Exception (grandfathering) does NOT affect Grad PLUS access.
+              Subject to the SOR % for award year 2026-27 and later when the borrower is in the
+              legacy or interim-exception lane. This engine does not determine NSLDS aggregate or
+              lifetime remaining eligibility.
             </InfoTip>
           </h3>
           <div className="grid grid-cols-2 gap-2">

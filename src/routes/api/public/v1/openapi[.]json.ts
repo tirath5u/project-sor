@@ -397,6 +397,8 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                 description:
                   "Mirrors SORInputs. Numeric fields use strict validation (no silent 0 coercion). " +
                   "term.paidSub / paidUnsub: null means blank (no anchor), 0 means explicit zero anchor. " +
+                  "The engine does not calculate NSLDS aggregate limits, lifetime maximum eligibility, " +
+                  "Parent PLUS remaining eligibility, or consolidation allocation. " +
                   "The example below is the first published scenario from /api/public/v1/scenarios.",
                 example: exampleScenario.input,
               },

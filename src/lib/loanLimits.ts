@@ -242,14 +242,12 @@ export interface AggregateCap {
 }
 
 export function aggregateCap(
-  level: "undergrad_dependent" | "undergrad_independent" | "graduate",
+  level: "undergrad_dependent" | "undergrad_independent",
 ): AggregateCap {
   switch (level) {
     case "undergrad_dependent":
       return { sub: 23000, total: 31000 };
     case "undergrad_independent":
       return { sub: 23000, total: 57500 };
-    case "graduate":
-      return { sub: 65500, total: 138500 };
   }
 }

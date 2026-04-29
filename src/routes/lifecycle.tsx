@@ -1,6 +1,6 @@
 /**
- * /lifecycle - 4-year academic-career tracker. Each row = an AY; columns =
- * up to 5 terms. Tracks cumulative Sub/Unsub against OBBBA aggregate caps.
+ * /lifecycle - undergraduate academic-career tracker. Each row = an AY.
+ * Tracks cumulative Sub/Unsub against undergraduate aggregate caps.
  * Persisted in localStorage (browser-only - SSR-safe via lazy load).
  */
 import * as React from "react";
@@ -26,19 +26,19 @@ export const Route = createFileRoute("/lifecycle")({
       {
         name: "description",
         content:
-          "Track Title IV Sub/Unsub disbursements across a student's 4-year academic career against OBBBA aggregate caps.",
+          "Track undergraduate Title IV Sub/Unsub disbursements against aggregate caps.",
       },
       { property: "og:title", content: "Aid Lifecycle Tracker - SOR" },
       {
         property: "og:description",
-        content: "4-year cumulative aid tracker with OBBBA aggregate cap monitoring.",
+        content: "Undergraduate cumulative aid tracker with aggregate cap monitoring.",
       },
     ],
   }),
   component: LifecyclePage,
 });
 
-type Level = "undergrad_dependent" | "undergrad_independent" | "graduate";
+type Level = "undergrad_dependent" | "undergrad_independent";
 
 interface AYRow {
   id: string;
@@ -82,7 +82,7 @@ function LifecyclePage() {
     setRows(loadRows());
     try {
       const lvl = window.localStorage.getItem(STORAGE_KEY + ":level");
-      if (lvl === "undergrad_dependent" || lvl === "undergrad_independent" || lvl === "graduate") {
+      if (lvl === "undergrad_dependent" || lvl === "undergrad_independent") {
         setLevel(lvl);
       }
     } catch {
@@ -137,7 +137,7 @@ function LifecyclePage() {
                 Aid Lifecycle Tracker
               </h1>
               <p className="text-[11px] text-muted-foreground sm:text-xs">
-                Cumulative Sub/Unsub vs OBBBA aggregate caps · saved locally.
+                Cumulative undergraduate Sub/Unsub vs aggregate caps, saved locally.
               </p>
               <p className="text-[10px] italic text-muted-foreground/80 sm:text-[11px]">
                 built by{" "}
@@ -162,7 +162,6 @@ function LifecyclePage() {
               <SelectContent>
                 <SelectItem value="undergrad_dependent">Undergraduate · Dependent</SelectItem>
                 <SelectItem value="undergrad_independent">Undergraduate · Independent</SelectItem>
-                <SelectItem value="graduate">Graduate / Professional</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -236,9 +235,9 @@ function LifecyclePage() {
         </div>
 
         <p className="rounded-xl border border-border bg-card px-4 py-3 text-[11px] text-muted-foreground">
-          Aggregate caps per OBBBA: Undergraduate dependent ${cap.sub.toLocaleString()} Sub / $
-          {cap.total.toLocaleString()} total. Tracker is informational only; confirm against COD
-          before disbursing.
+          This tracker is limited to undergraduate Sub/Unsub aggregate caps. Graduate,
+          professional, Grad PLUS, Parent PLUS, and lifetime maximum checks require NSLDS remaining
+          limit data and are outside this public SOR tool.
         </p>
       </main>
     </div>
