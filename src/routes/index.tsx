@@ -416,8 +416,9 @@ function SORCalculatorPage() {
                 <Label className="text-xs font-medium">Loan Limit Exception</Label>
                 <InfoTip>
                   Grandfathered? Switches the Sub/Unsub annual limit table between the legacy
-                  (pre-OBBB) values and the OBBB 2026-27 values. Does NOT gate Grad PLUS - Grad PLUS
-                  access is determined by Grade Level only.
+                  values and the OBBB 2026-27 values. For 2026-27, Grad PLUS is only calculated in
+                  the legacy or interim-exception lane, and aggregate or lifetime limits must still
+                  be checked outside this SOR engine.
                 </InfoTip>
               </div>
               <Label className="flex h-9 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-xs">
@@ -539,7 +540,7 @@ function SORCalculatorPage() {
                   ? `Initial Max DLGP: ${fmtCurrency(results.initialGradPlus)}`
                   : "Grad/Professional only"
               }
-              tooltip="Student-requested Grad PLUS amount. Eligibility is COA minus all other estimated aid. Only available for graduate/professional Grade Levels."
+              tooltip="Student-requested Grad PLUS amount. This public engine only calculates Grad PLUS for graduate/professional borrowers in the legacy or interim-exception lane and does not determine NSLDS aggregate or lifetime remaining eligibility."
             />
           </div>
 

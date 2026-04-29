@@ -120,8 +120,8 @@ export interface SORInputs {
   terms: Record<TermKey, TermInput>;
   /** v19 - Award Year. SOR only applies to "2026-27"+. "2025-26" disables the SOR%. */
   awardYear?: "2025-26" | "2026-27";
-  /** v19 - Loan Limit Exception (grandfathered). Switches Sub/Unsub limit table only.
-   *  Does NOT gate Grad PLUS access. */
+  /** v19 - Loan Limit Exception (grandfathered). Switches Sub/Unsub limit table and gates
+   *  2026-27 Grad PLUS output in this public SOR engine. */
   loanLimitException?: boolean;
   /** v19 - Cost of Attendance (Section B). Drives Grad PLUS cap. */
   coa?: number;
@@ -1008,13 +1008,26 @@ function assemble(args: {
   }
 
   // v19 - Grad PLUS bucket (DLGP). Third parallel track alongside Sub/Unsub.
-  // Initial Max DLGP = MAX(0, MIN(requested, COA - otherAid - subBaseline - unsubBaseline))
-  // Gated on grade level (SLC >= 8), NOT on LLE/grandfathering (spec §4.3).
+  // Initial Max DLGP = MAX(0, MIN(requested, COA - otherAid - subBaseline - unsubBaseline)).
+  // Current public scope: 2026-27 Grad PLUS remains only in the legacy or
+  // interim-exception lane. This engine does not model NSLDS aggregate or
+  // lifetime remaining eligibility.
   const coa = Math.max(0, inp.coa ?? 0);
   const otherAid = Math.max(0, inp.otherAid ?? 0);
   const requestedGradPlus = Math.max(0, inp.requestedGradPlus ?? 0);
   const isGP = isGradOrProf(inp.gradeLevel);
-  const initialGradPlus = isGP
+  const gradPlusAllowed = isGP && (awardYear === "2025-26" || inp.loanLimitException === true);
+  if (requestedGradPlus > 0 && isGP && awardYear === "2026-27" && inp.loanLimitException !== true) {
+    warnings.push(
+      "Grad PLUS is not calculated for non-grandfathered 2026-27 borrowers in this public SOR engine. Apply NSLDS aggregate and lifetime-limit checks outside this calculation.",
+    );
+  }
+  if (requestedGradPlus > 0 && gradPlusAllowed) {
+    warnings.push(
+      "Grad PLUS output does not model OBBBA aggregate or lifetime remaining eligibility. Apply NSLDS limits before relying on the result.",
+    );
+  }
+  const initialGradPlus = gradPlusAllowed
     ? Math.max(0, Math.min(requestedGradPlus, coa - otherAid - subBaseline - unsubBaseline))
     : 0;
   const reducedGradPlus = round2(initialGradPlus * pct);
