@@ -47,6 +47,20 @@ the public `/api/public/v1/calculate` endpoint with `strictNumber` (no silent
 6. **Final totals.** Emit `totalFinalSub`, `totalFinalUnsub`,
    `initialGradPlus`, `reducedGradPlus`, and a `termResults[]` array.
 
+## Scope Limits
+
+The engine applies SOR after the caller has established the applicable annual
+eligibility ceiling. It does not calculate NSLDS remaining aggregate limits,
+lifetime maximum eligibility, Parent PLUS remaining eligibility, consolidation
+allocation, or final Grad PLUS eligibility.
+
+For 2026-27, Grad PLUS output is limited to graduate or professional borrowers
+in the legacy or interim-exception lane. If a broader product workflow supports
+Grad PLUS, it must apply NSLDS aggregate and lifetime limits before relying on
+this SOR result. Current source guidance says that when Unsubsidized plus
+requested Grad PLUS exceeds the lifetime ceiling, Grad PLUS should be reduced
+first, then Unsubsidized.
+
 ## Determinism & rounding
 
 All monetary outputs use the rounding rules described in

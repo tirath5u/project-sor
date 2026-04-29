@@ -78,8 +78,6 @@ export interface TermInput {
   refundUnsub: number | null;
   coaCapSub: number;
   coaCapUnsub: number;
-  /** v21 - Enrollment Intensity (0-100%). COD 5.0d requirement. */
-  enrollmentIntensity: number;
   /** v19 - Grad PLUS (DLGP) per-term tracking (third parallel bucket). */
   paidGradPlus?: number | null;
   refundGradPlus?: number | null;
@@ -122,8 +120,8 @@ export interface SORInputs {
   terms: Record<TermKey, TermInput>;
   /** v19 - Award Year. SOR only applies to "2026-27"+. "2025-26" disables the SOR%. */
   awardYear?: "2025-26" | "2026-27";
-  /** v19 - Loan Limit Exception (grandfathered). Switches Sub/Unsub limit table only.
-   *  Does NOT gate Grad PLUS access. */
+  /** v19 - Loan Limit Exception (grandfathered). Switches Sub/Unsub limit table and gates
+   *  2026-27 Grad PLUS output in this public SOR engine. */
   loanLimitException?: boolean;
   /** v19 - Cost of Attendance (Section B). Drives Grad PLUS cap. */
   coa?: number;
@@ -132,10 +130,6 @@ export interface SORInputs {
   otherAid?: number;
   /** v19 - Student-requested Grad PLUS amount (the borrowing ceiling). */
   requestedGradPlus?: number;
-  /** v21 - Workforce Pell indicator (informational). */
-  workforcePellEligible?: boolean;
-  /** v21 - Institutional Limit Applied indicator (informational). */
-  institutionalLimitApplied?: boolean;
 }
 
 export interface TermResult {
@@ -148,8 +142,6 @@ export interface TermResult {
   effectiveCredits: number; // actual if disbursed-mode locked, else planned
   termPct: number; // Step 4 (raw, can exceed 1)
   termPctCapped: number; // min(termPct, 1)
-  /** v21 - Enrollment Intensity (0-100%). */
-  enrollmentIntensity: number;
   intensityPct: number; // display intensity incl. carried LTHT credits
   shareSub: number; // Step 3 share
   shareUnsub: number;
@@ -273,10 +265,6 @@ export interface SORResults {
   perTermCapGradPlus: number;
   /** True when the OBBB table is still mirroring Legacy values (drives banner). */
   obbbTableIsPlaceholder: boolean;
-  /** v21 - Workforce Pell indicator. */
-  workforcePellEligible: boolean;
-  /** v21 - Institutional Limit Applied indicator. */
-  institutionalLimitApplied: boolean;
 }
 
 export const TERM_ORDER: TermKey[] = [
@@ -316,7 +304,6 @@ export function defaultTerm(key: TermKey): TermInput {
     refundUnsub: null,
     coaCapSub: 0,
     coaCapUnsub: 0,
-    enrollmentIntensity: 100,
     paidGradPlus: null,
     refundGradPlus: null,
     coaCapGradPlus: 0,
@@ -362,8 +349,6 @@ export function defaultInputs(): SORInputs {
     coa: 0,
     otherAid: 0,
     requestedGradPlus: 0,
-    workforcePellEligible: false,
-    institutionalLimitApplied: false,
   };
 }
 
@@ -1024,13 +1009,26 @@ function assemble(args: {
   }
 
   // v19 - Grad PLUS bucket (DLGP). Third parallel track alongside Sub/Unsub.
-  // Initial Max DLGP = MAX(0, MIN(requested, COA - otherAid - subBaseline - unsubBaseline))
-  // Gated on grade level (SLC >= 8), NOT on LLE/grandfathering (spec §4.3).
+  // Initial Max DLGP = MAX(0, MIN(requested, COA - otherAid - subBaseline - unsubBaseline)).
+  // Current public scope: 2026-27 Grad PLUS remains only in the legacy or
+  // interim-exception lane. This engine does not model NSLDS aggregate or
+  // lifetime remaining eligibility.
   const coa = Math.max(0, inp.coa ?? 0);
   const otherAid = Math.max(0, inp.otherAid ?? 0);
   const requestedGradPlus = Math.max(0, inp.requestedGradPlus ?? 0);
   const isGP = isGradOrProf(inp.gradeLevel);
-  const initialGradPlus = isGP
+  const gradPlusAllowed = isGP && (awardYear === "2025-26" || inp.loanLimitException === true);
+  if (requestedGradPlus > 0 && isGP && awardYear === "2026-27" && inp.loanLimitException !== true) {
+    warnings.push(
+      "Grad PLUS is not calculated for non-grandfathered 2026-27 borrowers in this public SOR engine. Apply NSLDS aggregate and lifetime-limit checks outside this calculation.",
+    );
+  }
+  if (requestedGradPlus > 0 && gradPlusAllowed) {
+    warnings.push(
+      "Grad PLUS output does not model OBBBA aggregate or lifetime remaining eligibility. Apply NSLDS limits before relying on the result.",
+    );
+  }
+  const initialGradPlus = gradPlusAllowed
     ? Math.max(0, Math.min(requestedGradPlus, coa - otherAid - subBaseline - unsubBaseline))
     : 0;
   const reducedGradPlus = round2(initialGradPlus * pct);
@@ -1117,7 +1115,6 @@ function assemble(args: {
       effectiveCredits: eff,
       termPct,
       termPctCapped: Math.min(1, termPct),
-      enrollmentIntensity: t.enrollmentIntensity,
       intensityPct: intensityPct[i],
       shareSub: displaySub.share[i],
       shareUnsub: displayUnsub.share[i],
@@ -1243,8 +1240,6 @@ function assemble(args: {
     perTermCapUnsub,
     perTermCapGradPlus,
     obbbTableIsPlaceholder: OBBB_TABLE_IS_PLACEHOLDER,
-    workforcePellEligible: inp.workforcePellEligible ?? false,
-    institutionalLimitApplied: inp.institutionalLimitApplied ?? false,
   };
 }
 

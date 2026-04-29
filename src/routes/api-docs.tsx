@@ -320,6 +320,12 @@ function ApiDocsPage() {
               This is an educational and validation tool, not an official ED
               calculator, legal advice, or an institutional policy substitute.
             </p>
+            <p>
+              The SOR API does not calculate NSLDS remaining aggregate limits,
+              lifetime maximum eligibility, Parent PLUS remaining eligibility, or
+              consolidation allocation. Apply those ceilings before relying on a
+              graduate, professional, or Grad PLUS result.
+            </p>
           </InfoSection>
         </section>
 

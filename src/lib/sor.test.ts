@@ -339,13 +339,15 @@ describe("SOR engine - v19 Grad PLUS bucket", () => {
     expect(t1.finalGradPlus + t2.finalGradPlus).toBe(14500);
   });
 
-  it("Scenario 8 - LLE = false (non-grandfathered) does NOT zero Grad PLUS", () => {
+  it("Scenario 8 - LLE = false (non-grandfathered) zeros Grad PLUS for 2026-27 public scope", () => {
     const grandfathered = calculateSOR(gradTwoTerm({ loanLimitException: true }));
     const nonGrandfathered = calculateSOR(gradTwoTerm({ loanLimitException: false }));
-    // Placeholder OBBB table mirrors Legacy → identical result
-    expect(nonGrandfathered.initialGradPlus).toBe(grandfathered.initialGradPlus);
-    expect(nonGrandfathered.reducedGradPlus).toBe(grandfathered.reducedGradPlus);
-    expect(nonGrandfathered.initialGradPlus).toBeGreaterThan(0);
+    expect(grandfathered.initialGradPlus).toBeGreaterThan(0);
+    expect(nonGrandfathered.initialGradPlus).toBe(0);
+    expect(nonGrandfathered.reducedGradPlus).toBe(0);
+    expect(nonGrandfathered.warnings.some((w) => w.includes("Grad PLUS is not calculated"))).toBe(
+      true,
+    );
   });
 
   it("Scenario 9 - Undergrad with Requested Grad PLUS = $5,000 returns 0", () => {

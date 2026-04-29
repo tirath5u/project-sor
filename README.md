@@ -52,6 +52,8 @@ A reference implementation of the Schedule of Reductions math for award years 20
 
 Not an official U.S. Department of Education publication. Not an Anthology or Ellucian product. Not legal or compliance advice. No real student data is or will ever be in this repo. All scenarios use synthetic personas or federally-published examples.
 
+This calculator is an SOR engine. It does not determine NSLDS remaining aggregate eligibility, lifetime maximum eligibility, Parent PLUS remaining eligibility, consolidation allocation, or final Grad PLUS eligibility. Those ceilings must be resolved before relying on the SOR output.
+
 Always validate against the current COD Technical Reference Volume 2 and the most recent ED Electronic Announcement before making a disbursement decision.
 
 ---
@@ -59,6 +61,8 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 ## What it does
 
 - **Reduced annual Sub/Unsub baselines** computed from grade level, dependency status, Parent PLUS denial, and optional override caps.
+- **Graduate and professional Sub/Unsub annual caps** including the 2026-27 professional annual Unsub cap for non-grandfathered borrowers.
+- **Grad PLUS preview only for legacy or interim-exception scenarios.** The engine does not model NSLDS aggregate or lifetime remaining eligibility.
 - **Per-term disbursement amounts** with proper rounding-to-dollar correction so the term sum equals the reduced annual amount (no orphan pennies).
 - **History-anchored disbursement view:** committed Paid Sub / Paid Unsub per term anchor independently and the engine redistributes the remaining pool only across future eligible terms.
 - **Case-file PDF export** of inputs, calculated baselines, per-term disbursements, and the 6-step walkthrough.
@@ -166,6 +170,7 @@ A second verification path is executable contract testing: CI pulls the document
 - **Round to dollar at the term level**, not the annual level. Per-term values are integer dollars; the rounding residual lands in the last eligible term.
 - **Mid-cycle disbursement requires history.** Once any term is marked Disbursed, the engine treats that term's Paid amounts as locked and only adjusts future terms.
 - **Grad/Prof has no Sub.** Sub baseline is forced to 0 for graduate and professional grade levels regardless of override.
+- **Aggregate and lifetime checks come first.** For graduate, professional, Grad PLUS, Parent PLUS, or lifetime-limit-sensitive scenarios, apply NSLDS remaining limits before using this SOR engine. If Unsub plus requested Grad PLUS exceeds the lifetime ceiling, source guidance says reduce Grad PLUS first, then Unsub.
 
 ---
 
