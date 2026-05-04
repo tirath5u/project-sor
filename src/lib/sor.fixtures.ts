@@ -274,6 +274,189 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   },
 ];
 
+// ---------- Department proportional distribution evidence (caveated) ----------
+// Source: ED proportional distribution workbook (psr-008). The workbook labels
+// say "FT credits" but the formulas actually weight by enrolled credits. We
+// mark these `directional` because the workbook itself is internally
+// inconsistent - the label/formula conflict is documented in psr-008.
+
+PARITY_FIXTURES.push(
+  {
+    id: "fixture-dept-25-36",
+    description:
+      "Dept 25/36 rounding - proportional, 2 terms, 25 enrolled across 36 AY FT. Tests whole-dollar rounding at the boundary.",
+    sourceRefs: ["psr-008"],
+    sourceStatus: "preliminary",
+    assertionLevel: "directional",
+    asOfDate: "2026-05-04",
+    input: build(
+      {
+        numStandardTerms: 2,
+        ayFtCredits: 36,
+        gradeLevel: "g1",
+        dependency: "dependent",
+        annualNeed: 3500,
+        distributionModel: "proportional",
+      },
+      {
+        term1: { enabled: true, ftCredits: 18, enrolledCredits: 12 },
+        term2: { enabled: true, ftCredits: 18, enrolledCredits: 13 },
+      },
+    ),
+    expected: {
+      sorApplicable: true,
+    },
+  },
+  {
+    id: "fixture-dept-14-14-6",
+    description:
+      "Dept 14/14/6 - proportional, 3 terms with uneven enrolled credits (14/14/6). Verifies enrolled-credit weighting across 3 terms.",
+    sourceRefs: ["psr-008"],
+    sourceStatus: "preliminary",
+    assertionLevel: "directional",
+    asOfDate: "2026-05-04",
+    input: build(
+      {
+        numStandardTerms: 3,
+        ayFtCredits: 36,
+        gradeLevel: "g2",
+        dependency: "independent",
+        annualNeed: 10500,
+        distributionModel: "proportional",
+      },
+      {
+        term1: { enabled: true, ftCredits: 12, enrolledCredits: 14 },
+        term2: { enabled: true, ftCredits: 12, enrolledCredits: 14 },
+        term3: { enabled: true, ftCredits: 12, enrolledCredits: 6 },
+      },
+    ),
+    expected: {
+      sorApplicable: true,
+    },
+  },
+  {
+    id: "fixture-dept-3-15-full-year",
+    description:
+      "Dept 3/15 full-year - proportional, Fall 3 (below half-time) + Spring 15 (overload), 24 AY FT. Tests LTHT + balloon in proportional model.",
+    sourceRefs: ["psr-008"],
+    sourceStatus: "preliminary",
+    assertionLevel: "directional",
+    asOfDate: "2026-05-04",
+    input: build(
+      {
+        numStandardTerms: 2,
+        ayFtCredits: 24,
+        gradeLevel: "g1",
+        dependency: "dependent",
+        annualNeed: 3500,
+        distributionModel: "proportional",
+      },
+      {
+        term1: { enabled: true, ftCredits: 12, enrolledCredits: 3 },
+        term2: { enabled: true, ftCredits: 12, enrolledCredits: 15 },
+      },
+    ),
+    expected: {
+      sorApplicable: true,
+    },
+  },
+  {
+    id: "fixture-dept-3-15-spring-only",
+    description:
+      "Dept 3/15 spring-only - proportional, Fall disabled, Spring 15 enrolled, 12 AY FT. Single eligible term takes full annual.",
+    sourceRefs: ["psr-008"],
+    sourceStatus: "preliminary",
+    assertionLevel: "directional",
+    asOfDate: "2026-05-04",
+    input: build(
+      {
+        numStandardTerms: 2,
+        ayFtCredits: 12,
+        gradeLevel: "g1",
+        dependency: "dependent",
+        annualNeed: 3500,
+        distributionModel: "proportional",
+      },
+      {
+        term1: { enabled: false, ftCredits: 12, enrolledCredits: 0 },
+        term2: { enabled: true, ftCredits: 12, enrolledCredits: 15 },
+      },
+    ),
+    expected: {
+      sorApplicable: true,
+    },
+  },
+  {
+    id: "fixture-dept-prior-term-drop",
+    description:
+      "Dept prior-term drop - proportional, disbursement mode. Fall was paid at 12 credits but actual was 6 (dropped after census). Spring 12 planned.",
+    sourceRefs: ["psr-008"],
+    sourceStatus: "preliminary",
+    assertionLevel: "directional",
+    asOfDate: "2026-05-04",
+    input: build(
+      {
+        viewMode: "disbursement",
+        numStandardTerms: 2,
+        ayFtCredits: 24,
+        gradeLevel: "g1",
+        dependency: "dependent",
+        annualNeed: 5500,
+        distributionModel: "proportional",
+      },
+      {
+        term1: {
+          enabled: true,
+          ftCredits: 12,
+          enrolledCredits: 12,
+          disbursed: true,
+          actualCredits: 6,
+          paidSub: 1375,
+          paidUnsub: 500,
+        },
+        term2: { enabled: true, ftCredits: 12, enrolledCredits: 12 },
+      },
+    ),
+    expected: {
+      sorApplicable: true,
+    },
+  },
+  {
+    id: "fixture-dept-full-time-baseline",
+    description:
+      "Dept full-time baseline - proportional, both terms at FT (12/12), 24 AY FT. SOR% = 100%, no reduction. Proportional = equal when weights are identical.",
+    sourceRefs: ["psr-008"],
+    sourceStatus: "preliminary",
+    assertionLevel: "directional",
+    asOfDate: "2026-05-04",
+    input: build(
+      {
+        numStandardTerms: 2,
+        ayFtCredits: 24,
+        gradeLevel: "g1",
+        dependency: "dependent",
+        annualNeed: 5500,
+        distributionModel: "proportional",
+      },
+      {
+        term1: { enabled: true, ftCredits: 12, enrolledCredits: 12 },
+        term2: { enabled: true, ftCredits: 12, enrolledCredits: 12 },
+      },
+    ),
+    expected: {
+      sorApplicable: true,
+      reducedSub: 3500,
+      reducedUnsub: 2000,
+      totalFinalSub: 3500,
+      totalFinalUnsub: 2000,
+      terms: {
+        term1: { finalSub: 1750, finalUnsub: 1000 },
+        term2: { finalSub: 1750, finalUnsub: 1000 },
+      },
+    },
+  },
+);
+
 /** Public-facing serialization (used by /api/public/v1/scenarios). */
 export function serializeFixturesForPublic() {
   return PARITY_FIXTURES.map((f) => ({

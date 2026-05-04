@@ -492,3 +492,177 @@ describe("SOR engine - Jennifer-scope regressions", () => {
     ).toBe(true);
   });
 });
+
+describe("SOR engine - Department proportional distribution regressions", () => {
+  it("25/36 rounding - proportional split sums to reduced annual", () => {
+    const inp = defaultInputs();
+    inp.distributionModel = "proportional";
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 36;
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.annualNeed = 3500;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 18, enrolledCredits: 12 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 18, enrolledCredits: 13 };
+    const r = calculateSOR(inp);
+    // SOR% = (12+13)/36 = 69%
+    expect(r.sorPctRounded).toBe(0.69);
+    expect(r.totalFinalSub).toBe(r.reducedSub);
+    // Proportional split by enrolled credits 12:13
+    const t1 = r.termResults.find((t) => t.key === "term1")!;
+    const t2 = r.termResults.find((t) => t.key === "term2")!;
+    expect(t1.finalSub + t2.finalSub).toBe(r.reducedSub);
+    // t2 should get slightly more (13 > 12)
+    expect(t2.finalSub).toBeGreaterThanOrEqual(t1.finalSub);
+  });
+
+  it("14/14/6 - three terms, proportional enrolled-credit weighting", () => {
+    const inp = defaultInputs();
+    inp.distributionModel = "proportional";
+    inp.numStandardTerms = 3;
+    inp.ayFtCredits = 36;
+    inp.gradeLevel = "g2";
+    inp.dependency = "independent";
+    inp.annualNeed = 10500;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 14 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 14 };
+    inp.terms.term3 = { ...inp.terms.term3, enabled: true, ftCredits: 12, enrolledCredits: 6 };
+    const r = calculateSOR(inp);
+    // SOR% = (14+14+6)/36 = 94%
+    expect(r.sorPctRounded).toBe(0.94);
+    const t1 = r.termResults.find((t) => t.key === "term1")!;
+    const t2 = r.termResults.find((t) => t.key === "term2")!;
+    const t3 = r.termResults.find((t) => t.key === "term3")!;
+    // t1 and t2 should be equal (same enrolled credits)
+    expect(t1.finalSub).toBe(t2.finalSub);
+    // t3 should get less (6 enrolled vs 14)
+    expect(t3.finalSub).toBeLessThan(t1.finalSub);
+    expect(r.totalFinalSub).toBe(r.reducedSub);
+  });
+
+  it("3/15 full-year - Fall LTHT + Spring overload, proportional", () => {
+    const inp = defaultInputs();
+    inp.distributionModel = "proportional";
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 24;
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.annualNeed = 3500;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 3 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 15 };
+    const r = calculateSOR(inp);
+    const t1 = r.termResults.find((t) => t.key === "term1")!;
+    const t2 = r.termResults.find((t) => t.key === "term2")!;
+    // Fall is below half-time → ineligible
+    expect(t1.eligible).toBe(false);
+    expect(t1.finalSub).toBe(0);
+    // Spring takes the full annual
+    expect(t2.finalSub).toBe(r.reducedSub);
+    // LTHT warning should be emitted
+    expect(r.warnings.some((w) => w.includes("Less-than-half-time") && w.includes("Fall"))).toBe(true);
+  });
+
+  it("3/15 spring-only - single enabled term takes full annual", () => {
+    const inp = defaultInputs();
+    inp.distributionModel = "proportional";
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 12;
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.annualNeed = 3500;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: false, ftCredits: 12, enrolledCredits: 0 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 15 };
+    const r = calculateSOR(inp);
+    const t2 = r.termResults.find((t) => t.key === "term2")!;
+    expect(t2.finalSub).toBe(r.reducedSub);
+    expect(r.sorPctRounded).toBe(1);
+  });
+
+  it("prior-term drop - disbursement with dropped credits redistributes", () => {
+    const inp = defaultInputs();
+    inp.viewMode = "disbursement";
+    inp.distributionModel = "proportional";
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 24;
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.annualNeed = 5500;
+    inp.terms.term1 = {
+      ...inp.terms.term1,
+      enabled: true,
+      ftCredits: 12,
+      enrolledCredits: 12,
+      disbursed: true,
+      actualCredits: 6,
+      paidSub: 1375,
+      paidUnsub: 500,
+    };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+    const r = calculateSOR(inp);
+    const t1 = r.termResults.find((t) => t.key === "term1")!;
+    const t2 = r.termResults.find((t) => t.key === "term2")!;
+    // Fall locked at paid amounts
+    expect(t1.finalSub).toBe(1375);
+    expect(t1.finalUnsub).toBe(500);
+    // Spring gets remainder
+    expect(t2.finalSub).toBe(r.reducedSub - 1375);
+    expect(t2.finalUnsub).toBe(r.reducedUnsub - 500);
+  });
+
+  it("full-time baseline - proportional = equal when weights match", () => {
+    const inp = defaultInputs();
+    inp.distributionModel = "proportional";
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 24;
+    inp.gradeLevel = "g1";
+    inp.dependency = "dependent";
+    inp.annualNeed = 5500;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+    const r = calculateSOR(inp);
+    expect(r.sorPctRounded).toBe(1);
+    const t1 = r.termResults.find((t) => t.key === "term1")!;
+    const t2 = r.termResults.find((t) => t.key === "term2")!;
+    expect(t1.finalSub).toBe(1750);
+    expect(t2.finalSub).toBe(1750);
+    expect(t1.finalUnsub).toBe(1000);
+    expect(t2.finalUnsub).toBe(1000);
+  });
+});
+
+describe("SOR engine - LTHT warnings", () => {
+  it("emits LT-HT warning for below-half-time terms", () => {
+    const inp = defaultInputs();
+    inp.annualNeed = 5500;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 3 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+    const r = calculateSOR(inp);
+    expect(r.warnings.some((w) => w.includes("Less-than-half-time") && w.includes("LT-HT"))).toBe(true);
+    expect(r.warnings.some((w) => w.includes("Fall"))).toBe(true);
+  });
+
+  it("does not emit LT-HT warning when all terms are at or above half-time", () => {
+    const inp = defaultInputs();
+    inp.annualNeed = 5500;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 6 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 9 };
+    const r = calculateSOR(inp);
+    expect(r.warnings.some((w) => w.includes("Less-than-half-time"))).toBe(false);
+  });
+
+  it("LT-HT warning lists multiple terms when applicable", () => {
+    const inp = defaultInputs();
+    inp.numStandardTerms = 3;
+    inp.ayFtCredits = 36;
+    inp.annualNeed = 5500;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 3 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+    inp.terms.term3 = { ...inp.terms.term3, enabled: true, ftCredits: 12, enrolledCredits: 4 };
+    const r = calculateSOR(inp);
+    const lthtWarning = r.warnings.find((w) => w.includes("Less-than-half-time"));
+    expect(lthtWarning).toBeDefined();
+    expect(lthtWarning).toContain("Fall");
+    expect(lthtWarning).toContain("Term 3");
+    expect(lthtWarning).toContain("these terms");
+  });
+});

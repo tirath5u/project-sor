@@ -365,9 +365,9 @@ export const SCENARIOS: Scenario[] = [
     student:
       "Independent sophomore with $10,500 of need, taking 12 credits in Fall (FT = 12) and 6 in Spring (FT = 6).",
     whatsSpecial:
-      "Spring is a shorter term with a lower FT count. The proportional model weights each term by its FT credits, so Fall gets ~⅔ and Spring ~⅓.",
+      "Spring is a shorter term with a lower FT count. The proportional model weights each term by its effective enrolled credits, so Fall gets ~⅔ and Spring ~⅓.",
     summary: "Independent G2 · Need $10,500 · Fall 12 (FT 12) / Spring 6 (FT 6) · 18 AY FT.",
-    expected: "AY % = 100 %. Equal model would split 50 / 50; proportional gives roughly ⅔ / ⅓.",
+    expected: "AY % = 100 %. Equal model would split 50 / 50; proportional (enrolled-credit-weighted) gives roughly ⅔ / ⅓.",
     build: () =>
       mk(
         {
