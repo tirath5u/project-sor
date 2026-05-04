@@ -268,7 +268,7 @@ export function exportSORCaseFile({
   const N = results.eligibleTermsCount;
   const equalSubPer = N > 0 ? Math.floor(results.reducedSub / N) : 0;
   const equalUnsubPer = N > 0 ? Math.floor(results.reducedUnsub / N) : 0;
-  const eligibleFtSum = eligibleTerms.reduce((s, t) => s + t.ftCredits, 0);
+  const eligibleCreditSum = eligibleTerms.reduce((s, t) => s + t.effectiveCredits, 0);
   let step3Formula = "";
   if (N > 0) {
     if (inputs.distributionModel === "equal") {
@@ -282,11 +282,11 @@ export function exportSORCaseFile({
         ".";
     } else {
       step3Formula =
-        ` Proportional model: each term's share = pool x (term FT / ${eligibleFtSum} eligible-term FT). ` +
+        ` Proportional model: each term's share = pool x (term effective enrolled credits / ${eligibleCreditSum} eligible-term effective enrolled credits). ` +
         eligibleTerms
           .map(
             (t) =>
-              `${t.label} Sub = ${fmtCurrency(results.reducedSub)} x (${t.ftCredits}/${eligibleFtSum}) = ${fmtCurrency(t.shareSub)}`,
+              `${t.label} Sub = ${fmtCurrency(results.reducedSub)} x (${t.effectiveCredits}/${eligibleCreditSum}) = ${fmtCurrency(t.shareSub)}`,
           )
           .join("; ") +
         ".";

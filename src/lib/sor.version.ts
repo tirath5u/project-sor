@@ -11,9 +11,9 @@
  *   Falls back to "local-dev" outside CI.
  */
 
-export const ENGINE_VERSION = "1.0.0" as const;
+export const ENGINE_VERSION = "1.0.1" as const;
 export const POLICY_YEAR = "2026-27" as const;
-export const POLICY_SNAPSHOT_DATE = "2026-04-25" as const;
+export const POLICY_SNAPSHOT_DATE = "2026-05-04" as const;
 
 export const SOURCE_COMMIT: string =
   (typeof import.meta !== "undefined" &&
