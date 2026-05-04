@@ -137,12 +137,12 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
         <StepHeader
           n={3}
           title="Per-term Share of the Annual Limit"
-          tip="Equal = annual ÷ N eligible terms. Proportional = weighted by each term's FT credits. Equal is the regulatory default."
+          tip="Equal = annual ÷ N eligible terms. Proportional = weighted by each term's effective enrolled credits (not FT credits). Equal is the regulatory default."
         />
         <p className="mb-2 text-xs text-muted-foreground">
           {inputs.distributionModel === "equal"
             ? `Equal model: pool ÷ N eligible terms. Whole dollars; the last term absorbs any remainder.`
-            : `Proportional model: each term's share = pool × (term FT ÷ Σ eligible-term FT).`}
+            : `Proportional model: each term's share = pool × (term effective enrolled credits ÷ Σ remaining eligible enrolled credits). The Department workbook labels say "FT credits" but the formulas weight by enrolled credits; this engine follows the formulas.`}
         </p>
         {N > 0 ? (
           <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
