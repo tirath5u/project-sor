@@ -13,6 +13,7 @@ here** - no internal documents, spreadsheet paths, or private URLs.
 | `psr-005` | **2026-27 COD Technical Reference** - preliminary OBBBA guidance.         | pending-federal-guidance |
 | `psr-006` | **34 CFR 685.203(d)** - Graduate / professional limits.                   | stable                   |
 | `psr-007` | **OBBBA** - One Big Beautiful Bill Act, loan-limit provisions.            | pending-federal-guidance |
+| `psr-008` | **ED Proportional Distribution Workbook** - Department rounding examples for enrolled-credit-weighted term shares (25/36, 14/14/6, 3/15, prior-term drop). Labels and formulas conflict; evidence is caveated. | pending-federal-guidance |
 
 ## How to add a new entry
 
