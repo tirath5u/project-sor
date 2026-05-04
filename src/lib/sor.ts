@@ -1178,6 +1178,16 @@ function assemble(args: {
     (t, i) => finalSnap.eligible[i] && !t.disbursed,
   ).length;
 
+  // LTHT (Less-Than-Half-Time) warnings - emit from the engine so all
+  // consumers (UI, API, PDF) share the same guidance without duplicating logic.
+  const lthtTerms = termResults.filter((t) => t.enabled && t.status === "below_half_time");
+  if (lthtTerms.length > 0) {
+    const names = lthtTerms.map((t) => t.label).join(", ");
+    warnings.push(
+      `Less-than-half-time (LT-HT): ${names} — enrolled credits are below the half-time threshold. The student is ineligible for disbursement in ${lthtTerms.length === 1 ? "this term" : "these terms"}. LT-HT credits ${inp.countLthtInAyPct ? "are" : "are not"} counted in the AY enrollment percentage numerator.`,
+    );
+  }
+
   return {
     enrolledSumAll: enrolledSum,
     ftSumAll: ayFtUsed,
