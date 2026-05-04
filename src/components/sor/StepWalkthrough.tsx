@@ -40,7 +40,8 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
   const equalUnsubPer = N > 0 ? Math.floor(results.reducedUnsub / N) : 0;
   // Proportional model - sum of FT credits across eligible terms is the
   // weighting denominator.
-  const eligibleFtSum = eligible.reduce((s, t) => s + t.ftCredits, 0);
+  // Proportional model uses effective enrolled credits as weights.
+  const eligibleEnrolledSum = eligible.reduce((s, t) => s + t.effectiveCredits, 0);
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
@@ -175,7 +176,7 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
               eligible.map((t) => (
                 <Eq key={t.key}>
                   <div className="text-muted-foreground">{t.label} Sub share:</div>
-                  {fmtCurrency(results.reducedSub)} × ({t.ftCredits} ÷ {eligibleFtSum}) ={" "}
+                  {fmtCurrency(results.reducedSub)} × ({t.effectiveCredits} ÷ {eligibleEnrolledSum}) ={" "}
                   <span className="font-semibold text-primary">{fmtCurrency(t.shareSub)}</span>
                 </Eq>
               ))
