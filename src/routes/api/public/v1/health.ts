@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import "@tanstack/react-start";
 import {
   ENGINE_VERSION,
   POLICY_YEAR,

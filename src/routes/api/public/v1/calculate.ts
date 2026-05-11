@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import "@tanstack/react-start";
 import { CalculateInputSchema } from "@/lib/sor.schema";
 import { calculateSOR, type SORInputs } from "@/lib/sor";
 import {
