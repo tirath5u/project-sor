@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import "@tanstack/react-start";
 import { serializeFixturesForPublic } from "@/lib/sor.fixtures";
 import { ENGINE_VERSION, POLICY_YEAR } from "@/lib/sor.version";
 import {
@@ -12,8 +13,9 @@ const ALLOWED_METHODS = ["GET", "OPTIONS"];
 
 export const Route = createFileRoute("/api/public/v1/scenarios")({
   server: {
+    handlers: {
       OPTIONS: async () => corsPreflightResponse(),
-      GET: async ({ request }: { request: Request }) => {
+      GET: async ({ request }) => {
         const requestId = resolveRequestId(request);
         const scenarios = serializeFixturesForPublic();
         return jsonResponse(
@@ -27,9 +29,10 @@ export const Route = createFileRoute("/api/public/v1/scenarios")({
           { headers: { "X-Request-Id": requestId } },
         );
       },
-      POST: async ({ request }: { request: Request }) => {
+      POST: async ({ request }) => {
         const requestId = resolveRequestId(request);
         return methodNotAllowedResponse(ALLOWED_METHODS, requestId);
       },
+    },
   },
 });

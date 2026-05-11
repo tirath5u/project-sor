@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import "@tanstack/react-start";
 import {
   ENGINE_VERSION,
   POLICY_SNAPSHOT_DATE,
@@ -11,6 +12,7 @@ import { calculateSOR } from "@/lib/sor";
 
 export const Route = createFileRoute("/api/public/v1/openapi.json")({
   server: {
+    handlers: {
       OPTIONS: async () => corsPreflightResponse(),
       GET: async () => {
         const exampleScenario = PARITY_FIXTURES[0];
@@ -556,5 +558,6 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
         };
         return jsonResponse(spec);
       },
+    },
   },
 });
