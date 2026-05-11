@@ -1,66 +1,75 @@
-# V20 — Public SOR Calculation API (Final Comprehensive Plan)
+## Locked decisions
 
-## Goal
+1. **Site:** new standalone Lovable project at `cod.myproduct.life`. SOR untouched.
+2. **Brand (your real myproduct.life brand):**
+   - **Primary:** light maroon
+   - **Surface:** white / cream
+   - **Supporting:** warm neutrals + a soft complementary accent (muted gold or dusty rose, picked to sit well on cream without competing with maroon)
+   - SOR purple + gold tokens are NOT used here. We only switch to the Ellucian palette on a future page if you tell me "this one is for Ellucian clients."
+3. **Gate password:** `cod2026` (one shared password for any vendor specific artifact).
+4. **Future siblings:** room reserved under `myproduct.life` for One Big Beautiful Bill, Warrior Bits, etc.
 
-Expose the V19 SOR engine as a free, public, portfolio-grade HTTP API on `sor.myproduct.life` with full provenance, spreadsheet parity testing, an open challenge workflow, and a transparent build narrative. Push the repo to GitHub so practitioners, vendors, and reviewers can inspect, use, and challenge the math.
+## Site map
 
-## Award-Year Support Matrix
+```text
+cod.myproduct.life
+├─ /                                COD Updates hub (lists cycles)
+├─ /2026-27                         2026-27 cycle landing + your story
+│   ├─ /xml-schema-diff             public
+│   ├─ /xml-sample-comparison       public
+│   ├─ /vol6-changelog              public
+│   ├─ /vol6-explorer               public
+│   └─ /message-class-rules         GATED (cod2026)
+└─ (future)  /2027-28, /obbb, /warrior-bits ...
+```
 
-- **2025-26**: Supported (stable — anchored to 34 CFR 685.203).
-- **2026-27**: Supported as `POLICY_YEAR` default, with OBBBA-affected items flagged `pending-federal-guidance` until ED rulemaking finalizes.
-- **OBBBA behavior**: Preliminary; surfaced via `meta.policyStatus` per scenario, never silently applied.
+## The 5 artifacts: friendly names + your story for each
 
-## Stage 1 — Contract & Parity (no API surface yet)
+### 1. COD XML Schema Diff: 2025-26 vs 2026-27
+**Source:** `2026-02-28-xml-schema-diff-2025-26-vs-2026-27.html` · **URL:** `/2026-27/xml-schema-diff` · **Public**
 
-**New files**
+> Every COD annual update lands as a new XML schema, and every team I have worked with reads that schema differently the first time. So I sat with both schemas side by side and built a single view that calls out exactly which elements were added, which moved, which were renamed, and which got new validation rules. The point was not to replace the spec, the point was to make a 200 page change feel like a 20 minute read. Engineering used it to scope, QA used it to plan test data, and Implementation used it to talk to clients without having to translate XSD in their head.
 
-- `src/lib/sor.version.ts` — exports `ENGINE_VERSION` (semver, code-driven), `POLICY_YEAR` (`"2026-27"`), `POLICY_SNAPSHOT_DATE`, `SOURCE_COMMIT` (from `VITE_COMMIT_SHA` with `"local-dev"` fallback).
-- `src/lib/sor.schema.ts` — Zod schemas for `CalculateInput` / `CalculateOutput`. Implements `strictNumber` helper that rejects empty strings, `null`, and whitespace for required numeric fields (no silent `0` coercion).
-- `src/lib/sor.fixtures.ts` — **single source of truth** for canonical scenarios. Each fixture: `id`, `description`, `input`, `expectedOutput`, `sourceRefs: ["psr-001", ...]` (public-source-register IDs only — no internal spreadsheet paths).
-- `src/lib/sor.parity.test.ts` — Vitest suite running every fixture through `runSOR()` and asserting field-level equality with expected outputs.
+### 2. COD XML Sample Payload Comparison
+**Source:** `Xml_Sample_Differences_Dashboard.html` · **URL:** `/2026-27/xml-sample-comparison` · **Public**
 
-**Acceptance**: `bun test` passes all parity fixtures; schemas reject malformed inputs; `ENGINE_VERSION` and `POLICY_YEAR` are decoupled.
+> Schema diffs tell you the shape, sample payloads tell you the truth. After the schema diff went out, the next question was always the same: show me a real before and after. So I built a side by side viewer for the COD sample XML payloads, with the changed nodes highlighted inline. No more two browser tabs and a coffee. This one was the most popular with the test data folks because they could finally agree on what a 26-27 disbursement record actually looks like.
 
-## Stage 2 — Public API Surface
+### 3. COD Vol. 6 Import Report Changelog (2026-27)
+**Source:** `2026-03-03-COD-Vol6-Changes-Visual.html` · **URL:** `/2026-27/vol6-changelog` · **Public**
 
-**New files** (TanStack Start file-route handlers under `/api/public/v1/`)
+> Vol. 6 is where the import report changes live, and it is the document the most people pretend to have read. I worked through the 26-27 edition end to end and turned it into a visual changelog: what was added, what shifted, what is new vs cosmetic, with the regulatory tag and effective dates next to each change. The version of this I shipped internally cut Vol. 6 walkthrough meetings from an hour to about fifteen minutes, because nobody had to ask "wait, which page" anymore.
 
-- `src/routes/api/public/v1/calculate.ts` — `POST` runs validated input through engine; returns `{ data, meta }`. `meta.citations` populated **only** when engine maps scenario to specific rule tags; otherwise `meta.sourceSet: ["direct-loan-sor-v1"]`.
-- `src/routes/api/public/v1/scenarios.ts` — `GET` serializes `sor.fixtures.ts` to JSON dynamically (no duplicate file).
-- `src/routes/api/public/v1/health.ts` — `GET` returns `{ status, engineVersion, policyYear, sourceCommit }`.
-- `src/routes/api/public/v1/openapi.json.ts` — `GET` serves OpenAPI 3.1 spec generated from Zod schemas.
-- `src/lib/api-errors.ts` — uniform `{ error: { code, message, details? } }` envelope.
-- `src/lib/rate-limit.ts` — token-bucket using daily-salted-hash of IP (raw IP never logged or persisted).
+### 4. COD Vol. 6 Field-by-Field Change Explorer
+**Source:** `COD-Vol6-Changes-Dashboard.html` · **URL:** `/2026-27/vol6-explorer` · **Public**
 
-**CORS / OPTIONS**: `OPTIONS` returns **204** with `Access-Control-Allow-Headers` including `Content-Type, Accept`. `Accept` is validated on `POST`.
+> The changelog is the narrative, this is the database behind it. An interactive dashboard that lets you filter every Vol. 6 import report change between 25-26 and 26-27 by status (added, shifted, modified, removed, new), by section, and by impact. Built originally so I could answer "is this field affected" in one click instead of one meeting. Turned out the QA team had it pinned all cycle, which is when I realized the real value was not the analysis, it was that everyone was finally reading from the same row.
 
-**Acceptance**: `curl` calculate/scenarios/health/openapi all green; rate limiting works; no raw IP in logs.
+### 5. Message Class Award Year Rules
+**Source:** `Hide-Show_Message_Classes.html` · **URL:** `/2026-27/message-class-rules` · **Gated (cod2026)**
 
-## Stage 3 — Public Evidence & Docs
+> When the award year flips, half the message classes our products surface need to disappear or come back, and the rules are not always intuitive. I built a single matrix that shows every relevant message class, what it does, and exactly which combination of award year, loan limit exception flag, and grade level makes it appear or hide. This one stays behind a password because it includes the vendor specific class codes and behaviors, but if you have the gate password the full logic is right there, no slides, no tribal knowledge.
 
-**New files**
+## `/2026-27` cycle landing intro (your voice, drop-in)
 
-- `docs/methodology.md` — calculation walkthrough with regulatory citations (34 CFR 685.203, OBBBA status notes).
-- `docs/process.md` — **Process Narrative**: how the engine was derived, LLM-assisted critique loop, and governance note ("LLMs helped derive, critique, and implement; source documents, fixtures, and parity tests are the authority").
-- `docs/rounding-policy.md` — explicit half-up vs banker's rounding rules per field.
-- `docs/public-source-register.md` — `psr-001` → 34 CFR 685.203(a)(2), `psr-002` → 2026-27 COD Tech Ref, etc. All fixture `sourceRefs` resolve here.
-- `LICENSE` (MIT), `CONTRIBUTING.md` (challenge workflow), `.github/ISSUE_TEMPLATE/scenario-challenge.yml`.
+> ### COD Annual Update 2026-27
+>
+> Every COD annual update is, on paper, the same exercise: read the new tech reference, diff the schema, update the import report mappings, retest. In practice it is the moment of the year where engineering, QA, implementation, and product all need to be looking at exactly the same row of exactly the same table at exactly the same time, or the cycle slips.
+>
+> The hard part is almost never the requirement. The hard part is the communication. Getting twenty people on the same page about what changed, what stayed, what is cosmetic, and what is going to break a customer in production, that is the whole job.
+>
+> So I built these. Five artifacts that turned the 26-27 COD cycle from a stack of PDFs into something people could actually point at. I shipped them to my team, and the feedback I got back was that this was what they were genuinely depending on during testing, not the spec. That was the moment I knew this belonged outside the team too.
+>
+> Below are the artifacts, in roughly the order I would read them in if I were starting this cycle today.
 
-**Audience phrasing**: "higher-ed practitioners, vendor teams, and reviewers can inspect, use, and challenge" — no implied ED endorsement.
+## Build order (each step = one follow-up turn)
 
-## Stage 4 — CI & Safety
+1. **Foundation** — new `cod.myproduct.life` project scaffold, brand tokens (light maroon primary, cream surface, complementary accent), shared shell (header, footer, breadcrumbs, "last updated" stamp), AccessGate component using `cod2026`, `/` hub, `/2026-27` landing with the intro above.
+2. **XML Schema Diff** (Artifact 1).
+3. **XML Sample Comparison** (Artifact 2).
+4. **Vol. 6 Changelog** (Artifact 3).
+5. **Vol. 6 Explorer** (Artifact 4).
+6. **Message Class Rules** (Artifact 5) behind the gate.
+7. **Polish & launch** — per artifact OG images, JSON-LD Article schema, sitemap (gated routes set to noindex), robots.txt, DNS instructions for pointing `cod.myproduct.life` at the new project.
 
-- `.github/workflows/ci.yml` — runs `bun test` (parity + unit), typecheck, build; injects `VITE_COMMIT_SHA=${{ github.sha }}`.
-- **Public-safety pre-launch checklist**: scrub repo for internal spreadsheet paths, client names, raw IPs in logs, private URLs in fixtures.
-- **Versioning policy** (in `CONTRIBUTING.md`): additive fields → v1.1; changed input/output meaning → v2.0. Disbursement-mode is v2 because it changes output shape.
-
-## Out of Scope (this plan)
-
-- Disbursement-mode calculations (v2.0).
-- Authenticated/quota endpoints.
-- Non-Direct-Loan programs (Pell, TEACH, Plus parent/grad nuances beyond current engine).
-
-## Files Touched
-
-**New**: `src/lib/sor.{version,schema,fixtures,parity.test}.ts`, `src/lib/{api-errors,rate-limit}.ts`, `src/routes/api/public/v1/{calculate,scenarios,health,openapi.json}.ts`, `docs/{methodology,process,rounding-policy,public-source-register}.md`, `LICENSE`, `CONTRIBUTING.md`, `.github/workflows/ci.yml`, `.github/ISSUE_TEMPLATE/scenario-challenge.yml`.
-**Modified**: none in `src/lib/sor.ts` (engine is frozen for parity); `vite.config.ts` only if `VITE_COMMIT_SHA` define needed.
+Approve this and I will start step 1.
