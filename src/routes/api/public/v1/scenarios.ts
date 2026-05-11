@@ -12,9 +12,8 @@ const ALLOWED_METHODS = ["GET", "OPTIONS"];
 
 export const Route = createFileRoute("/api/public/v1/scenarios")({
   server: {
-    handlers: {
       OPTIONS: async () => corsPreflightResponse(),
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         const requestId = resolveRequestId(request);
         const scenarios = serializeFixturesForPublic();
         return jsonResponse(
@@ -28,10 +27,9 @@ export const Route = createFileRoute("/api/public/v1/scenarios")({
           { headers: { "X-Request-Id": requestId } },
         );
       },
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         const requestId = resolveRequestId(request);
         return methodNotAllowedResponse(ALLOWED_METHODS, requestId);
       },
-    },
   },
 });

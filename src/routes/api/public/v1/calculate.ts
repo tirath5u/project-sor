@@ -25,15 +25,14 @@ const ALLOWED_METHODS = ["POST", "OPTIONS"];
 
 export const Route = createFileRoute("/api/public/v1/calculate")({
   server: {
-    handlers: {
       OPTIONS: async () => corsPreflightResponse(),
 
-      GET: async ({ request }) => {
+      GET: async ({ request }: { request: Request }) => {
         const requestId = resolveRequestId(request);
         return methodNotAllowedResponse(ALLOWED_METHODS, requestId);
       },
 
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         const requestId = resolveRequestId(request);
 
         // 1) Rate limit (salted-hash key only - no raw IP storage).
@@ -172,6 +171,5 @@ export const Route = createFileRoute("/api/public/v1/calculate")({
           { headers: { "X-Request-Id": requestId } },
         );
       },
-    },
   },
 });
