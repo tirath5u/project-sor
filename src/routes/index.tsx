@@ -68,19 +68,27 @@ const OPTIONAL_KEYS: { key: TermKey; toggle: keyof SORInputs }[] = [
   { key: "summer2", toggle: "includeSummer2" },
 ];
 
-const V41_UPDATES = [
-  "Added a clear loan period scope option so schools can choose annual or multi-term treatment, or a true single-term loan calculation.",
-  "Added single-term loan calculation support. When Single-term is selected, the calculator uses the single-term portion of borrower eligibility and does not apply Equal or Proportional multi-term distribution logic.",
-  "Improved handling for less-than-half-time terms. LTHT terms can still count in the annual SOR calculation when appropriate, but final payout stays $0 for terms where the student is not eligible for a disbursement.",
-  "Fixed one-eligible-term annual scenarios, such as 12 / 3 / 3 or 3 / 15, so the eligible term receives the correct reduced annual amount without being reduced a second time by a proportional split.",
-  "Added stronger COA and other-aid limits before SOR is applied. The calculator now prevents Sub, Unsub, and Grad PLUS from exceeding remaining COA-based eligibility.",
-  "Updated final Direct Loan outputs to whole dollars and clarified that displayed SOR eligibility amounts are gross loan amounts, not net of loan fees.",
-  "Added Grad PLUS support for grandfathered scenarios, including COA-based Grad PLUS eligibility and SOR distribution across terms.",
-  "Restored and verified summer, winter, and additional-term toggles so optional modules and extra terms activate correctly when selected.",
-  "Added denominator controls for required versus optional modules, so schools can include or exclude optional summer or winter modules from the full-time academic-year denominator when appropriate.",
-  "Improved paid-history handling. If a student was already paid and later enrollment changes, the calculator subtracts prior paid amounts and calculates only the remaining allowable payout.",
-  "Added clearer warnings and status messages so users can see when SOR is active, when Single-term mode is active, when no payable term exists, or when the selected loan-period scope needs review.",
-  "Improved usability notes and visual cues, including clearer COA guidance, a more visible Equal versus Proportional selector, and cleaner default setup values for demonstrations and client use.",
+type VersionEntry = { version: string; headline: string; changes: string[] };
+
+const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "v41",
+    headline: "Loan-period scope, Single-term mode, COA/OFA caps, Grad PLUS grandfathering",
+    changes: [
+      "Added a clear loan period scope option so schools can choose annual or multi-term treatment, or a true single-term loan calculation.",
+      "Added single-term loan calculation support. When Single-term is selected, the calculator uses the single-term portion of borrower eligibility and does not apply Equal or Proportional multi-term distribution logic.",
+      "Improved handling for less-than-half-time terms. LTHT terms can still count in the annual SOR calculation when appropriate, but final payout stays $0 for terms where the student is not eligible for a disbursement.",
+      "Fixed one-eligible-term annual scenarios, such as 12 / 3 / 3 or 3 / 15, so the eligible term receives the correct reduced annual amount without being reduced a second time by a proportional split.",
+      "Added stronger COA and other-aid limits before SOR is applied. The calculator now prevents Sub, Unsub, and Grad PLUS from exceeding remaining COA-based eligibility.",
+      "Updated final Direct Loan outputs to whole dollars and clarified that displayed SOR eligibility amounts are gross loan amounts, not net of loan fees.",
+      "Added Grad PLUS support for grandfathered scenarios, including COA-based Grad PLUS eligibility and SOR distribution across terms.",
+      "Restored and verified summer, winter, and additional-term toggles so optional modules and extra terms activate correctly when selected.",
+      "Added denominator controls for required versus optional modules, so schools can include or exclude optional summer or winter modules from the full-time academic-year denominator when appropriate.",
+      "Improved paid-history handling. If a student was already paid and later enrollment changes, the calculator subtracts prior paid amounts and calculates only the remaining allowable payout.",
+      "Added clearer warnings and status messages so users can see when SOR is active, when Single-term mode is active, when no payable term exists, or when the selected loan-period scope needs review.",
+      "Improved usability notes and visual cues, including clearer COA guidance, a more visible Equal versus Proportional selector, and cleaner default setup values for demonstrations and client use.",
+    ],
+  },
 ];
 
 function OverrideCapsBlock({
