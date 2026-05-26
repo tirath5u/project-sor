@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
 import { Route as ApiDocsRouteImport } from './routes/api-docs'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/publ
 import { Route as ApiPublicV1HealthRouteImport } from './routes/api/public/v1/health'
 import { Route as ApiPublicV1CalculateRouteImport } from './routes/api/public/v1/calculate'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LifecycleRoute = LifecycleRouteImport.update({
   id: '/lifecycle',
   path: '/lifecycle',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api-docs': typeof ApiDocsRoute
   '/lifecycle': typeof LifecycleRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api-docs': typeof ApiDocsRoute
   '/lifecycle': typeof LifecycleRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/api-docs': typeof ApiDocsRoute
   '/lifecycle': typeof LifecycleRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api-docs'
     | '/lifecycle'
+    | '/sitemap.xml'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
     | '/api/public/v1/openapi.json'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api-docs'
     | '/lifecycle'
+    | '/sitemap.xml'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
     | '/api/public/v1/openapi.json'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/'
     | '/api-docs'
     | '/lifecycle'
+    | '/sitemap.xml'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
     | '/api/public/v1/openapi.json'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiDocsRoute: typeof ApiDocsRoute
   LifecycleRoute: typeof LifecycleRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicV1CalculateRoute: typeof ApiPublicV1CalculateRoute
   ApiPublicV1HealthRoute: typeof ApiPublicV1HealthRoute
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
@@ -124,6 +137,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lifecycle': {
       id: '/lifecycle'
       path: '/lifecycle'
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiDocsRoute: ApiDocsRoute,
   LifecycleRoute: LifecycleRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicV1CalculateRoute: ApiPublicV1CalculateRoute,
   ApiPublicV1HealthRoute: ApiPublicV1HealthRoute,
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
