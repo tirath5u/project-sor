@@ -68,19 +68,27 @@ const OPTIONAL_KEYS: { key: TermKey; toggle: keyof SORInputs }[] = [
   { key: "summer2", toggle: "includeSummer2" },
 ];
 
-const V41_UPDATES = [
-  "Added a clear loan period scope option so schools can choose annual or multi-term treatment, or a true single-term loan calculation.",
-  "Added single-term loan calculation support. When Single-term is selected, the calculator uses the single-term portion of borrower eligibility and does not apply Equal or Proportional multi-term distribution logic.",
-  "Improved handling for less-than-half-time terms. LTHT terms can still count in the annual SOR calculation when appropriate, but final payout stays $0 for terms where the student is not eligible for a disbursement.",
-  "Fixed one-eligible-term annual scenarios, such as 12 / 3 / 3 or 3 / 15, so the eligible term receives the correct reduced annual amount without being reduced a second time by a proportional split.",
-  "Added stronger COA and other-aid limits before SOR is applied. The calculator now prevents Sub, Unsub, and Grad PLUS from exceeding remaining COA-based eligibility.",
-  "Updated final Direct Loan outputs to whole dollars and clarified that displayed SOR eligibility amounts are gross loan amounts, not net of loan fees.",
-  "Added Grad PLUS support for grandfathered scenarios, including COA-based Grad PLUS eligibility and SOR distribution across terms.",
-  "Restored and verified summer, winter, and additional-term toggles so optional modules and extra terms activate correctly when selected.",
-  "Added denominator controls for required versus optional modules, so schools can include or exclude optional summer or winter modules from the full-time academic-year denominator when appropriate.",
-  "Improved paid-history handling. If a student was already paid and later enrollment changes, the calculator subtracts prior paid amounts and calculates only the remaining allowable payout.",
-  "Added clearer warnings and status messages so users can see when SOR is active, when Single-term mode is active, when no payable term exists, or when the selected loan-period scope needs review.",
-  "Improved usability notes and visual cues, including clearer COA guidance, a more visible Equal versus Proportional selector, and cleaner default setup values for demonstrations and client use.",
+type VersionEntry = { version: string; headline: string; changes: string[] };
+
+const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "v41",
+    headline: "Loan-period scope, Single-term mode, COA/OFA caps, Grad PLUS grandfathering",
+    changes: [
+      "Added a clear loan period scope option so schools can choose annual or multi-term treatment, or a true single-term loan calculation.",
+      "Added single-term loan calculation support. When Single-term is selected, the calculator uses the single-term portion of borrower eligibility and does not apply Equal or Proportional multi-term distribution logic.",
+      "Improved handling for less-than-half-time terms. LTHT terms can still count in the annual SOR calculation when appropriate, but final payout stays $0 for terms where the student is not eligible for a disbursement.",
+      "Fixed one-eligible-term annual scenarios, such as 12 / 3 / 3 or 3 / 15, so the eligible term receives the correct reduced annual amount without being reduced a second time by a proportional split.",
+      "Added stronger COA and other-aid limits before SOR is applied. The calculator now prevents Sub, Unsub, and Grad PLUS from exceeding remaining COA-based eligibility.",
+      "Updated final Direct Loan outputs to whole dollars and clarified that displayed SOR eligibility amounts are gross loan amounts, not net of loan fees.",
+      "Added Grad PLUS support for grandfathered scenarios, including COA-based Grad PLUS eligibility and SOR distribution across terms.",
+      "Restored and verified summer, winter, and additional-term toggles so optional modules and extra terms activate correctly when selected.",
+      "Added denominator controls for required versus optional modules, so schools can include or exclude optional summer or winter modules from the full-time academic-year denominator when appropriate.",
+      "Improved paid-history handling. If a student was already paid and later enrollment changes, the calculator subtracts prior paid amounts and calculates only the remaining allowable payout.",
+      "Added clearer warnings and status messages so users can see when SOR is active, when Single-term mode is active, when no payable term exists, or when the selected loan-period scope needs review.",
+      "Improved usability notes and visual cues, including clearer COA guidance, a more visible Equal versus Proportional selector, and cleaner default setup values for demonstrations and client use.",
+    ],
+  },
 ];
 
 function OverrideCapsBlock({
@@ -395,20 +403,6 @@ function SORCalculatorPage() {
 
         {/* Quick calc widget */}
         <QuickTermCalc />
-
-        <details className="rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
-          <summary className="cursor-pointer text-sm font-semibold text-foreground">
-            What changed from v32 to v41
-          </summary>
-          <ul className="mt-3 space-y-2 text-xs leading-relaxed text-muted-foreground">
-            {V41_UPDATES.map((item) => (
-              <li key={item} className="flex gap-2">
-                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </details>
 
         {/* Section A - compact inputs */}
         <Section
@@ -1119,6 +1113,57 @@ function SORCalculatorPage() {
             />
           </aside>
         </div>
+
+        <section
+          aria-labelledby="version-history-heading"
+          className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]"
+        >
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2
+              id="version-history-heading"
+              className="text-sm font-semibold text-foreground"
+            >
+              Version history
+            </h2>
+            <span className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
+              Changelog
+            </span>
+          </div>
+          <div className="space-y-3">
+            {VERSION_HISTORY.map((entry, idx) => (
+              <details
+                key={entry.version}
+                open={idx === 0}
+                className="group rounded-xl border border-border bg-background/60 p-4 open:bg-background"
+              >
+                <summary className="flex cursor-pointer items-start justify-between gap-3 list-none [&::-webkit-details-marker]:hidden">
+                  <div className="flex items-baseline gap-2">
+                    <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                      {entry.version}
+                    </span>
+                    <span className="text-sm font-medium text-foreground">
+                      {entry.headline}
+                    </span>
+                  </div>
+                  <span className="mt-0.5 text-[11px] text-muted-foreground group-open:hidden">
+                    Show
+                  </span>
+                  <span className="mt-0.5 hidden text-[11px] text-muted-foreground group-open:inline">
+                    Hide
+                  </span>
+                </summary>
+                <ul className="mt-3 space-y-2 text-xs leading-relaxed text-muted-foreground">
+                  {entry.changes.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
+          </div>
+        </section>
 
         <footer className="border-t border-border/60 pt-5 text-center text-[11px] text-muted-foreground">
           Modeling tool only · Verify against the FSA Handbook & 34 CFR 685.203 before disbursement.
