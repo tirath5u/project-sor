@@ -109,7 +109,11 @@ export const CalculateInputSchema = z
     programLevel: z.enum(["undergraduate", "graduate"]),
     summerPosition: z.enum(["none", "trailer", "header"]),
     ayType: z.enum(["SAY", "BBAY1", "BBAY2"]),
-    numStandardTerms: z.union([z.literal(2), z.literal(3), z.literal(4)]),
+    loanPeriodScope: z
+      .enum(["annualMultiTerm", "singleTerm"])
+      .optional()
+      .default("annualMultiTerm"),
+    numStandardTerms: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
     includeSummer1: z.boolean(),
     includeSummer2: z.boolean(),
     includeWinter1: z.boolean(),

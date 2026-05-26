@@ -51,6 +51,14 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
           ED 5-Step Process
         </span>
       </div>
+      {results.loanPeriodScope === "singleTerm" ? (
+        <div className="mb-4 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-foreground">
+          <span className="font-semibold">Single-term mode:</span> the engine uses one half of the
+          initial maximum eligibility as the single-term starting point, then applies the term
+          enrollment percentage when the student is at least half-time. Equal and Proportional
+          distribution do not apply in this mode.
+        </div>
+      ) : null}
 
       {/* Step 1 */}
       <section className="border-b border-border pb-4">
@@ -176,8 +184,8 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
               eligible.map((t) => (
                 <Eq key={t.key}>
                   <div className="text-muted-foreground">{t.label} Sub share:</div>
-                  {fmtCurrency(results.reducedSub)} × ({t.effectiveCredits} ÷ {eligibleEnrolledSum}) ={" "}
-                  <span className="font-semibold text-primary">{fmtCurrency(t.shareSub)}</span>
+                  {fmtCurrency(results.reducedSub)} × ({t.effectiveCredits} ÷ {eligibleEnrolledSum})
+                  = <span className="font-semibold text-primary">{fmtCurrency(t.shareSub)}</span>
                 </Eq>
               ))
             )}

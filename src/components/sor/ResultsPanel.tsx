@@ -78,6 +78,13 @@ export function ResultsPanel({
             {results.eligibleTermsCount} eligible term{results.eligibleTermsCount === 1 ? "" : "s"}
           </span>
         </div>
+        <div className="mb-3 rounded-lg bg-white/10 px-3 py-2 text-[11px] opacity-90">
+          <span className="font-semibold">Loan period scope:</span>{" "}
+          {results.loanPeriodScope === "singleTerm"
+            ? "Single-term loan period"
+            : "Annual / Multi-term"}{" "}
+          <span className="opacity-80">| Gross Direct Loan amounts, not net of loan fees.</span>
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-white/10 p-3">
             <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-80">
