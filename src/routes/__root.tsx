@@ -50,7 +50,7 @@ export const Route = createRootRoute({
           "Free calculator for OBBBA Schedule of Reductions. Compute reduced Sub/Unsub loan limits for less-than-full-time students, 2026–27 award year.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://sor.myproduct.life" },
+      { property: "og:url", content: "/" },
       { property: "og:site_name", content: "SOR Calculator" },
       { property: "og:image", content: "https://sor.myproduct.life/og-image.png" },
       { property: "og:image:width", content: "1200" },
