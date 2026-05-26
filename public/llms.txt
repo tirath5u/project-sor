@@ -1,0 +1,22 @@
+# SOR Calculator
+
+> Free calculator and public JSON API for the federal Direct Loan Schedule of Reductions (SOR) under the One Big Beautiful Bill Act. Computes reduced Subsidized, Unsubsidized, and Grad PLUS annual limits for less-than-full-time enrollment for the 2026–27 award year.
+
+The SOR Calculator is an open, source-labeled implementation of 34 CFR 685.203 reductions. Financial aid offices, students, and developers use it to inspect inputs, replay published scenarios, compare implementations, and challenge the math with citations.
+
+## Pages
+
+- [SOR Calculator](/): Interactive calculator for the OBBBA Schedule of Reductions — pick award year, grade level, dependency, term structure, and enrollment to see reduced loan limits and per-term disbursements.
+- [Aid Lifecycle Tracker](/lifecycle): Track cumulative undergraduate Sub/Unsub borrowing across academic years against statutory aggregate caps.
+- [Public API Docs](/api-docs): REST API reference (health, scenarios, calculate, OpenAPI 3.1) for integrating SOR calculations into other systems.
+
+## API Endpoints
+
+- [Health](/api/public/v1/health): Liveness, engine version, policy year, deployed commit.
+- [Scenarios](/api/public/v1/scenarios): Public parity fixture catalog with inputs, expected outputs, source IDs.
+- [Calculate](/api/public/v1/calculate): POST endpoint to run the SOR engine against caller-supplied input.
+- [OpenAPI Spec](/api/public/v1/openapi.json): OpenAPI 3.1 contract for tooling and SDK generation.
+
+## Optional
+
+- [Sitemap](/sitemap.xml): Machine-readable index of public routes.
