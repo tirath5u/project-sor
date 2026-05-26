@@ -35,6 +35,76 @@ describe("SOR engine - scenario regression", () => {
 });
 
 describe("SOR engine - invariants", () => {
+  it("applies COA and other aid caps before SOR for graduate unsub", () => {
+    const inp = defaultInputs();
+    inp.gradeLevel = "g11";
+    inp.dependency = "independent";
+    inp.annualNeed = 17250;
+    inp.coa = 17250;
+    inp.otherAid = 0;
+    inp.numStandardTerms = 3;
+    inp.ayFtCredits = 36;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+    inp.terms.term3 = { ...inp.terms.term3, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+
+    const r = calculateSOR(inp);
+    expect(r.subBaseline).toBe(0);
+    expect(r.unsubBaseline).toBe(17250);
+    expect(r.totalFinalUnsub).toBe(17250);
+  });
+
+  it("single-term full-time uses one half of initial maximum eligibility", () => {
+    const inp = defaultInputs();
+    inp.loanPeriodScope = "singleTerm";
+    inp.gradeLevel = "g3";
+    inp.numStandardTerms = 1;
+    inp.ayFtCredits = 12;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: false };
+    inp.terms.term3 = { ...inp.terms.term3, enabled: false };
+
+    const r = calculateSOR(inp);
+    expect(r.totalFinalSub).toBe(2750);
+    expect(r.totalFinalUnsub).toBe(1000);
+    expect(r.warnings).toContain(
+      "Single-term mode active. Equal and Proportional distribution do not apply.",
+    );
+  });
+
+  it("single-term less-than-full-time applies the term percentage after the half-year base", () => {
+    const inp = defaultInputs();
+    inp.loanPeriodScope = "singleTerm";
+    inp.gradeLevel = "g3";
+    inp.numStandardTerms = 1;
+    inp.ayFtCredits = 12;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 9 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: false };
+    inp.terms.term3 = { ...inp.terms.term3, enabled: false };
+
+    const r = calculateSOR(inp);
+    expect(r.totalFinalSub).toBe(2063);
+    expect(r.totalFinalUnsub).toBe(750);
+  });
+
+  it("single-term below-half-time pays zero", () => {
+    const inp = defaultInputs();
+    inp.loanPeriodScope = "singleTerm";
+    inp.gradeLevel = "g3";
+    inp.numStandardTerms = 1;
+    inp.ayFtCredits = 12;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 3 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: false };
+    inp.terms.term3 = { ...inp.terms.term3, enabled: false };
+
+    const r = calculateSOR(inp);
+    expect(r.totalFinalSub).toBe(0);
+    expect(r.totalFinalUnsub).toBe(0);
+    expect(r.warnings).toContain(
+      "Single-term mode is below half-time. Final Direct Loan payout is $0.",
+    );
+  });
+
   it("proportional distribution uses a balance-forward remaining-credit denominator", () => {
     const inp = defaultInputs();
     inp.overrideLimits = true;
@@ -487,9 +557,7 @@ describe("SOR engine - Jennifer-scope regressions", () => {
     const r = calculateSOR(inp);
     expect(r.initialGradPlus).toBeGreaterThan(0);
     expect(r.reducedGradPlus).toBeGreaterThan(0);
-    expect(
-      r.warnings.some((w) => w.includes("aggregate") || w.includes("lifetime")),
-    ).toBe(true);
+    expect(r.warnings.some((w) => w.includes("aggregate") || w.includes("lifetime"))).toBe(true);
   });
 });
 
@@ -559,7 +627,35 @@ describe("SOR engine - Department proportional distribution regressions", () => 
     // Spring takes the full annual
     expect(t2.finalSub).toBe(r.reducedSub);
     // LTHT warning should be emitted
-    expect(r.warnings.some((w) => w.includes("Less-than-half-time") && w.includes("Fall"))).toBe(true);
+    expect(r.warnings.some((w) => w.includes("Less-than-half-time") && w.includes("Fall"))).toBe(
+      true,
+    );
+  });
+
+  it("12/3/3 annual one-eligible-term pays the full reduced annual amount", () => {
+    for (const distributionModel of ["equal", "proportional"] as const) {
+      const inp = defaultInputs();
+      inp.distributionModel = distributionModel;
+      inp.numStandardTerms = 3;
+      inp.ayFtCredits = 36;
+      inp.gradeLevel = "g3";
+      inp.dependency = "dependent";
+      inp.annualNeed = 10000;
+      inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 12 };
+      inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 3 };
+      inp.terms.term3 = { ...inp.terms.term3, enabled: true, ftCredits: 12, enrolledCredits: 3 };
+
+      const r = calculateSOR(inp);
+      const t1 = r.termResults.find((t) => t.key === "term1")!;
+      const t2 = r.termResults.find((t) => t.key === "term2")!;
+      const t3 = r.termResults.find((t) => t.key === "term3")!;
+
+      expect(r.sorPctRounded).toBe(0.5);
+      expect(t1.finalSub).toBe(2750);
+      expect(t1.finalUnsub).toBe(1000);
+      expect(t2.finalSub + t3.finalSub).toBe(0);
+      expect(t2.finalUnsub + t3.finalUnsub).toBe(0);
+    }
   });
 
   it("3/15 spring-only - single enabled term takes full annual", () => {
@@ -637,7 +733,9 @@ describe("SOR engine - LTHT warnings", () => {
     inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 3 };
     inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 12 };
     const r = calculateSOR(inp);
-    expect(r.warnings.some((w) => w.includes("Less-than-half-time") && w.includes("LT-HT"))).toBe(true);
+    expect(r.warnings.some((w) => w.includes("Less-than-half-time") && w.includes("LT-HT"))).toBe(
+      true,
+    );
     expect(r.warnings.some((w) => w.includes("Fall"))).toBe(true);
   });
 

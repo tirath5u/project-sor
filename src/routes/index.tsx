@@ -21,6 +21,7 @@ import {
   type CalType,
   type ViewMode,
   type DistributionModel,
+  type LoanPeriodScope,
 } from "@/lib/sor";
 import {
   GRADE_LABELS,
@@ -65,6 +66,21 @@ const OPTIONAL_KEYS: { key: TermKey; toggle: keyof SORInputs }[] = [
   { key: "winter2", toggle: "includeWinter2" },
   { key: "summer1", toggle: "includeSummer1" },
   { key: "summer2", toggle: "includeSummer2" },
+];
+
+const V41_UPDATES = [
+  "Added a clear loan period scope option so schools can choose annual or multi-term treatment, or a true single-term loan calculation.",
+  "Added single-term loan calculation support. When Single-term is selected, the calculator uses the single-term portion of borrower eligibility and does not apply Equal or Proportional multi-term distribution logic.",
+  "Improved handling for less-than-half-time terms. LTHT terms can still count in the annual SOR calculation when appropriate, but final payout stays $0 for terms where the student is not eligible for a disbursement.",
+  "Fixed one-eligible-term annual scenarios, such as 12 / 3 / 3 or 3 / 15, so the eligible term receives the correct reduced annual amount without being reduced a second time by a proportional split.",
+  "Added stronger COA and other-aid limits before SOR is applied. The calculator now prevents Sub, Unsub, and Grad PLUS from exceeding remaining COA-based eligibility.",
+  "Updated final Direct Loan outputs to whole dollars and clarified that displayed SOR eligibility amounts are gross loan amounts, not net of loan fees.",
+  "Added Grad PLUS support for grandfathered scenarios, including COA-based Grad PLUS eligibility and SOR distribution across terms.",
+  "Restored and verified summer, winter, and additional-term toggles so optional modules and extra terms activate correctly when selected.",
+  "Added denominator controls for required versus optional modules, so schools can include or exclude optional summer or winter modules from the full-time academic-year denominator when appropriate.",
+  "Improved paid-history handling. If a student was already paid and later enrollment changes, the calculator subtracts prior paid amounts and calculates only the remaining allowable payout.",
+  "Added clearer warnings and status messages so users can see when SOR is active, when Single-term mode is active, when no payable term exists, or when the selected loan-period scope needs review.",
+  "Improved usability notes and visual cues, including clearer COA guidance, a more visible Equal versus Proportional selector, and cleaner default setup values for demonstrations and client use.",
 ];
 
 function OverrideCapsBlock({
@@ -252,6 +268,11 @@ function SORCalculatorPage() {
               </p>
             </div>
           </div>
+          <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-[11px] text-primary">
+            <span className="font-semibold">v41 loan-period-scope update:</span> Single-term mode,
+            COA/OFA caps, Grad PLUS grandfathering, paid-history residuals, and gross whole-dollar
+            Direct Loan outputs are included.
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1">
               <Link
@@ -375,6 +396,20 @@ function SORCalculatorPage() {
         {/* Quick calc widget */}
         <QuickTermCalc />
 
+        <details className="rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
+          <summary className="cursor-pointer text-sm font-semibold text-foreground">
+            What changed from v32 to v41
+          </summary>
+          <ul className="mt-3 space-y-2 text-xs leading-relaxed text-muted-foreground">
+            {V41_UPDATES.map((item) => (
+              <li key={item} className="flex gap-2">
+                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+
         {/* Section A - compact inputs */}
         <Section
           letter="A"
@@ -413,12 +448,35 @@ function SORCalculatorPage() {
 
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
+                <Label className="text-xs font-medium">Loan Period Scope</Label>
+                <InfoTip>
+                  Annual or multi-term uses the full academic-year SOR calculation. Single-term is
+                  only for a true one-term loan period, such as spring-only, transfer,
+                  grade-advancement, or separate summer-only loans.
+                </InfoTip>
+              </div>
+              <Select
+                value={inputs.loanPeriodScope ?? "annualMultiTerm"}
+                onValueChange={(v) => update({ loanPeriodScope: v as LoanPeriodScope })}
+              >
+                <SelectTrigger className="h-9 rounded-lg border-primary/50 bg-primary/5">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="annualMultiTerm">Annual / Multi-term</SelectItem>
+                  <SelectItem value="singleTerm">Single-term loan period</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
                 <Label className="text-xs font-medium">Loan Limit Exception</Label>
                 <InfoTip>
-                  Grandfathered? Switches the Sub/Unsub annual limit table between the legacy
-                  values and the OBBB 2026-27 values. For 2026-27, Grad PLUS is only calculated in
-                  the legacy or interim-exception lane, and aggregate or lifetime limits must still
-                  be checked outside this SOR engine.
+                  Grandfathered? Switches the Sub/Unsub annual limit table between the legacy values
+                  and the OBBB 2026-27 values. For 2026-27, Grad PLUS is only calculated in the
+                  legacy or interim-exception lane, and aggregate or lifetime limits must still be
+                  checked outside this SOR engine.
                 </InfoTip>
               </div>
               <Label className="flex h-9 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-xs">
@@ -521,7 +579,7 @@ function SORCalculatorPage() {
               prefix="$"
               value={inputs.coa ?? 0}
               onChange={(v) => update({ coa: v })}
-              tooltip="Total COA for the academic year. Drives the Grad PLUS cap: COA minus other aid minus Sub minus Unsub."
+              tooltip="Total COA for the academic year. This is a hard cap for Sub, Unsub, and Grad PLUS before SOR. If COA is 0, Direct Loan eligibility calculates as 0."
             />
             <NumberField
               label="Other Non-PLUS Aid"
@@ -552,6 +610,11 @@ function SORCalculatorPage() {
             </div>
           ) : null}
 
+          <div className="mt-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-[11px] text-primary">
+            Final SOR eligibility amounts are gross Direct Loan amounts. They are not net of loan
+            fees.
+          </div>
+
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
@@ -562,10 +625,10 @@ function SORCalculatorPage() {
               </div>
               <RadioGroup
                 value={String(inputs.numStandardTerms)}
-                onValueChange={(v) => update({ numStandardTerms: Number(v) as 2 | 3 | 4 })}
-                className="grid grid-cols-3 gap-1.5"
+                onValueChange={(v) => update({ numStandardTerms: Number(v) as 1 | 2 | 3 | 4 })}
+                className="grid grid-cols-4 gap-1.5"
               >
-                {[2, 3, 4].map((n) => (
+                {[1, 2, 3, 4].map((n) => (
                   <Label
                     key={n}
                     htmlFor={`nst-${n}`}

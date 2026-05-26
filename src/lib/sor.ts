@@ -45,6 +45,7 @@ export type SummerPosition = "none" | "trailer" | "header";
 export type AYType = "SAY" | "BBAY1" | "BBAY2";
 export type ViewMode = "plan" | "disbursement";
 export type DistributionModel = "equal" | "proportional";
+export type LoanPeriodScope = "annualMultiTerm" | "singleTerm";
 
 export type TermKey =
   | "term1"
@@ -68,9 +69,9 @@ export interface TermInput {
    * means excluded from both. This mirrors the spreadsheet's Yes/No toggle.
    *
    * Future design: split into three independent flags:
-   *   - `includeInAySorNumerator`  — count enrolled credits in Step 2 AY%
-   *   - `includeInAyFtDenominator` — count FT credits in Step 2 denominator
-   *   - `includeInDistribution`     — include in Step 3 term-share distribution
+   *   - `includeInAySorNumerator`  - count enrolled credits in Step 2 AY%
+   *   - `includeInAyFtDenominator` - count FT credits in Step 2 denominator
+   *   - `includeInDistribution`     - include in Step 3 term-share distribution
    * These would allow a summer or winter module to contribute to AY% without
    * receiving a disbursement share, or vice versa.
    */
@@ -104,7 +105,8 @@ export interface SORInputs {
   programLevel: ProgramLevel;
   summerPosition: SummerPosition;
   ayType: AYType;
-  numStandardTerms: 2 | 3 | 4;
+  loanPeriodScope: LoanPeriodScope;
+  numStandardTerms: 1 | 2 | 3 | 4;
   includeSummer1: boolean;
   includeSummer2: boolean;
   includeWinter1: boolean;
@@ -257,6 +259,9 @@ export interface SORResults {
   verifyUnsub: number;
   warnings: string[];
   recalcHistory: RecalcEvent[];
+  loanPeriodScope: LoanPeriodScope;
+  singleTermScopeValid: boolean;
+  grossAmountBasis: boolean;
   /** v19 - Award Year & SOR applicability. */
   awardYear: "2025-26" | "2026-27";
   sorApplicable: boolean;
@@ -329,8 +334,13 @@ export function defaultInputs(): SORInputs {
   TERM_ORDER.forEach((k) => (terms[k] = defaultTerm(k)));
   terms.term1.enabled = true;
   terms.term1.ftCredits = 12;
+  terms.term1.enrolledCredits = 12;
   terms.term2.enabled = true;
   terms.term2.ftCredits = 12;
+  terms.term2.enrolledCredits = 12;
+  terms.term3.enabled = true;
+  terms.term3.ftCredits = 12;
+  terms.term3.enrolledCredits = 12;
 
   const lim = lookupLimits("g1", "dependent");
 
@@ -340,17 +350,18 @@ export function defaultInputs(): SORInputs {
     programLevel: "undergraduate",
     summerPosition: "none",
     ayType: "SAY",
-    numStandardTerms: 2,
+    loanPeriodScope: "annualMultiTerm",
+    numStandardTerms: 3,
     includeSummer1: false,
     includeSummer2: false,
     includeWinter1: false,
     includeWinter2: false,
-    ayFtCredits: 24,
+    ayFtCredits: 36,
     gradeLevel: "g1",
     dependency: "dependent",
     parentPlusDenied: false,
     overrideLimits: false,
-    annualNeed: lim.sub + lim.unsub,
+    annualNeed: 10000,
     subStatutory: lim.sub,
     unsubStatutory: lim.unsub,
     distributionModel: "equal",
@@ -360,7 +371,7 @@ export function defaultInputs(): SORInputs {
     terms,
     awardYear: "2026-27",
     loanLimitException: false,
-    coa: 0,
+    coa: 10000,
     otherAid: 0,
     requestedGradPlus: 0,
   };
@@ -703,6 +714,13 @@ export function calculateSOR(inp: SORInputs): SORResults {
 
   const keys = activeKeys(inp);
   const ordered = keys.map((k) => inp.terms[k]);
+  const loanPeriodScope = inp.loanPeriodScope ?? "annualMultiTerm";
+  const singleTermScopeValid = loanPeriodScope !== "singleTerm" || ordered.length === 1;
+  if (loanPeriodScope === "singleTerm" && ordered.length !== 1) {
+    warnings.push(
+      "Single-term scope should have exactly one active loan-period term. Set standard terms and optional modules so only one term is active.",
+    );
+  }
 
   // STEP 1 - derive Sub / Unsub baselines per FSA spec §1 (Combined Limit / Shifting Rule).
   //   A. Subsidized_Max + Base_Unsub_Max = Total_Combined_Limit
@@ -717,11 +735,17 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const caps = resolveCaps(inp);
   const { subNeed, unsubNeed } = splitNeed(inp.annualNeed, caps.sub, caps.unsub);
   const combinedLimit = caps.combined;
-  const subBaseline = Math.min(caps.sub, subNeed);
+  const coa = Math.max(0, inp.coa ?? 0);
+  const otherAid = Math.max(0, inp.otherAid ?? 0);
+  const availableCoa = Math.max(0, coa - otherAid);
+  const subBaseline = Math.min(caps.sub, subNeed, availableCoa);
   // Unsub baseline = the remainder of the combined cap after Subsidized consumes
   // its need-based share. `caps.unsub` already includes any PLUS-denial
   // uplift coming from the lookup, so do not add it a second time downstream.
-  const unsubBaseline = Math.max(0, combinedLimit - subBaseline);
+  const unsubBaseline = Math.max(
+    0,
+    Math.min(combinedLimit - subBaseline, availableCoa - subBaseline),
+  );
   const useLegacy = inp.loanLimitException !== false;
   const lookup = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied, useLegacy);
   const additionalUnsubBase =
@@ -750,17 +774,38 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const effectiveCreditsBy = (t: TermInput) =>
     isDisbursementMode && hasHistoricalActivity(t) ? historicalCredits(t) : t.enrolledCredits;
 
+  const reductionBasesFor = (creditsFn: (t: TermInput) => number) => {
+    if (loanPeriodScope !== "singleTerm") {
+      return { sub: subBaseline, unsub: unsubBaselineEff };
+    }
+    if (!singleTermScopeValid || ordered.length !== 1) {
+      return { sub: 0, unsub: 0 };
+    }
+    const term = ordered[0];
+    const credits = creditsFn(term);
+    if (credits < term.ftCredits / 2) {
+      return { sub: 0, unsub: 0 };
+    }
+    return { sub: subBaseline / 2, unsub: unsubBaselineEff / 2 };
+  };
+
   const runSnapshot = (creditsFn: (t: TermInput) => number) => {
+    const reductionBases = reductionBasesFor(creditsFn);
+    const snapshotAyFt =
+      loanPeriodScope === "singleTerm" && singleTermScopeValid && ordered.length === 1
+        ? ordered[0].ftCredits
+        : ayFtUsed;
     const first = computeSnapshot(
       ordered,
       creditsFn,
-      ayFtUsed,
-      subBaseline,
-      unsubBaselineEff,
+      snapshotAyFt,
+      reductionBases.sub,
+      reductionBases.unsub,
       inp.countLthtInAyPct,
       inp.distributionModel,
     );
-    if (!inp.applyDoubleReduction) return { snap: first, reduced: false };
+    if (!inp.applyDoubleReduction || loanPeriodScope === "singleTerm")
+      return { snap: first, reduced: false };
     const pct = first.ayPctRounded;
     const subNeedReduced = Math.min(subNeed, Math.round(subNeed * pct));
     const unsubNeedReduced = Math.min(unsubNeed, Math.round(unsubNeed * pct));
@@ -772,7 +817,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     const second = computeSnapshot(
       ordered,
       creditsFn,
-      ayFtUsed,
+      snapshotAyFt,
       subBaseline2,
       unsubBaseline2,
       inp.countLthtInAyPct,
@@ -994,6 +1039,13 @@ function assemble(args: {
   const awardYear: "2025-26" | "2026-27" = inp.awardYear ?? "2026-27";
   const sorApplicable = awardYear === "2026-27";
   const pct = sorApplicable ? finalSnap.ayPctRounded : 1;
+  const loanPeriodScope = inp.loanPeriodScope ?? "annualMultiTerm";
+  const singleTermScopeValid = loanPeriodScope !== "singleTerm" || ordered.length === 1;
+  const singleTermEligible =
+    loanPeriodScope === "singleTerm" &&
+    singleTermScopeValid &&
+    ordered.length === 1 &&
+    effectiveCreditsBy(ordered[0]) >= ordered[0].ftCredits / 2;
 
   const subStatBaseline = caps.sub;
   const unsubStatBaseline = caps.unsub;
@@ -1006,18 +1058,22 @@ function assemble(args: {
   const doubleReductionApplied =
     inp.applyDoubleReduction && (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);
 
-  const reducedSubRaw = round2(subBaseline * pct);
-  const reducedUnsubRaw = round2(unsubBaseline * pct);
-  const additionalUnsubReduced = round2(additionalUnsubBase * pct);
+  const reductionSubBase =
+    loanPeriodScope === "singleTerm" ? (singleTermEligible ? subBaseline / 2 : 0) : subBaseline;
+  const reductionUnsubBase =
+    loanPeriodScope === "singleTerm" ? (singleTermEligible ? unsubBaseline / 2 : 0) : unsubBaseline;
+  const reducedSubRaw = round(reductionSubBase * pct);
+  const reducedUnsubRaw = round(reductionUnsubBase * pct);
+  const additionalUnsubReduced = round(additionalUnsubBase * pct);
   const reducedSub = reducedSubRaw;
   let reducedUnsub = reducedUnsubRaw;
   let shiftedToUnsub = 0;
-  if (inp.applySubUnsubShift) {
-    const subStatCeiling = round2(caps.sub * pct);
-    const unsubStatCeiling = round2(caps.unsub * pct);
+  if (inp.applySubUnsubShift && loanPeriodScope !== "singleTerm") {
+    const subStatCeiling = round(caps.sub * pct);
+    const unsubStatCeiling = round(caps.unsub * pct);
     const subUnused = Math.max(0, subStatCeiling - reducedSubRaw);
     const unsubHeadroom = Math.max(0, unsubStatCeiling - reducedUnsubRaw);
-    shiftedToUnsub = round2(Math.min(subUnused, unsubHeadroom));
+    shiftedToUnsub = round(Math.min(subUnused, unsubHeadroom));
     reducedUnsub = reducedUnsubRaw + shiftedToUnsub;
   }
 
@@ -1044,7 +1100,13 @@ function assemble(args: {
   const initialGradPlus = gradPlusAllowed
     ? Math.max(0, Math.min(requestedGradPlus, coa - otherAid - subBaseline - unsubBaseline))
     : 0;
-  const reducedGradPlus = round2(initialGradPlus * pct);
+  const gradPlusReductionBase =
+    loanPeriodScope === "singleTerm"
+      ? singleTermEligible
+        ? initialGradPlus / 2
+        : 0
+      : initialGradPlus;
+  const reducedGradPlus = round(gradPlusReductionBase * pct);
 
   const enrolledSum = ordered.reduce((s, t, i) => {
     return s + (finalSnap.eligible[i] ? effectiveCreditsBy(t) : 0);
@@ -1108,10 +1170,10 @@ function assemble(args: {
     const calcGradPlus = displayGradPlus.calc[i];
     // Final = MIN(Step 5 Calc, COA cap). No averaging, no override -
     // Final must rigidly mirror the Step-5 output to preserve history anchoring.
-    const cappedSub = round2(t.coaCapSub > 0 ? Math.min(calcSub, t.coaCapSub) : calcSub);
-    const cappedUnsub = round2(t.coaCapUnsub > 0 ? Math.min(calcUnsub, t.coaCapUnsub) : calcUnsub);
+    const cappedSub = round(t.coaCapSub > 0 ? Math.min(calcSub, t.coaCapSub) : calcSub);
+    const cappedUnsub = round(t.coaCapUnsub > 0 ? Math.min(calcUnsub, t.coaCapUnsub) : calcUnsub);
     const coaCapGradPlus = t.coaCapGradPlus ?? 0;
-    const cappedGradPlus = round2(
+    const cappedGradPlus = round(
       coaCapGradPlus > 0 ? Math.min(calcGradPlus, coaCapGradPlus) : calcGradPlus,
     );
     const netPaidSub = Math.max(0, (t.paidSub || 0) - (t.refundSub || 0));
@@ -1198,9 +1260,26 @@ function assemble(args: {
   if (lthtTerms.length > 0) {
     const names = lthtTerms.map((t) => t.label).join(", ");
     warnings.push(
-      `Less-than-half-time (LT-HT): ${names} — enrolled credits are below the half-time threshold. The student is ineligible for disbursement in ${lthtTerms.length === 1 ? "this term" : "these terms"}. LT-HT credits ${inp.countLthtInAyPct ? "are" : "are not"} counted in the AY enrollment percentage numerator.`,
+      `Less-than-half-time (LT-HT): ${names} - enrolled credits are below the half-time threshold. The student is ineligible for disbursement in ${lthtTerms.length === 1 ? "this term" : "these terms"}. LT-HT credits ${inp.countLthtInAyPct ? "are" : "are not"} counted in the AY enrollment percentage numerator.`,
     );
   }
+
+  if (loanPeriodScope === "singleTerm") {
+    if (!singleTermScopeValid) {
+      warnings.push(
+        "Review: Single-term mode should have exactly one active loan-period term. Set standard terms and optional modules accordingly.",
+      );
+    } else if (!singleTermEligible) {
+      warnings.push("Single-term mode is below half-time. Final Direct Loan payout is $0.");
+    } else {
+      warnings.push("Single-term mode active. Equal and Proportional distribution do not apply.");
+    }
+  } else if (ordered.length === 1) {
+    warnings.push(
+      "Only one term is active. If this is a true one-term loan period, select Single-term loan period.",
+    );
+  }
+  warnings.push("SOR eligibility amounts are gross Direct Loan amounts, not net of loan fees.");
 
   return {
     enrolledSumAll: enrolledSum,
@@ -1245,6 +1324,9 @@ function assemble(args: {
     verifyUnsub: reducedUnsub - totalFinalUnsub,
     warnings: Array.from(new Set(warnings)),
     recalcHistory,
+    loanPeriodScope,
+    singleTermScopeValid,
+    grossAmountBasis: true,
     awardYear,
     sorApplicable,
     loanLimitException: inp.loanLimitException ?? false,
