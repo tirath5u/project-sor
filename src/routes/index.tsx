@@ -1141,7 +1141,6 @@ function SORCalculatorPage() {
             {VERSION_HISTORY.map((entry, idx) => (
               <details
                 key={entry.version}
-                open={idx === 0}
                 className="group rounded-xl border border-border bg-background/60 p-4 open:bg-background"
               >
                 <summary className="flex cursor-pointer items-start justify-between gap-3 list-none [&::-webkit-details-marker]:hidden">
