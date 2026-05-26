@@ -58,6 +58,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export const Route = createFileRoute("/")({
   component: SORCalculatorPage,
+  head: () => ({
+    meta: [
+      { property: "og:url", content: "https://project-sor.lovable.app/" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://project-sor.lovable.app/" },
+    ],
+  }),
 });
 
 const STANDARD_KEYS: TermKey[] = ["term1", "term2", "term3", "term4"];
