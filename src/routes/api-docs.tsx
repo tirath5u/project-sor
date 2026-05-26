@@ -17,6 +17,26 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/api-docs")({
+  head: () => ({
+    meta: [
+      { title: "SOR Public API Docs - Endpoints & OpenAPI" },
+      {
+        name: "description",
+        content:
+          "REST API reference for the SOR calculator: health, scenarios, calculate, and OpenAPI spec for integrating SOR into your systems.",
+      },
+      { property: "og:title", content: "SOR Public API Docs - Endpoints & OpenAPI" },
+      {
+        property: "og:description",
+        content:
+          "REST API reference for the SOR calculator: health, scenarios, calculate, and OpenAPI spec for integrating SOR into your systems.",
+      },
+      { property: "og:url", content: "https://project-sor.lovable.app/api-docs" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://project-sor.lovable.app/api-docs" },
+    ],
+  }),
   component: ApiDocsPage,
 });
 
