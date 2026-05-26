@@ -404,20 +404,6 @@ function SORCalculatorPage() {
         {/* Quick calc widget */}
         <QuickTermCalc />
 
-        <details className="rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)]">
-          <summary className="cursor-pointer text-sm font-semibold text-foreground">
-            What changed from v32 to v41
-          </summary>
-          <ul className="mt-3 space-y-2 text-xs leading-relaxed text-muted-foreground">
-            {V41_UPDATES.map((item) => (
-              <li key={item} className="flex gap-2">
-                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </details>
-
         {/* Section A - compact inputs */}
         <Section
           letter="A"
