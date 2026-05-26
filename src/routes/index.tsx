@@ -1114,6 +1114,57 @@ function SORCalculatorPage() {
           </aside>
         </div>
 
+        <section
+          aria-labelledby="version-history-heading"
+          className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]"
+        >
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2
+              id="version-history-heading"
+              className="text-sm font-semibold text-foreground"
+            >
+              Version history
+            </h2>
+            <span className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
+              Changelog
+            </span>
+          </div>
+          <div className="space-y-3">
+            {VERSION_HISTORY.map((entry, idx) => (
+              <details
+                key={entry.version}
+                open={idx === 0}
+                className="group rounded-xl border border-border bg-background/60 p-4 open:bg-background"
+              >
+                <summary className="flex cursor-pointer items-start justify-between gap-3 list-none [&::-webkit-details-marker]:hidden">
+                  <div className="flex items-baseline gap-2">
+                    <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                      {entry.version}
+                    </span>
+                    <span className="text-sm font-medium text-foreground">
+                      {entry.headline}
+                    </span>
+                  </div>
+                  <span className="mt-0.5 text-[11px] text-muted-foreground group-open:hidden">
+                    Show
+                  </span>
+                  <span className="mt-0.5 hidden text-[11px] text-muted-foreground group-open:inline">
+                    Hide
+                  </span>
+                </summary>
+                <ul className="mt-3 space-y-2 text-xs leading-relaxed text-muted-foreground">
+                  {entry.changes.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
+          </div>
+        </section>
+
         <footer className="border-t border-border/60 pt-5 text-center text-[11px] text-muted-foreground">
           Modeling tool only · Verify against the FSA Handbook & 34 CFR 685.203 before disbursement.
           R2T4 (Scenarios 6 & 7) are out of scope.
