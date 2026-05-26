@@ -39,6 +39,10 @@ export const Route = createRootRoute({
       },
       { name: "author", content: "Tirath Chhatriwala" },
       { name: "robots", content: "index, follow" },
+      {
+        name: "google-site-verification",
+        content: "oviwtu7Z9B8da0VF04ENUjzz6_rh6Gf49FJm3WO86h8",
+      },
       { property: "og:title", content: "SOR Calculator - Schedule of Reductions" },
       {
         property: "og:description",
