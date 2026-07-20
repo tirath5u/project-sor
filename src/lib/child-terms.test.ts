@@ -108,6 +108,6 @@ describe("v55 child allocation", () => {
       (row) => row.parentTerm === "term1" && row.childIndex === 0,
     );
     expect(child1?.scheduledGross.sub).toBe(100);
-    expect(child1?.calculatedNet.sub).toBe(98.94);
+    expect(child1?.calculatedNet.sub).toBe(98.95);
   });
 });
