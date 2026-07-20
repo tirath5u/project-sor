@@ -1,0 +1,277 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "project-sor-mcp",
+      "version": "0.1.0",
+      "title": "Project SOR — Schedule of Reductions"
+    },
+    "tools": [
+      {
+        "name": "calculate_sor",
+        "title": "Calculate Schedule of Reductions",
+        "description": "Run the SOR engine for a given borrower/enrollment scenario. Returns per-term Sub, Unsub, and Grad PLUS disbursements, the SOR%, and all engine diagnostics (warnings, baselines, term caps). Any field left unset falls back to safe defaults; supply `terms` to override per-term FT/enrolled credits and paid history.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "awardYear": {
+              "type": "string",
+              "enum": [
+                "2025-26",
+                "2026-27"
+              ],
+              "description": "Award year. Defaults to 2026-27 (OBBBA)."
+            },
+            "loanLimitException": {
+              "type": "boolean",
+              "description": "Loan Limit Exception (LLE). When true, use legacy pre-OBBB annual caps and allow Grad PLUS preview."
+            },
+            "programLevel": {
+              "type": "string",
+              "enum": [
+                "undergraduate",
+                "graduate"
+              ]
+            },
+            "gradeLevel": {
+              "type": "string",
+              "enum": [
+                "g0",
+                "g1",
+                "g2",
+                "g3",
+                "g4",
+                "g5",
+                "g6",
+                "g7",
+                "g8",
+                "g9",
+                "g10",
+                "g11",
+                "g12",
+                "g13"
+              ],
+              "description": "Grade level code. g1=UG yr 1, g8+=graduate/professional."
+            },
+            "dependency": {
+              "type": "string",
+              "enum": [
+                "dependent",
+                "independent"
+              ]
+            },
+            "parentPlusDenied": {
+              "type": "boolean"
+            },
+            "ayType": {
+              "type": "string",
+              "enum": [
+                "SAY",
+                "BBAY1",
+                "BBAY2"
+              ]
+            },
+            "numStandardTerms": {
+              "type": "number",
+              "enum": [
+                1,
+                2,
+                3,
+                4
+              ]
+            },
+            "includeSummer1": {
+              "type": "boolean"
+            },
+            "includeSummer2": {
+              "type": "boolean"
+            },
+            "includeWinter1": {
+              "type": "boolean"
+            },
+            "includeWinter2": {
+              "type": "boolean"
+            },
+            "ayFtCredits": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "Full-time AY credits."
+            },
+            "annualNeed": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Annual financial need in dollars."
+            },
+            "subStatutory": {
+              "type": "number",
+              "minimum": 0
+            },
+            "unsubStatutory": {
+              "type": "number",
+              "minimum": 0
+            },
+            "coa": {
+              "type": "number",
+              "minimum": 0
+            },
+            "otherAid": {
+              "type": "number",
+              "minimum": 0
+            },
+            "requestedGradPlus": {
+              "type": "number",
+              "minimum": 0
+            },
+            "distributionModel": {
+              "type": "string",
+              "enum": [
+                "equal",
+                "proportional"
+              ]
+            },
+            "applySubUnsubShift": {
+              "type": "boolean"
+            },
+            "countLthtInAyPct": {
+              "type": "boolean"
+            },
+            "viewMode": {
+              "type": "string",
+              "enum": [
+                "plan",
+                "disbursement"
+              ]
+            },
+            "terms": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "ftCredits": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 60
+                  },
+                  "enrolledCredits": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 60
+                  },
+                  "disbursed": {
+                    "type": "boolean"
+                  },
+                  "actualCredits": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 60
+                  },
+                  "paidSub": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "paidUnsub": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "refundSub": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "refundUnsub": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "coaCapSub": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "coaCapUnsub": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "paidGradPlus": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "refundGradPlus": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "coaCapGradPlus": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                },
+                "additionalProperties": false
+              },
+              "propertyNames": {
+                "enum": [
+                  "term1",
+                  "term2",
+                  "term3",
+                  "term4",
+                  "summer1",
+                  "summer2",
+                  "winter1",
+                  "winter2"
+                ]
+              },
+              "description": "Per-term overrides keyed by term1..term4, summer1/summer2, winter1/winter2. Set `enabled: true` to include a term."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_scenarios",
+        "title": "List canonical SOR scenarios",
+        "description": "Return the full public parity-fixture set: canonical borrower scenarios (undergraduate SAY, Grad PLUS with/without SOR reduction, proportional-distribution edge cases, etc.) with their inputs, expected outputs, and public-source-register citations. Use this to discover valid input shapes for `calculate_sor` or to verify engine parity.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Optional fixture id (e.g. 'fixture-v19-001'). When set, returns only that fixture."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
