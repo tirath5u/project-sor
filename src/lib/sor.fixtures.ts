@@ -455,6 +455,39 @@ PARITY_FIXTURES.push(
       },
     },
   },
+  {
+    id: "fixture-v55-child-equal-allocation",
+    description:
+      "v55 child allocation - parent SOR is calculated first, then a 3/6 child pattern is allocated equally across credited child terms.",
+    sourceRefs: ["psr-009", "psr-010"],
+    sourceStatus: "preliminary",
+    assertionLevel: "directional",
+    asOfDate: "2026-07-19",
+    input: build(
+      {
+        numStandardTerms: 2,
+        ayFtCredits: 24,
+        gradeLevel: "g1",
+        dependency: "dependent",
+        annualNeed: 3500,
+        childTerms: {
+          count: 2,
+          allocationMethod: "equalAcrossActiveChildTerms",
+          parents: {
+            term1: [{ credits: 3 }, { credits: 6 }],
+            term2: [{ credits: 6 }, { credits: 6 }],
+          },
+        },
+      },
+      {
+        term1: { enabled: true, ftCredits: 12, enrolledCredits: 9 },
+        term2: { enabled: true, ftCredits: 12, enrolledCredits: 12 },
+      },
+    ),
+    expected: {
+      sorApplicable: true,
+    },
+  },
 );
 
 /** Public-facing serialization (used by /api/public/v1/scenarios). */

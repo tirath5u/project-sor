@@ -46,6 +46,17 @@ the public `/api/public/v1/calculate` endpoint with `strictNumber` (no silent
    running total exceed the reduced annual amount.
 6. **Final totals.** Emit `totalFinalSub`, `totalFinalUnsub`,
    `initialGradPlus`, `reducedGradPlus`, and a `termResults[]` array.
+7. **Optional child allocation.** When enabled, calculate the parent term first,
+   then split that parent gross payout by child credits or equally across active
+   child terms. Child allocation does not feed back into SOR.
+
+## Child and Net Display Layer
+
+The v55 child layer is downstream of the SOR engine. It accepts child credits and
+optional gross paid history, preserves paid child amounts, excludes zero-credit
+children from unpaid allocation, and returns scheduled gross and calculated net
+display values. Net is calculated from gross using the FY27 fee percentages and
+fee truncation rule. Net values never feed SOR eligibility.
 
 ## Scope Limits
 

@@ -8,5 +8,9 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 export default defineConfig({
-  plugins: [mcpPlugin()],
+  // @lovable.dev/mcp-js 0.24.0 has a Windows-only path separator check that
+  // rejects an otherwise valid generated route tree. The routes are committed
+  // and remain available for local verification; Lovable's Linux build keeps
+  // the generator enabled.
+  plugins: process.platform === "win32" ? [] : [mcpPlugin()],
 });

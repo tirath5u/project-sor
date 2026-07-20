@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { calculateSOR, defaultInputs, TERM_ORDER, type SORInputs, type TermKey } from "@/lib/sor";
+import { calculateSORWithChildTerms, defaultInputs, TERM_ORDER, type SORInputs, type TermKey } from "@/lib/sor";
 import { CalculateInputSchema } from "@/lib/sor.schema";
 import {
   ENGINE_VERSION,
@@ -94,6 +94,8 @@ export default defineTool({
     coa: z.number().min(0).optional(),
     otherAid: z.number().min(0).optional(),
     requestedGradPlus: z.number().min(0).optional(),
+    feeSubUnsubPercent: z.number().min(0).max(100).optional().describe("FY27 Sub/Unsub Direct Loan fee percentage. Defaults to 1.057."),
+    feeGradPlusPercent: z.number().min(0).max(100).optional().describe("FY27 Grad PLUS fee percentage. Defaults to 4.228."),
     distributionModel: z.enum(["equal", "proportional"]).optional(),
     applySubUnsubShift: z.boolean().optional(),
     countLthtInAyPct: z.boolean().optional(),
@@ -104,6 +106,28 @@ export default defineTool({
       .describe(
         "Per-term overrides keyed by term1..term4, summer1/summer2, winter1/winter2. Set `enabled: true` to include a term.",
       ),
+    childTerms: z
+      .object({
+        count: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+        allocationMethod: z.enum(["byChildCredits", "equalAcrossActiveChildTerms"]),
+        parents: z.record(
+          TermKeyEnum,
+          z.array(
+            z.object({
+              credits: z.number().min(0).max(60),
+              paidGross: z
+                .object({
+                  sub: z.number().min(0).nullable().optional(),
+                  unsub: z.number().min(0).nullable().optional(),
+                  gradPlus: z.number().min(0).nullable().optional(),
+                })
+                .optional(),
+            }),
+          ),
+        ),
+      })
+      .optional()
+      .describe("Optional v55 child/module allocation layer. Parent SOR is calculated first."),
   },
   annotations: {
     readOnlyHint: true,
@@ -154,7 +178,7 @@ export default defineTool({
 
     let results;
     try {
-      results = calculateSOR(parsed.data as unknown as SORInputs);
+      results = calculateSORWithChildTerms(parsed.data as unknown as SORInputs);
     } catch (e) {
       return {
         content: [
@@ -172,6 +196,7 @@ export default defineTool({
       policyYear: merged.awardYear ?? POLICY_YEAR,
       policySnapshotDate: POLICY_SNAPSHOT_DATE,
       sourceCommit: SOURCE_COMMIT,
+      sourceSet: ["direct-loan-sor-v1", "project-sor-v55-child-allocation"],
       computedAt: new Date().toISOString(),
     };
 

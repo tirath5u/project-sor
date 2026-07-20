@@ -55,6 +55,26 @@ export const strictNumber = (opts: { min?: number; max?: number; int?: boolean }
     })
     .transform((val) => (typeof val === "number" ? val : Number(val)));
 
+const ChildPaidGrossSchema = z.object({
+  sub: z.number().finite().min(0).nullable().optional(),
+  unsub: z.number().finite().min(0).nullable().optional(),
+  gradPlus: z.number().finite().min(0).nullable().optional(),
+});
+
+const ChildTermsSchema = z.object({
+  count: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+  allocationMethod: z.enum(["byChildCredits", "equalAcrossActiveChildTerms"]),
+  parents: z.record(
+    z.enum(["term1", "term2", "term3", "term4", "summer1", "summer2", "winter1", "winter2"]),
+    z.array(
+      z.object({
+        credits: strictNumber({ min: 0, max: 60 }),
+        paidGross: ChildPaidGrossSchema.optional(),
+      }),
+    ),
+  ),
+});
+
 /** Optional money: number or null. Null = "not entered" (engine semantic). */
 const nullableMoney = z.union([z.number().finite(), z.null()]);
 
@@ -151,6 +171,9 @@ export const CalculateInputSchema = z
     coa: optionalMoney,
     otherAid: optionalMoney,
     requestedGradPlus: optionalMoney,
+    childTerms: ChildTermsSchema.optional(),
+    feeSubUnsubPercent: z.number().finite().min(0).max(100).optional().default(1.057),
+    feeGradPlusPercent: z.number().finite().min(0).max(100).optional().default(4.228),
   })
   .strict();
 

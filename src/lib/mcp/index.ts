@@ -4,9 +4,9 @@ import listScenariosTool from "./tools/list-scenarios";
 
 export default defineMcp({
   name: "project-sor-mcp",
-  title: "Project SOR — Schedule of Reductions",
-  version: "0.1.0",
+  title: "Project SOR: Schedule of Reductions",
+  version: "0.2.0",
   instructions:
-    "Public MCP server for the Schedule of Reductions (SOR) calculator. Use `list_scenarios` to discover canonical borrower scenarios and valid input shapes, then `calculate_sor` to run the ED five-step SOR engine on your own inputs (award year, grade level, enrollment credits per term, financial need, etc.). All calculations are stateless and public; no user data is retained. This is a decision-support tool — production packaging must still be verified against NSLDS aggregate and lifetime-limit checks outside this calculator.",
+    "Public MCP server for the Project SOR calculator. Use `list_scenarios` to discover canonical scenarios and `calculate_sor` for parent-term SOR calculations with optional v55 child/module allocation. Child allocation runs after the parent SOR result and never creates a second SOR calculation. Calculations are stateless and public; no user data is retained. This is decision support, not an official Department of Education calculator. Verify NSLDS aggregate, lifetime, COD, proration, and final packaging requirements outside this service.",
   tools: [calculateSorTool, listScenariosTool],
 });

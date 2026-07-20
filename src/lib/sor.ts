@@ -38,6 +38,7 @@ import {
   type GradeLevel,
   type Dependency,
 } from "./loanLimits";
+import { allocateChildTerms, type ChildTermsInput, type ChildAllocationResult } from "./child-terms";
 
 export type CalType = 1 | 2 | 3 | 4;
 export type ProgramLevel = "undergraduate" | "graduate";
@@ -146,6 +147,11 @@ export interface SORInputs {
   otherAid?: number;
   /** v19 - Student-requested Grad PLUS amount (the borrowing ceiling). */
   requestedGradPlus?: number;
+  /** Optional v55 parent-term child/module allocation layer. */
+  childTerms?: ChildTermsInput;
+  /** FY27 Direct Loan fee percentages used only for net display. */
+  feeSubUnsubPercent: number;
+  feeGradPlusPercent: number;
 }
 
 export interface TermResult {
@@ -284,6 +290,7 @@ export interface SORResults {
   perTermCapGradPlus: number;
   /** True when the OBBB table is still mirroring Legacy values (drives banner). */
   obbbTableIsPlaceholder: boolean;
+  childAllocations?: ChildAllocationResult;
 }
 
 export const TERM_ORDER: TermKey[] = [
@@ -374,6 +381,13 @@ export function defaultInputs(): SORInputs {
     coa: 10000,
     otherAid: 0,
     requestedGradPlus: 0,
+    childTerms: {
+      count: 0,
+      allocationMethod: "byChildCredits",
+      parents: {},
+    },
+    feeSubUnsubPercent: 1.057,
+    feeGradPlusPercent: 4.228,
   };
 }
 
@@ -1365,6 +1379,15 @@ export const fmtCurrencyCents = (n: number) =>
     maximumFractionDigits: 2,
     signDisplay: n < 0 ? "always" : "auto",
   }).format(n);
+
+export function calculateSORWithChildTerms(inp: SORInputs): SORResults {
+  const results = calculateSOR(inp);
+  const childAllocations = allocateChildTerms(results, inp.childTerms, {
+    subUnsub: inp.feeSubUnsubPercent,
+    gradPlus: inp.feeGradPlusPercent,
+  });
+  return { ...results, childAllocations };
+}
 
 export const fmtPct = (n: number) => `${Math.round(n * 100)}%`;
 

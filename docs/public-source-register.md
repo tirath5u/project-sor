@@ -14,6 +14,8 @@ here** - no internal documents, spreadsheet paths, or private URLs.
 | `psr-006` | **34 CFR 685.203(d)** - Graduate / professional limits.                   | stable                   |
 | `psr-007` | **OBBBA** - One Big Beautiful Bill Act, loan-limit provisions.            | pending-federal-guidance |
 | `psr-008` | **ED Proportional Distribution Workbook** - Department rounding examples for enrolled-credit-weighted term shares (25/36, 14/14/6, 3/15, prior-term drop). Labels and formulas conflict; evidence is caveated. | pending-federal-guidance |
+| `psr-009` | **FSA OBBBA SOR and Loan Limits webinar, June 10, 2026** - Modules inside standard terms remain under the parent term or academic-year framework; child/module distribution remains institution-policy dependent when it does not create a second SOR calculation. | operational-clarification |
+| `psr-010` | **FSA FY27 sequester-required changes, GENERAL-26-28** - Direct Subsidized/Unsubsidized fee 1.057% and Direct PLUS fee 4.228%, with fee calculations truncated to cents. | stable |
 
 ## How to add a new entry
 

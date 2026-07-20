@@ -15,6 +15,8 @@ Built and maintained by **Tirath Chhatriwala**, Product Manager with over 14 yea
 >
 > **Source:** <https://github.com/tirath5u/project-sor>
 >
+> **Remote MCP:** `https://sor.myproduct.life/mcp` after the current branch is published and endpoint discovery passes.
+>
 > **Web UI access:** The web calculator is behind a soft access gate during the launch window. Password: `sor2026`. The public API endpoints below require no password and no signup.
 
 ---
@@ -65,6 +67,8 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 - **Grad PLUS preview only for legacy or interim-exception scenarios.** The engine does not model NSLDS aggregate or lifetime remaining eligibility.
 - **Per-term disbursement amounts** with proper rounding-to-dollar correction so the term sum equals the reduced annual amount (no orphan pennies).
 - **History-anchored disbursement view:** committed Paid Sub / Paid Unsub per term anchor independently and the engine redistributes the remaining pool only across future eligible terms.
+- **v55 child/module allocation:** an optional child ledger allocates each already-calculated parent-term gross payout by child credits or equally across active credited child terms. Zero-credit children receive $0, paid child gross remains locked, and child allocation never runs a second SOR calculation.
+- **Gross and net display:** eligibility remains gross. Net display uses configurable FY27 Direct Loan fee percentages, defaulting to 1.057% for Subsidized/Unsubsidized and 4.228% for Grad PLUS, with fee truncation to cents.
 - **Case-file PDF export** of inputs, calculated baselines, per-term disbursements, and the 6-step walkthrough.
 - **7 canonical fixtures** drawn from ED-published scenarios, each tagged with regulatory citations and a source-status label.
 
@@ -80,13 +84,36 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 | `/api/public/v1/openapi.json` | GET    | OpenAPI 3.1 specification                                          |
 | `/api-docs`                   | GET    | Human-readable API guide with examples and challenge workflow      |
 
+### v55 child-term input
+
+The optional `childTerms` object is an allocation layer under the parent SOR result:
+
+```json
+{
+  "childTerms": {
+    "count": 2,
+    "allocationMethod": "equalAcrossActiveChildTerms",
+    "parents": {
+      "term1": [
+        { "credits": 3, "paidGross": { "sub": 0 } },
+        { "credits": 6 }
+      ]
+    }
+  }
+}
+```
+
+Supported methods are `byChildCredits` and `equalAcrossActiveChildTerms`. The parent term is calculated first. Child terms do not create separate SOR terms, change the academic-year SOR percentage, or level funds across different parent terms. The response includes `data.childAllocations` when `childTerms.count` is greater than zero.
+
+The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. It is read-only and stateless. Consumers must verify the published `engineVersion` and `sourceCommit` before relying on a result.
+
 **Rate limit:** 30 requests per minute and 5,000 per day per IP, best-effort per edge isolate. No keys, no signup. Header `X-RateLimit-Policy: best-effort-per-isolate` documents the constraint honestly.
 
 **Response envelope:** every successful response carries the metadata needed to
 reproduce a calculation against a specific snapshot of the rules. Top-level
 keys: `data` and `meta`. The `meta` object includes:
 
-- `engineVersion` - semantic version of the calculation engine (e.g. `1.0.0`)
+- `engineVersion` - semantic version of the calculation engine (e.g. `1.1.0`)
 - `policyYear` - award year the engine was evaluated against (e.g. `2026-27`)
 - `policySnapshotDate` - ISO date of the policy snapshot used
 - `policyStatus` - `confirmed` or `supported-preliminary`
@@ -124,7 +151,7 @@ bun install
 bun test
 ```
 
-42 tests pass cent-exact against published fixtures: 7 SOR parity scenarios plus schema validation plus numeric coercion edges. CI runs the same suite on every push and pull request.
+72 tests pass against the current engine and v55 child-allocation regressions: 7 SOR parity scenarios, schema validation, numeric coercion edges, and child/module allocation cases. CI runs the same suite on every push and pull request.
 
 A second verification path is executable contract testing: CI pulls the documented request example from `/api/public/v1/openapi.json`, posts it to `/api/public/v1/calculate`, and checks the documented stable fields. The exported Postman collection in `postman/` runs nightly through Newman against the live API.
 
@@ -203,9 +230,15 @@ Accepted challenges become fixtures first, code changes second. Issues are triag
 
 ---
 
+## MCP and agent use
+
+The project exposes a read-only remote MCP server at `/mcp` when the deployment has MCP routes enabled. MCP clients can discover `list_scenarios` and call `calculate_sor` using natural-language prompts when the client supports remote MCP and the user's workspace allows custom MCP apps. ChatGPT custom MCP apps require workspace support and administrator approval; this is not automatically available to every ChatGPT user or plan. Claude and other MCP clients have their own connection and approval requirements.
+
+MCP responses include engine and policy metadata so an agent can report which calculator snapshot produced the result. Agents should not present results as Department-approved and should distinguish gross eligibility from net posting amounts and from external COD, NSLDS, aggregate, lifetime, proration, and packaging checks.
+
 ## How it was built
 
-Regulatory ingest into a domain wiki, LLM-assisted formula derivation into an Excel master sheet, adversarial cross-LLM review on the spec, Lovable-built calculator UI, and a thin TypeScript HTTP wrapper around the same engine. The full workflow including the AI-orchestration role is documented in [`docs/process.md`](docs/process.md).
+Regulatory ingest into a domain wiki, source-item coverage inventories, LLM-assisted formula derivation into an Excel master sheet, adversarial cross-LLM review on the spec, Lovable-built calculator UI, a child/module allocation layer, and TypeScript HTTP and MCP wrappers around the same engine. The full workflow including the AI-orchestration role is documented in [`docs/process.md`](docs/process.md).
 
 ---
 

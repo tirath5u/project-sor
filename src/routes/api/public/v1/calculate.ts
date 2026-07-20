@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import "@tanstack/react-start";
 import { CalculateInputSchema } from "@/lib/sor.schema";
-import { calculateSOR, type SORInputs } from "@/lib/sor";
+import { calculateSORWithChildTerms, type SORInputs } from "@/lib/sor";
 import {
   ENGINE_VERSION,
   POLICY_YEAR,
@@ -140,7 +140,7 @@ export const Route = createFileRoute("/api/public/v1/calculate")({
         // 6) Run engine.
         let results;
         try {
-          results = calculateSOR(parsed.data as unknown as SORInputs);
+          results = calculateSORWithChildTerms(parsed.data as unknown as SORInputs);
         } catch (e) {
           return errorResponse(
             "internal_error",
@@ -164,7 +164,7 @@ export const Route = createFileRoute("/api/public/v1/calculate")({
               policySnapshotDate: POLICY_SNAPSHOT_DATE,
               sourceCommit: SOURCE_COMMIT,
               policyStatus: ay === "2026-27" ? "supported-preliminary" : "confirmed",
-              sourceSet: ["direct-loan-sor-v1"],
+              sourceSet: ["direct-loan-sor-v1", "project-sor-v55-child-allocation"],
               citations: [],
               computedAt: new Date().toISOString(),
               requestId,

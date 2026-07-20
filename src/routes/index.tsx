@@ -10,7 +10,7 @@ import {
   GraduationCap,
 } from "lucide-react";
 import {
-  calculateSOR,
+  calculateSORWithChildTerms,
   defaultInputs,
   fmtCurrency,
   splitNeed,
@@ -40,6 +40,7 @@ import { StepWalkthrough } from "@/components/sor/StepWalkthrough";
 import { TermsMatrix } from "@/components/sor/TermsMatrix";
 import { TermsCards } from "@/components/sor/TermsCards";
 import { QuickTermCalc } from "@/components/sor/QuickTermCalc";
+import { ChildTermsPanel } from "@/components/sor/ChildTermsPanel";
 import { InfoTip } from "@/components/sor/InfoTip";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -156,7 +157,7 @@ function SORCalculatorPage() {
   const [inputs, setInputs] = React.useState<SORInputs>(() => defaultInputs());
   const [activeScenario, setActiveScenario] = React.useState<string>("");
   const [resultView, setResultView] = React.useState<"table" | "cards">("table");
-  const results = React.useMemo(() => calculateSOR(inputs), [inputs]);
+  const results = React.useMemo(() => calculateSORWithChildTerms(inputs), [inputs]);
 
   const update = (patch: Partial<SORInputs>) => {
     setActiveScenario("");
@@ -1067,6 +1068,13 @@ function SORCalculatorPage() {
             </div>
           </div>
         </Section>
+
+        <ChildTermsPanel
+          inputs={inputs}
+          results={results}
+          activeTermKeys={activeTermKeys}
+          onChange={(childTerms) => update({ childTerms })}
+        />
 
         {/* Results layout - Matrix or Cards + sticky summary */}
         <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_360px]">

@@ -8,7 +8,7 @@ import {
 } from "@/lib/sor.version";
 import { corsPreflightResponse, jsonResponse } from "@/lib/api-errors";
 import { PARITY_FIXTURES } from "@/lib/sor.fixtures";
-import { calculateSOR } from "@/lib/sor";
+import { calculateSORWithChildTerms } from "@/lib/sor";
 
 export const Route = createFileRoute("/api/public/v1/openapi.json")({
   server: {
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
       OPTIONS: async () => corsPreflightResponse(),
       GET: async () => {
         const exampleScenario = PARITY_FIXTURES[0];
-        const exampleResult = calculateSOR(exampleScenario.input);
+        const exampleResult = calculateSORWithChildTerms(exampleScenario.input);
         const exampleStableData = {
           totalFinalSub: exampleScenario.expected.totalFinalSub ?? exampleResult.totalFinalSub,
           totalFinalUnsub: exampleScenario.expected.totalFinalUnsub ?? exampleResult.totalFinalUnsub,
@@ -154,7 +154,10 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                             policySnapshotDate: POLICY_SNAPSHOT_DATE,
                             sourceCommit: "local-dev",
                             policyStatus: "supported-preliminary",
-                            sourceSet: ["direct-loan-sor-v1"],
+                            sourceSet: [
+                              "direct-loan-sor-v1",
+                              "project-sor-v55-child-allocation",
+                            ],
                             citations: [],
                             computedAt: "2026-04-26T00:00:00.000Z",
                             requestId: "demo-sor-001",
@@ -398,10 +401,70 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                 description:
                   "Mirrors SORInputs. Numeric fields use strict validation (no silent 0 coercion). " +
                   "term.paidSub / paidUnsub: null means blank (no anchor), 0 means explicit zero anchor. " +
+                  "The optional childTerms object allocates an already-calculated parent gross payout " +
+                  "by child credits or equally across active credited child terms; zero-credit children " +
+                  "receive zero and paid child gross remains anchored. " +
+                  "feeSubUnsubPercent and feeGradPlusPercent control net display from gross. " +
                   "The engine does not calculate NSLDS aggregate limits, lifetime maximum eligibility, " +
                   "Parent PLUS remaining eligibility, or consolidation allocation. " +
                   "The example below is the first published scenario from /api/public/v1/scenarios.",
+                properties: {
+                  childTerms: { $ref: "#/components/schemas/ChildTermsInput" },
+                  feeSubUnsubPercent: {
+                    type: "number",
+                    minimum: 0,
+                    maximum: 100,
+                    default: 1.057,
+                    description: "Direct Subsidized/Unsubsidized fee percentage applied to gross for net display.",
+                  },
+                  feeGradPlusPercent: {
+                    type: "number",
+                    minimum: 0,
+                    maximum: 100,
+                    default: 4.228,
+                    description: "Direct PLUS fee percentage applied to gross for net display.",
+                  },
+                },
                 example: exampleScenario.input,
+              },
+              ChildTermsInput: {
+                type: "object",
+                required: ["count", "allocationMethod", "parents"],
+                additionalProperties: false,
+                description:
+                  "Optional v55 allocation layer. Parent SOR is calculated first; child rows do not create " +
+                  "new SOR terms or level funds across parent terms.",
+                properties: {
+                  count: { type: "integer", minimum: 0, maximum: 4, example: 2 },
+                  allocationMethod: {
+                    type: "string",
+                    enum: ["byChildCredits", "equalAcrossActiveChildTerms"],
+                    example: "equalAcrossActiveChildTerms",
+                  },
+                  parents: {
+                    type: "object",
+                    additionalProperties: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        required: ["credits"],
+                        additionalProperties: false,
+                        properties: {
+                          credits: { type: "number", minimum: 0, maximum: 60 },
+                          paidGross: {
+                            type: "object",
+                            additionalProperties: false,
+                            properties: {
+                              sub: { type: ["number", "null"], minimum: 0 },
+                              unsub: { type: ["number", "null"], minimum: 0 },
+                              gradPlus: { type: ["number", "null"], minimum: 0 },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
               },
               TermResultStable: {
                 type: "object",
@@ -490,7 +553,10 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                   sourceSet: {
                     type: "array",
                     items: { type: "string" },
-                    example: ["direct-loan-sor-v1"],
+                    example: [
+                      "direct-loan-sor-v1",
+                      "project-sor-v55-child-allocation",
+                    ],
                   },
                   citations: {
                     type: "array",

@@ -61,6 +61,11 @@ const endpoints = [
     path: "/api/public/v1/openapi.json",
     purpose: "Read the OpenAPI 3.1 contract for tooling and integration review.",
   },
+  {
+    method: "POST",
+    path: "/mcp",
+    purpose: "Use the read-only remote MCP server to discover scenarios and run the same v55 calculator engine.",
+  },
 ];
 
 const responseCodes = [
@@ -273,6 +278,16 @@ function ApiDocsPage() {
               <code className="rounded bg-muted px-1.5 py-1 text-xs text-foreground">
                 https://sor.myproduct.life/api/public/v1/openapi.json
               </code>
+            </div>
+            <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">Agent integration:</span>{" "}
+              the read-only remote MCP server is available at{" "}
+              <code className="rounded bg-muted px-1.5 py-1 text-xs text-foreground">
+                https://sor.myproduct.life/mcp
+              </code>
+              . It exposes <code>list_scenarios</code> and <code>calculate_sor</code>, including
+              the optional v55 child/module allocation layer. MCP clients must support remote
+              MCP and may require workspace or administrator approval.
             </div>
           </div>
         </section>
