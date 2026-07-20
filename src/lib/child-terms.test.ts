@@ -64,4 +64,50 @@ describe("v55 child allocation", () => {
     expect(term1[1].scheduledGross.sub).toBeGreaterThanOrEqual(0);
     expect(term1[0].review).toBe("Remaining payable");
   });
+
+  it("keeps each parent term independent and does not create rows for disabled terms", () => {
+    const { input, results } = baseResults();
+    input.terms.summer1.enabled = false;
+    input.terms.winter1.enabled = false;
+    const allocated = allocateChildTerms(results, {
+      count: 2,
+      allocationMethod: "equalAcrossActiveChildTerms",
+      parents: {
+        term1: [{ credits: 3 }, { credits: 6 }],
+        term2: [{ credits: 9 }, { credits: 3 }],
+        summer1: [{ credits: 6 }, { credits: 6 }],
+      },
+    });
+
+    expect(new Set(allocated.rows.map((row) => row.parentTerm))).toEqual(
+      new Set(["term1", "term2"]),
+    );
+    for (const parentKey of ["term1", "term2"] as const) {
+      const parentGross = results.termResults.find((term) => term.key === parentKey)?.finalSub ?? 0;
+      const childGross = allocated.rows
+        .filter((row) => row.parentTerm === parentKey)
+        .reduce((sum, row) => sum + row.scheduledGross.sub, 0);
+      expect(childGross).toBe(parentGross);
+    }
+  });
+
+  it("preserves paid child gross and calculates the displayed net from gross", () => {
+    const { results } = baseResults();
+    const allocated = allocateChildTerms(
+      results,
+      {
+        count: 2,
+        allocationMethod: "equalAcrossActiveChildTerms",
+        parents: {
+          term1: [{ credits: 6, paidGross: { sub: 100 } }, { credits: 3 }],
+        },
+      },
+      { subUnsub: 1.057, gradPlus: 4.228 },
+    );
+    const child1 = allocated.rows.find(
+      (row) => row.parentTerm === "term1" && row.childIndex === 0,
+    );
+    expect(child1?.scheduledGross.sub).toBe(100);
+    expect(child1?.calculatedNet.sub).toBe(98.94);
+  });
 });
