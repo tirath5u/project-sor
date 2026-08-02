@@ -3,6 +3,7 @@
 const baseUrl = normalizeBaseUrl(process.env.CONTRACT_BASE_URL || "https://sor.myproduct.life");
 const requestId = process.env.CONTRACT_REQUEST_ID || "openapi-contract-001";
 const openapiPath = "/api/public/v1/openapi.json";
+const healthPath = "/api/public/v1/health";
 const calculatePath = "/api/public/v1/calculate";
 
 function normalizeBaseUrl(value) {
@@ -55,8 +56,9 @@ function assertType(path, value, schema, schemas) {
   const resolved = resolveRef(schemas, schema);
   if (!resolved) return;
 
-  // OpenAPI 3.0 uses nullable: true, while OpenAPI 3.1 represents null as
-  // one member of the type array. Both forms are valid inputs to this checker.
+  // OpenAPI 3.0 uses nullable: true; OpenAPI 3.1 represents null in the
+  // type array. Accept both forms because the live Lovable deployment may
+  // legitimately report sourceCommit as null.
   const declaredTypes = Array.isArray(resolved.type) ? resolved.type : [resolved.type];
   const nullable = resolved.nullable === true || declaredTypes.includes("null");
 
@@ -172,6 +174,20 @@ if (!schemas.SORResultsStable) {
 if (!schemas.CalculateMeta) {
   fail("OpenAPI components.schemas.CalculateMeta is missing");
 }
+
+const healthOperation = spec.paths?.[healthPath]?.get;
+if (!healthOperation) {
+  fail(`OpenAPI path ${healthPath} is missing`);
+}
+const healthResult = await fetchJson(healthPath, { headers: { Accept: "application/json" } });
+if (healthResult.response.status !== 200) {
+  fail(`Health returned ${healthResult.response.status}`, healthResult.body);
+}
+const healthSchema = healthOperation.responses?.["200"]?.content?.["application/json"]?.schema;
+if (!healthSchema) {
+  fail(`OpenAPI path ${healthPath} is missing a 200 response schema`);
+}
+validateRequiredFields("health", healthResult.body, healthSchema, schemas);
 
 const calculateResult = await fetchJson(calculatePath, {
   method: "POST",
