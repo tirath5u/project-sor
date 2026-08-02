@@ -798,3 +798,15 @@ describe("SOR engine - LTHT warnings", () => {
     expect(lthtWarning).toContain("these terms");
   });
 });
+
+describe("deployment markers", () => {
+  it("uses releaseId as the authoritative deployment marker", () => {
+    expect(DEPLOYMENT_MARKER).toBe(RELEASE_ID);
+    expect(RELEASE_ID).toBe("sor-v56-1.2.0-2026-07-23");
+  });
+
+  it("reports sourceCommit as null with an explanatory status, never local-dev", () => {
+    expect(SOURCE_COMMIT).toBeNull();
+    expect(SOURCE_COMMIT_STATUS).toBe("not_available_in_lovable_build");
+  });
+});
