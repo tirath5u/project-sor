@@ -67,7 +67,7 @@ export const Route = createFileRoute("/api/public/v2/student-estimate")({
           warnings: result.warnings,
           disclaimer: "This is an estimate, not an award, approval, or guarantee. The school must verify full-time definitions, COA, other aid, grade level, dependency, SAP, aggregate limits, and all other Direct Loan eligibility requirements.",
           unsupported: ["single-term", "summer", "modules", "R2T4", "paid-history", "child-terms", "Parent PLUS", "Grad PLUS", "COD", "NSLDS"],
-          meta: { contractVersion: "v2", engineVersion: ENGINE_VERSION, policyYear: value.awardYear, policySnapshotDate: POLICY_SNAPSHOT_DATE, sourceCommit: SOURCE_COMMIT, releaseId: RELEASE_ID, computedAt: new Date().toISOString(), requestId },
+          meta: { contractVersion: "v2", engineVersion: ENGINE_VERSION, policyYear: value.awardYear, policySnapshotDate: POLICY_SNAPSHOT_DATE, sourceCommit: SOURCE_COMMIT, sourceCommitStatus: SOURCE_COMMIT_STATUS, deploymentMarker: DEPLOYMENT_MARKER, releaseId: RELEASE_ID, computedAt: new Date().toISOString(), requestId },
         }, { headers: { "X-Request-Id": requestId } });
       },
     },

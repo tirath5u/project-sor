@@ -139,7 +139,7 @@ export default defineTool({
 
     try {
       const data = calculateSORWithChildTerms(parsed.data as unknown as SORInputs) as unknown as Record<string, unknown>;
-      const meta = { engineVersion: ENGINE_VERSION, mcpVersion: MCP_VERSION, policyYear: parsed.data.awardYear ?? POLICY_YEAR, policySnapshotDate: POLICY_SNAPSHOT_DATE, sourceCommit: SOURCE_COMMIT, releaseId: RELEASE_ID, sourceSet: ["direct-loan-sor-v1", "project-sor-v56-rule-corrections", "department-vfg-july-23-2026"], computedAt: new Date().toISOString() };
+      const meta = { engineVersion: ENGINE_VERSION, mcpVersion: MCP_VERSION, policyYear: parsed.data.awardYear ?? POLICY_YEAR, policySnapshotDate: POLICY_SNAPSHOT_DATE, sourceCommit: SOURCE_COMMIT, sourceCommitStatus: SOURCE_COMMIT_STATUS, deploymentMarker: DEPLOYMENT_MARKER, releaseId: RELEASE_ID, sourceSet: ["direct-loan-sor-v1", "project-sor-v56-rule-corrections", "department-vfg-july-23-2026"], computedAt: new Date().toISOString() };
       const result = { status: "calculated", canCalculate: true, data, meta, explanation: explanation(data) };
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], structuredContent: result as Record<string, unknown> };
     } catch (error) {

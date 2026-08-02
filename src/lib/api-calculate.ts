@@ -101,7 +101,7 @@ export async function handleCalculateRequest(request: Request, contractVersion: 
         mcpVersion: MCP_VERSION,
         policyYear: awardYear,
         policySnapshotDate: POLICY_SNAPSHOT_DATE,
-        sourceCommit: SOURCE_COMMIT,
+        sourceCommit: SOURCE_COMMIT, sourceCommitStatus: SOURCE_COMMIT_STATUS, deploymentMarker: DEPLOYMENT_MARKER,
         releaseId: RELEASE_ID,
         policyStatus: awardYear === "2026-27" ? "supported-preliminary" : "confirmed",
         sourceSet: ["direct-loan-sor-v1", "project-sor-v56-rule-corrections", "department-vfg-july-23-2026"],

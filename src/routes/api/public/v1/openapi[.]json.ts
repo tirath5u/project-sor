@@ -159,8 +159,8 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                             policyYear: POLICY_YEAR,
                             policySnapshotDate: POLICY_SNAPSHOT_DATE,
                             sourceCommit: null,
-                          sourceCommitStatus: "not_available_in_lovable_build",
-                          deploymentMarker: RELEASE_ID,
+                            sourceCommitStatus: "not_available_in_lovable_build",
+                            deploymentMarker: RELEASE_ID,
                             policyStatus: "supported-preliminary",
                             sourceSet: [
                               "direct-loan-sor-v1",
@@ -549,7 +549,9 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                   "engineVersion",
                   "policyYear",
                   "policySnapshotDate",
+                  "deploymentMarker",
                   "sourceCommit",
+                  "sourceCommitStatus",
                   "policyStatus",
                   "sourceSet",
                   "citations",
@@ -561,6 +563,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                   engineVersion: { type: "string", example: ENGINE_VERSION },
                   policyYear: { type: "string", example: POLICY_YEAR },
                   policySnapshotDate: { type: "string", example: POLICY_SNAPSHOT_DATE },
+                  deploymentMarker: { type: "string", example: RELEASE_ID },
                   sourceCommit: { type: "string", nullable: true, example: null },
                   sourceCommitStatus: { type: "string", example: "not_available_in_lovable_build" },
                   policyStatus: {
