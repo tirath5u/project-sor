@@ -189,7 +189,7 @@ export const CalculateOutputSchema = z
       engineVersion: z.string(),
       policyYear: z.string(),
       policySnapshotDate: z.string(),
-      sourceCommit: z.string(),
+      sourceCommit: z.string().nullable(),
       policyStatus: z.enum(["confirmed", "supported-preliminary"]),
       sourceSet: z.array(z.string()),
       citations: z.array(z.string()).optional(),
