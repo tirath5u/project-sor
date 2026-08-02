@@ -275,6 +275,8 @@ export interface SORResults {
   /** v19 - Award Year & SOR applicability. */
   awardYear: "2025-26" | "2026-27";
   sorApplicable: boolean;
+  currentSorReduction: boolean;
+  effectiveDistributionModel: DistributionModel;
   loanLimitException: boolean;
   /** v19 - Grad PLUS bucket aggregates. */
   coa: number;
@@ -452,12 +454,16 @@ function activeKeys(inp: SORInputs): TermKey[] {
   return TERM_ORDER.filter((k) => (standardSet.has(k) || optional[k]) && inp.terms[k]?.enabled);
 }
 
-/** Split annual into N equal whole-dollar shares; last term takes the remainder. */
-function equalShares(annual: number, n: number): number[] {
+/** Split annual into N equal whole-dollar shares with a deterministic residual. */
+function equalShares(annual: number, n: number, residualToFirst = false): number[] {
   if (n <= 0) return [];
   const base = Math.floor(annual / n);
   const out = new Array(n).fill(base);
-  out[n - 1] = annual - base * (n - 1);
+  if (residualToFirst) {
+    out[0] = annual - base * (n - 1);
+  } else {
+    out[n - 1] = annual - base * (n - 1);
+  }
   return out;
 }
 
@@ -478,6 +484,7 @@ function distributeRunningPoolDetailed(
   locked: Array<number | null>,
   distributionModel: DistributionModel,
   weights: number[],
+  residualToFirst = false,
 ): { share: number[]; calc: number[] } {
   const share = new Array(termsInOrder.length).fill(0);
   const calc = new Array(termsInOrder.length).fill(0);
@@ -519,7 +526,13 @@ function distributeRunningPoolDetailed(
           ? remainingPool
           : Math.round((remainingPool * currentWeight) / totalWeight);
     } else {
-      payout = isLast ? remainingPool : Math.floor(remainingPool / remainingEligibleIdx.length);
+      const isFirst = remainingEligibleIdx[0] === i;
+      payout =
+        (residualToFirst && isFirst) || (!residualToFirst && isLast)
+          ? remainingPool -
+            Math.floor(remainingPool / remainingEligibleIdx.length) *
+              (remainingEligibleIdx.length - 1)
+          : Math.floor(remainingPool / remainingEligibleIdx.length);
     }
 
     share[i] = payout;
@@ -537,6 +550,7 @@ function distributeRemainingPool(
   locked: Array<number | null>,
   distributionModel: DistributionModel,
   weights: number[],
+  residualToFirst = false,
 ): number[] {
   return distributeRunningPoolDetailed(
     annual,
@@ -545,6 +559,7 @@ function distributeRemainingPool(
     locked,
     distributionModel,
     weights,
+    residualToFirst,
   ).calc;
 }
 
@@ -576,8 +591,9 @@ function computeDisplayRows(args: {
   locked: Array<number | null>;
   distributionModel: DistributionModel;
   weights: number[];
+  residualToFirst?: boolean;
 }): { share: number[]; calc: number[] } {
-  const { annual, termsInOrder, eligible, locked, distributionModel, weights } = args;
+  const { annual, termsInOrder, eligible, locked, distributionModel, weights, residualToFirst } = args;
   return distributeRunningPoolDetailed(
     annual,
     termsInOrder,
@@ -585,6 +601,7 @@ function computeDisplayRows(args: {
     locked,
     distributionModel,
     weights,
+    residualToFirst,
   );
 }
 
@@ -601,6 +618,7 @@ function computeSnapshot(
   countLthtInAyPct: boolean,
   distributionModel: DistributionModel,
   sorApplies: boolean,
+  residualToFirst = false,
 ): {
   ayPctRaw: number;
   ayPctRounded: number;
@@ -641,8 +659,8 @@ function computeSnapshot(
       shareSubFlat = proportionalShares(annualSub, weights);
       shareUnsubFlat = proportionalShares(annualUnsub, weights);
     } else {
-      shareSubFlat = equalShares(annualSub, enabledCount);
-      shareUnsubFlat = equalShares(annualUnsub, enabledCount);
+      shareSubFlat = equalShares(annualSub, enabledCount, residualToFirst);
+      shareUnsubFlat = equalShares(annualUnsub, enabledCount, residualToFirst);
     }
   }
   const shareSub: number[] = new Array(termsInOrder.length).fill(0);
@@ -663,6 +681,7 @@ function computeSnapshot(
     unlocked,
     distributionModel,
     weights,
+    residualToFirst,
   );
   const unsubDistribution = distributeRunningPoolDetailed(
     annualUnsub,
@@ -671,6 +690,7 @@ function computeSnapshot(
     unlocked,
     distributionModel,
     weights,
+    residualToFirst,
   );
 
   return {
@@ -787,6 +807,22 @@ export function calculateSOR(inp: SORInputs): SORResults {
       : 0;
   const unsubBaselineEff = unsubBaseline;
 
+  // Single-term scope uses half of the annual eligibility before the
+  // term-level SOR percentage. Do not reuse the annual COA-capped baseline,
+  // because that would cap annual eligibility to the term COA and then halve
+  // it again. Apply the single-term COA once after the annual half-cap is
+  // established.
+  const singleTermAnnualSubBase = Math.min(caps.sub, subNeed);
+  const singleTermAnnualUnsubBase = Math.max(
+    0,
+    Math.min(combinedLimit - singleTermAnnualSubBase, Math.max(caps.unsub, unsubNeed)),
+  );
+  const singleTermSubPreSORBase = Math.min(singleTermAnnualSubBase / 2, availableCoa);
+  const singleTermUnsubPreSORBase = Math.min(
+    singleTermAnnualUnsubBase / 2,
+    Math.max(0, availableCoa - singleTermSubPreSORBase),
+  );
+
   const sumOfTermFT = ordered.reduce((s, t) => s + t.ftCredits, 0);
   const ayFtUsed = inp.ayFtCredits > 0 ? inp.ayFtCredits : sumOfTermFT;
 
@@ -807,6 +843,34 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const effectiveCreditsBy = (t: TermInput) =>
     isDisbursementMode && hasHistoricalActivity(t) ? historicalCredits(t) : t.enrolledCredits;
 
+  const plannedEligible = ordered.map((t) => {
+    const half = t.ftCredits / 2;
+    return t.enabled && half > 0 && t.enrolledCredits >= half;
+  });
+  const plannedEnrolledSum = ordered.reduce((sum, t, i) => {
+    if (plannedEligible[i]) return sum + t.enrolledCredits;
+    if (inp.countLthtInAyPct && t.enabled && t.enrolledCredits > 0) return sum + t.enrolledCredits;
+    return sum;
+  }, 0);
+  const plannedSorPct = sorApplicable
+    ? Math.min(
+        1,
+        Math.round(
+          (plannedEnrolledSum /
+            (loanPeriodScope === "singleTerm" && ordered.length === 1
+              ? ordered[0].ftCredits
+              : ayFtUsed)) *
+            100,
+        ) / 100,
+      )
+    : 1;
+  const currentSorReduction = sorApplicable && plannedSorPct < 1;
+  const effectiveDistributionModel: DistributionModel =
+    loanPeriodScope === "singleTerm" || !currentSorReduction
+      ? "equal"
+      : inp.distributionModel;
+  const residualToFirst = !currentSorReduction;
+
   const reductionBasesFor = (creditsFn: (t: TermInput) => number) => {
     if (loanPeriodScope !== "singleTerm") {
       return { sub: subBaseline, unsub: unsubBaselineEff };
@@ -819,7 +883,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     if (credits < term.ftCredits / 2) {
       return { sub: 0, unsub: 0 };
     }
-    return { sub: subBaseline / 2, unsub: unsubBaselineEff / 2 };
+    return { sub: singleTermSubPreSORBase, unsub: singleTermUnsubPreSORBase };
   };
 
   const runSnapshot = (creditsFn: (t: TermInput) => number) => {
@@ -835,8 +899,9 @@ export function calculateSOR(inp: SORInputs): SORResults {
       reductionBases.sub,
       reductionBases.unsub,
       inp.countLthtInAyPct,
-      inp.distributionModel,
+      effectiveDistributionModel,
       sorApplicable,
+      residualToFirst,
     );
     if (!inp.applyDoubleReduction || loanPeriodScope === "singleTerm")
       return { snap: first, reduced: false };
@@ -855,8 +920,9 @@ export function calculateSOR(inp: SORInputs): SORResults {
       subBaseline2,
       unsubBaseline2,
       inp.countLthtInAyPct,
-      inp.distributionModel,
+      effectiveDistributionModel,
       sorApplicable,
+      residualToFirst,
     );
     return { snap: second, reduced: true };
   };
@@ -886,6 +952,11 @@ export function calculateSOR(inp: SORInputs): SORResults {
       recalcHistory,
       warnings,
       finalSnap: snap,
+      singleTermSubPreSORBase,
+      singleTermUnsubPreSORBase,
+      currentSorReduction,
+      effectiveDistributionModel,
+      residualToFirst,
     });
   }
 
@@ -921,16 +992,18 @@ export function calculateSOR(inp: SORInputs): SORResults {
       ordered,
       newSnap.eligible,
       lockedSub,
-      inp.distributionModel,
+      effectiveDistributionModel,
       weightsFor(creditModeAt(i)),
+      residualToFirst,
     );
     const distributedUnsub = distributeRemainingPool(
       newSnap.annualUnsub,
       ordered,
       newSnap.eligible,
       lockedUnsub,
-      inp.distributionModel,
+      effectiveDistributionModel,
       weightsFor(creditModeAt(i)),
+      residualToFirst,
     );
 
     ordered.forEach((term, idx) => {
@@ -993,16 +1066,18 @@ export function calculateSOR(inp: SORInputs): SORResults {
     ordered,
     finalSnap.eligible,
     finalLockedSub,
-    inp.distributionModel,
+    effectiveDistributionModel,
     weightsFor((t) => (hasHistoricalActivity(t) ? historicalCredits(t) : t.enrolledCredits)),
+    residualToFirst,
   );
   const finalDistributedUnsub = distributeRemainingPool(
     finalSnap.annualUnsub,
     ordered,
     finalSnap.eligible,
     finalLockedUnsub,
-    inp.distributionModel,
+    effectiveDistributionModel,
     weightsFor((t) => (hasHistoricalActivity(t) ? historicalCredits(t) : t.enrolledCredits)),
+    residualToFirst,
   );
   ordered.forEach((t, i) => {
     finalSubByKey[t.key] = finalDistributedSub[i];
@@ -1027,6 +1102,11 @@ export function calculateSOR(inp: SORInputs): SORResults {
     recalcHistory,
     warnings,
     finalSnap,
+    singleTermSubPreSORBase,
+    singleTermUnsubPreSORBase,
+    currentSorReduction,
+    effectiveDistributionModel,
+    residualToFirst,
   });
 }
 
@@ -1048,6 +1128,11 @@ function assemble(args: {
   recalcHistory: RecalcEvent[];
   warnings: string[];
   finalSnap: ReturnType<typeof computeSnapshot>;
+  singleTermSubPreSORBase: number;
+  singleTermUnsubPreSORBase: number;
+  currentSorReduction: boolean;
+  effectiveDistributionModel: DistributionModel;
+  residualToFirst: boolean;
 }): SORResults {
   const {
     inp,
@@ -1067,6 +1152,11 @@ function assemble(args: {
     recalcHistory,
     warnings,
     finalSnap,
+    singleTermSubPreSORBase,
+    singleTermUnsubPreSORBase,
+    currentSorReduction,
+    effectiveDistributionModel,
+    residualToFirst,
   } = args;
 
   // v19 - Award Year gate: SOR only applies for "2026-27"+. For 2025-26
@@ -1094,6 +1184,16 @@ function assemble(args: {
     ordered.length === 1 &&
     effectiveCreditsBy(ordered[0]) >= ordered[0].ftCredits / 2;
 
+  if (
+    inp.distributionModel === "proportional" &&
+    !currentSorReduction &&
+    loanPeriodScope !== "singleTerm"
+  ) {
+    warnings.push(
+      "Review: Proportional is not used because SOR is not reducing the current loan. Remaining allocation uses Equal.",
+    );
+  }
+
   const subStatBaseline = caps.sub;
   const unsubStatBaseline = caps.unsub;
   const subNeedAdjusted = inp.applyDoubleReduction
@@ -1106,9 +1206,9 @@ function assemble(args: {
     inp.applyDoubleReduction && (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);
 
   const reductionSubBase =
-    loanPeriodScope === "singleTerm" ? (singleTermEligible ? subBaseline / 2 : 0) : subBaseline;
+    loanPeriodScope === "singleTerm" ? (singleTermEligible ? singleTermSubPreSORBase : 0) : subBaseline;
   const reductionUnsubBase =
-    loanPeriodScope === "singleTerm" ? (singleTermEligible ? unsubBaseline / 2 : 0) : unsubBaseline;
+    loanPeriodScope === "singleTerm" ? (singleTermEligible ? singleTermUnsubPreSORBase : 0) : unsubBaseline;
   const reducedSubRaw = round(reductionSubBase * pct);
   const reducedUnsubRaw = round(reductionUnsubBase * pct);
   const additionalUnsubReduced = round(additionalUnsubBase * pct);
@@ -1174,16 +1274,18 @@ function assemble(args: {
     termsInOrder: ordered,
     eligible: finalSnap.eligible,
     locked: lockedSubDisplay,
-    distributionModel: inp.distributionModel,
+    distributionModel: effectiveDistributionModel,
     weights,
+    residualToFirst,
   });
   const displayUnsub = computeDisplayRows({
     annual: reducedUnsub,
     termsInOrder: ordered,
     eligible: finalSnap.eligible,
     locked: lockedUnsubDisplay,
-    distributionModel: inp.distributionModel,
+    distributionModel: effectiveDistributionModel,
     weights,
+    residualToFirst,
   });
 
   // Grad PLUS distribution - same balance-forward distributor as Sub/Unsub.
@@ -1197,8 +1299,9 @@ function assemble(args: {
     termsInOrder: ordered,
     eligible: finalSnap.eligible,
     locked: lockedGradPlusDisplay,
-    distributionModel: inp.distributionModel,
+    distributionModel: effectiveDistributionModel,
     weights,
+    residualToFirst,
   });
 
   // Per-term cap diagnostic (informational, spec §4.8): reduced annual ÷ # active terms.
@@ -1375,6 +1478,8 @@ function assemble(args: {
     grossAmountBasis: true,
     awardYear,
     sorApplicable,
+    currentSorReduction,
+    effectiveDistributionModel,
     loanLimitException: inp.loanLimitException ?? false,
     coa,
     otherAid,
@@ -1416,7 +1521,12 @@ function assemble(args: {
       {
         id: "parent-distribution",
         label: "Parent distribution",
-        output: { distributionModel: inp.distributionModel, activeTerms: ordered.map((t) => t.key) },
+        output: {
+          selectedDistributionModel: inp.distributionModel,
+          effectiveDistributionModel,
+          currentSorReduction,
+          activeTerms: ordered.map((t) => t.key),
+        },
       },
       {
         id: "net-display",
@@ -1430,7 +1540,8 @@ function assemble(args: {
     ],
     notModeledChecks: [
       "COD transaction validation", "NSLDS aggregate and lifetime limits", "R2T4 transaction processing",
-      "institutional SAP and final award approval", "institution-specific program classification",
+      "Parent PLUS remaining eligibility and aggregate usage", "institutional SAP and final award approval",
+      "institution-specific program classification",
     ],
   };
 }

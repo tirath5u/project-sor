@@ -168,7 +168,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   {
     id: "fixture-v19-004",
     description:
-      "Part-time Fall 6, overload Spring 18, proportional model - AY% = 100, balloon to Spring (ed-1).",
+      "Part-time Fall 6, overload Spring 18, proportional selected with no current SOR reduction - substantially equal distribution.",
     sourceRefs: ["psr-001"],
     input: build(
       {
@@ -187,8 +187,8 @@ export const PARITY_FIXTURES: ParityFixture[] = [
     expected: {
       totalFinalSub: 3500,
       terms: {
-        term1: { finalSub: 875 },
-        term2: { finalSub: 2625 },
+        term1: { finalSub: 1750 },
+        term2: { finalSub: 1750 },
       },
     },
   },

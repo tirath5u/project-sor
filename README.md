@@ -111,7 +111,7 @@ The optional `childTerms` object is an allocation layer under the parent SOR res
 
 Supported methods are `byChildCredits` and `equalAcrossActiveChildTerms`. The parent term is calculated first. Child terms do not create separate SOR terms, change the academic-year SOR percentage, or level funds across different parent terms. The response includes `data.childAllocations` when `childTerms.count` is greater than zero.
 
-The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. It is read-only and stateless. Consumers must verify the published `engineVersion`, `releaseId`, and `deploymentMarker` before relying on a result. When required facts are missing, the MCP returns `status: "needs_input"` with exact missing fields and follow-up questions rather than calculating from demo defaults.
+The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. It is read-only and stateless. Streamable HTTP clients should send `Accept: application/json, text/event-stream` and retain the MCP session identifier returned during initialization. Consumers must verify the published `engineVersion`, `releaseId`, and `deploymentMarker` before relying on a result. When required facts are missing, the MCP returns `status: "needs_input"` with exact missing fields and follow-up questions rather than calculating from demo defaults. Parent PLUS aggregate usage and remaining eligibility are external checks and are called out in the result rather than inferred by the service.
 
 ### Student estimate boundaries
 

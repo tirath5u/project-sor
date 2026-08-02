@@ -55,11 +55,23 @@ function assertType(path, value, schema, schemas) {
   const resolved = resolveRef(schemas, schema);
   if (!resolved) return;
 
+  // OpenAPI 3.0 uses nullable: true, while OpenAPI 3.1 represents null as
+  // one member of the type array. Both forms are valid inputs to this checker.
+  const declaredTypes = Array.isArray(resolved.type) ? resolved.type : [resolved.type];
+  const nullable = resolved.nullable === true || declaredTypes.includes("null");
+
+  if (value === null) {
+    if (nullable) return;
+    fail(`${path} must not be null`, value);
+  }
+
   if (resolved.enum && !resolved.enum.includes(value)) {
     fail(`${path} must be one of ${resolved.enum.join(", ")}`, value);
   }
 
-  switch (resolved.type) {
+  const primaryType = declaredTypes.find((entry) => entry && entry !== "null");
+
+  switch (primaryType) {
     case "string":
       if (typeof value !== "string") fail(`${path} must be a string`, value);
       break;

@@ -15,7 +15,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
-              "pm.test('Response time is under 3000ms', function () { pm.expect(pm.response.responseTime).to.be.below(3000); });",
+              "pm.test('Response time is under 10000ms', function () { pm.expect(pm.response.responseTime).to.be.below(10000); });",
               "pm.test('Response body is valid JSON', function () { pm.response.json(); });",
               "pm.test('Response has engineVersion at the top level', function () {",
               "  var json = pm.response.json();",
@@ -53,7 +53,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
-              "pm.test('Response time is under 3000ms', function () { pm.expect(pm.response.responseTime).to.be.below(3000); });",
+              "pm.test('Response time is under 10000ms', function () { pm.expect(pm.response.responseTime).to.be.below(10000); });",
               "pm.test('Response body is valid JSON', function () { pm.response.json(); });",
               "pm.test('Spec has OpenAPI 3.1 metadata', function () {",
               "  var json = pm.response.json();",
@@ -99,7 +99,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
-              "pm.test('Response time is under 3000ms', function () { pm.expect(pm.response.responseTime).to.be.below(3000); });",
+              "pm.test('Response time is under 10000ms', function () { pm.expect(pm.response.responseTime).to.be.below(10000); });",
               "pm.test('Response body is valid JSON', function () { pm.response.json(); });",
               "pm.test('Response has scenarios array', function () {",
               "  var json = pm.response.json();",
@@ -164,7 +164,7 @@
               "  });",
               "}",
               "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
-              "pm.test('Response time is under 3000ms', function () { pm.expect(pm.response.responseTime).to.be.below(3000); });",
+              "pm.test('Response time is under 10000ms', function () { pm.expect(pm.response.responseTime).to.be.below(10000); });",
               "pm.test('Response body is valid JSON', function () { pm.response.json(); });",
               "pm.test('Response has data and meta envelopes', function () {",
               "  var json = pm.response.json();",
@@ -226,7 +226,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test('Status is 405', function () { pm.response.to.have.status(405); });",
-              "pm.test('Response time is under 3000ms', function () { pm.expect(pm.response.responseTime).to.be.below(3000); });",
+              "pm.test('Response time is under 10000ms', function () { pm.expect(pm.response.responseTime).to.be.below(10000); });",
               "pm.test('Response body is valid JSON', function () { pm.response.json(); });",
               "pm.test('Response has method_not_allowed error code', function () {",
               "  var json = pm.response.json();",

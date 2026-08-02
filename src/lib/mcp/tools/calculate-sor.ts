@@ -24,6 +24,20 @@ const TermPatchSchema = z.object({
 }).strict();
 
 const TermKeyEnum = z.enum(["term1", "term2", "term3", "term4", "summer1", "summer2", "winter1", "winter2"]);
+const ChildPaidGrossSchema = z.object({
+  sub: z.number().min(0).nullable().optional(),
+  unsub: z.number().min(0).nullable().optional(),
+  gradPlus: z.number().min(0).nullable().optional(),
+}).strict();
+const ChildTermSchema = z.object({
+  credits: z.number().min(0).max(60),
+  paidGross: ChildPaidGrossSchema.optional(),
+}).strict();
+const ChildTermsSchema = z.object({
+  count: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+  allocationMethod: z.enum(["byChildCredits", "equalAcrossActiveChildTerms"]),
+  parents: z.record(TermKeyEnum, z.array(ChildTermSchema)),
+}).strict();
 const InputSchema = {
   awardYear: z.enum(["2025-26", "2026-27"]).optional(),
   loanLimitException: z.boolean().optional(),
@@ -46,7 +60,7 @@ const InputSchema = {
   applySubUnsubShift: z.boolean().optional(), applyDoubleReduction: z.boolean().optional(), countLthtInAyPct: z.boolean().optional(),
   viewMode: z.enum(["plan", "disbursement"]).optional(),
   terms: z.record(TermKeyEnum, TermPatchSchema).optional(),
-  childTerms: z.unknown().optional(), feeSubUnsubPercent: z.number().min(0).max(100).optional(), feeGradPlusPercent: z.number().min(0).max(100).optional(),
+  childTerms: ChildTermsSchema.optional(), feeSubUnsubPercent: z.number().min(0).max(100).optional(), feeGradPlusPercent: z.number().min(0).max(100).optional(),
   traditionalProrationApplies: z.boolean().optional(), ayDenominatorVerified: z.boolean().optional(),
 };
 
@@ -92,12 +106,15 @@ function getMissingInputs(input: Record<string, unknown>) {
 
 function explanation(data: Record<string, unknown>) {
   return {
-    summary: "This result was calculated by the shared Project SOR engine. Gross amounts are authoritative for eligibility; net amounts are display values after fees.",
+    summary: "This result was calculated by the shared Project SOR engine. Gross amounts are authoritative for eligibility; net amounts are display values after fees. Parent PLUS remaining eligibility and aggregate usage are not calculated by this service and must be verified separately.",
     calculationStages: data.calculationStages ?? [],
     warnings: data.warnings ?? [],
     appliedRuleIds: ["SOR-APPLICABILITY", "SOR-INITIAL-MAXIMUM", "SOR-ENROLLMENT-PERCENTAGE", "SOR-DISTRIBUTION", "SOR-GROSS-NET"],
     modeledInputs: data.modeledInputs ?? [],
-    notModeledChecks: data.notModeledChecks ?? [],
+    notModeledChecks: Array.from(new Set([
+      ...(Array.isArray(data.notModeledChecks) ? data.notModeledChecks : []),
+      "Parent PLUS remaining eligibility and aggregate usage",
+    ])),
     citations: ["https://fsapartners.ed.gov/more-info/important-dates/2026/06/10/live-webinar-schedule-reductions/loan-limits"],
   };
 }
@@ -105,7 +122,7 @@ function explanation(data: Record<string, unknown>) {
 export default defineTool({
   name: "calculate_sor",
   title: "Calculate Schedule of Reductions",
-  description: "Run the source-backed V56 Schedule of Reductions engine. The tool does not use demo defaults for required borrower, enrollment, loan-period, financial, or paid-history facts. If the request is incomplete, it returns exact follow-up questions. When complete, it returns gross and net results, calculation stages, warnings, modeled checks, and public citations.",
+  description: "Run the source-backed V56 Schedule of Reductions engine. The tool does not use demo defaults for required borrower, enrollment, loan-period, financial, or paid-history facts. If the request is incomplete, it returns exact follow-up questions. When complete, it returns gross and net results, calculation stages, warnings, modeled checks, and public citations. Parent PLUS aggregate usage and remaining eligibility are not modeled, so the tool will identify that external check rather than inventing an answer.",
   inputSchema: InputSchema,
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (rawInput) => {

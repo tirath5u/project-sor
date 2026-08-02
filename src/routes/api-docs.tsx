@@ -292,7 +292,11 @@ function ApiDocsPage() {
               </code>
               . It exposes <code>list_scenarios</code> and <code>calculate_sor</code>, including
               the optional V56 child/module allocation layer. MCP clients must support remote
-              MCP and may require workspace or administrator approval.
+              MCP and may require workspace or administrator approval. Streamable HTTP clients
+              should send <code>Accept: application/json, text/event-stream</code> and retain
+              the MCP session identifier returned during initialization. Parent PLUS aggregate
+              usage and remaining eligibility are external checks and are identified in the
+              calculation response rather than inferred by this service.
             </div>
           </div>
         </section>

@@ -129,10 +129,14 @@ describe("SOR engine - invariants", () => {
     const spring = r.termResults.find((t) => t.key === "term2")!;
     const t3 = r.termResults.find((t) => t.key === "term3")!;
 
-    expect(fall.finalSub).toBe(669);
-    expect(spring.finalSub).toBe(335);
-    expect(t3.finalSub).toBe(836);
+    // The selected method remains visible, but no-current-SOR eligibility uses
+    // the approved substantially-equal allocation rule.
+    expect(fall.finalSub).toBe(614);
+    expect(spring.finalSub).toBe(613);
+    expect(t3.finalSub).toBe(613);
     expect(r.totalFinalSub).toBe(1840);
+    expect(r.effectiveDistributionModel).toBe("equal");
+    expect(r.warnings.some((warning) => warning.includes("Remaining allocation uses Equal"))).toBe(true);
   });
 
   it("annual Sub never exceeds the reduced annual cap", () => {
@@ -463,8 +467,55 @@ describe("SOR engine - v19 Grad PLUS bucket", () => {
     inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 9, enrolledCredits: 9 };
     inp.terms.term2 = { ...inp.terms.term2, enabled: false };
     const r = calculateSOR(inp);
-    expect(r.initialGradPlus).toBe(9500);
-    expect(r.reducedGradPlus).toBe(9500);
+    expect(r.initialGradPlus).toBe(8750);
+    expect(r.reducedGradPlus).toBe(8750);
+  });
+
+  it("uses the exact single-term 9-of-12 lower-of path before Grad PLUS", () => {
+    const inp = defaultInputs();
+    inp.gradeLevel = "g8";
+    inp.dependency = "independent";
+    inp.programLevel = "graduate";
+    inp.awardYear = "2026-27";
+    inp.loanLimitException = true;
+    inp.loanPeriodScope = "singleTerm";
+    inp.numStandardTerms = 1;
+    inp.ayFtCredits = 12;
+    inp.annualNeed = 20500;
+    inp.coa = 19000;
+    inp.otherAid = 0;
+    inp.requestedGradPlus = 15000;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 9 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: false };
+
+    const r = calculateSOR(inp);
+
+    expect(r.sorPctRounded).toBe(0.75);
+    expect(r.reducedUnsub).toBe(7688);
+    expect(r.initialGradPlus).toBe(11312);
+    expect(r.reducedGradPlus).toBe(8484);
+  });
+
+  it("puts the no-current-SOR residual in the first eligible term", () => {
+    const inp = defaultInputs();
+    inp.overrideLimits = true;
+    inp.annualNeed = 20500;
+    inp.subStatutory = 0;
+    inp.unsubStatutory = 20500;
+    inp.coa = 20500;
+    inp.otherAid = 0;
+    inp.distributionModel = "proportional";
+    inp.numStandardTerms = 3;
+    inp.ayFtCredits = 24;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 9 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 9 };
+    inp.terms.term3 = { ...inp.terms.term3, enabled: true, ftCredits: 12, enrolledCredits: 9 };
+
+    const r = calculateSOR(inp);
+
+    expect(r.sorPctRounded).toBe(1);
+    expect(r.effectiveDistributionModel).toBe("equal");
+    expect(r.termResults.map((term) => term.finalUnsub)).toEqual([6834, 6833, 6833]);
   });
 });
 
