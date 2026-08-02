@@ -147,11 +147,15 @@ export interface SORInputs {
   otherAid?: number;
   /** v19 - Student-requested Grad PLUS amount (the borrowing ceiling). */
   requestedGradPlus?: number;
-  /** Optional v55 parent-term child/module allocation layer. */
+  /** Optional V56 parent-term child/module allocation layer. */
   childTerms?: ChildTermsInput;
   /** FY27 Direct Loan fee percentages used only for net display. */
   feeSubUnsubPercent: number;
   feeGradPlusPercent: number;
+  /** V56 online contract: valid traditional proration suppresses SOR. */
+  traditionalProrationApplies?: boolean;
+  /** V56 online contract: institution-verified denominator review state. */
+  ayDenominatorVerified?: boolean;
 }
 
 export interface TermResult {
@@ -291,6 +295,15 @@ export interface SORResults {
   /** True when the OBBB table is still mirroring Legacy values (drives banner). */
   obbbTableIsPlaceholder: boolean;
   childAllocations?: ChildAllocationResult;
+  /** V56 trace fields consumed by REST, MCP, and the student projection. */
+  calculationStages?: Array<{
+    id: string;
+    label: string;
+    input?: Record<string, unknown>;
+    output?: Record<string, unknown>;
+  }>;
+  modeledInputs?: string[];
+  notModeledChecks?: string[];
 }
 
 export const TERM_ORDER: TermKey[] = [
@@ -388,6 +401,8 @@ export function defaultInputs(): SORInputs {
     },
     feeSubUnsubPercent: 1.057,
     feeGradPlusPercent: 4.228,
+    traditionalProrationApplies: false,
+    ayDenominatorVerified: false,
   };
 }
 
@@ -585,6 +600,7 @@ function computeSnapshot(
   initialUnsub: number,
   countLthtInAyPct: boolean,
   distributionModel: DistributionModel,
+  sorApplies: boolean,
 ): {
   ayPctRaw: number;
   ayPctRounded: number;
@@ -608,7 +624,7 @@ function computeSnapshot(
     return s;
   }, 0);
   const ayPctRaw = ayFtUsed > 0 ? enrolledSum / ayFtUsed : 0;
-  const ayPctRounded = Math.min(1, Math.round(ayPctRaw * 100) / 100);
+  const ayPctRounded = sorApplies ? Math.min(1, Math.round(ayPctRaw * 100) / 100) : 1;
   const annualSub = round(initialSub * ayPctRounded);
   const annualUnsub = round(initialUnsub * ayPctRounded);
 
@@ -715,6 +731,9 @@ export function resolveCaps(inp: SORInputs): {
 
 export function calculateSOR(inp: SORInputs): SORResults {
   const warnings: string[] = [];
+  const awardYear: "2025-26" | "2026-27" = inp.awardYear ?? "2026-27";
+  const traditionalProrationApplies = inp.traditionalProrationApplies === true;
+  const sorApplicable = awardYear === "2026-27" && !traditionalProrationApplies;
   if (inp.calType === 3 || inp.calType === 4) {
     warnings.push(
       `Academic Calendar ${inp.calType} (non-standard) - confirm SOR applicability with the FSA Handbook.`,
@@ -817,6 +836,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
       reductionBases.unsub,
       inp.countLthtInAyPct,
       inp.distributionModel,
+      sorApplicable,
     );
     if (!inp.applyDoubleReduction || loanPeriodScope === "singleTerm")
       return { snap: first, reduced: false };
@@ -836,6 +856,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
       unsubBaseline2,
       inp.countLthtInAyPct,
       inp.distributionModel,
+      sorApplicable,
     );
     return { snap: second, reduced: true };
   };
@@ -1051,7 +1072,19 @@ function assemble(args: {
   // v19 - Award Year gate: SOR only applies for "2026-27"+. For 2025-26
   // the SOR% effectively reverts to 100% so reduced limits = initial max.
   const awardYear: "2025-26" | "2026-27" = inp.awardYear ?? "2026-27";
-  const sorApplicable = awardYear === "2026-27";
+  const traditionalProrationApplies = inp.traditionalProrationApplies === true;
+  const sorApplicable = awardYear === "2026-27" && !traditionalProrationApplies;
+  if (traditionalProrationApplies) {
+    if (inp.programLevel === "undergraduate") {
+      warnings.push(
+        "Traditional 685.203 proration is active. SOR is suppressed to prevent double proration.",
+      );
+    } else {
+      warnings.push(
+        "Traditional 685.203 proration was selected for a non-undergraduate program. Verify applicability before relying on this result.",
+      );
+    }
+  }
   const pct = sorApplicable ? finalSnap.ayPctRounded : 1;
   const loanPeriodScope = inp.loanPeriodScope ?? "annualMultiTerm";
   const singleTermScopeValid = loanPeriodScope !== "singleTerm" || ordered.length === 1;
@@ -1112,14 +1145,13 @@ function assemble(args: {
     );
   }
   const initialGradPlus = gradPlusAllowed
-    ? Math.max(0, Math.min(requestedGradPlus, coa - otherAid - subBaseline - unsubBaseline))
+    ? Math.max(0, Math.min(requestedGradPlus, coa - otherAid - reducedSub - reducedUnsub))
     : 0;
-  const gradPlusReductionBase =
-    loanPeriodScope === "singleTerm"
-      ? singleTermEligible
-        ? initialGradPlus / 2
-        : 0
-      : initialGradPlus;
+  // A single-term COA gap is already scoped to the loan period. Do not halve
+  // it again. The SOR percentage is applied once after the gap is established.
+  const gradPlusReductionBase = loanPeriodScope === "singleTerm"
+    ? singleTermEligible ? initialGradPlus : 0
+    : initialGradPlus;
   const reducedGradPlus = round(gradPlusReductionBase * pct);
 
   const enrolledSum = ordered.reduce((s, t, i) => {
@@ -1359,6 +1391,47 @@ function assemble(args: {
     perTermCapUnsub,
     perTermCapGradPlus,
     obbbTableIsPlaceholder: OBBB_TABLE_IS_PLACEHOLDER,
+    calculationStages: [
+      {
+        id: "applicability",
+        label: "Applicability",
+        input: { awardYear, traditionalProrationApplies, loanPeriodScope },
+        output: { sorApplicable, singleTermScopeValid },
+      },
+      {
+        id: "ordinary-pre-sor-maximum",
+        label: "Ordinary pre-SOR maximum",
+        output: { subBaseline, unsubBaseline, coa, otherAid },
+      },
+      {
+        id: "sor-adjusted-maximum",
+        label: "SOR-adjusted maximum",
+        output: { sorPctRounded: pct, reducedSub, reducedUnsub },
+      },
+      {
+        id: "grad-plus-gap",
+        label: "Grad PLUS gap",
+        output: { initialGradPlus, reducedGradPlus },
+      },
+      {
+        id: "parent-distribution",
+        label: "Parent distribution",
+        output: { distributionModel: inp.distributionModel, activeTerms: ordered.map((t) => t.key) },
+      },
+      {
+        id: "net-display",
+        label: "Net display",
+        output: { feeSubUnsubPercent: inp.feeSubUnsubPercent, feeGradPlusPercent: inp.feeGradPlusPercent },
+      },
+    ],
+    modeledInputs: [
+      "awardYear", "gradeLevel", "dependency", "enrollment", "need", "COA", "otherAid",
+      "distributionModel", "paidHistory", "childTerms", "loanFees",
+    ],
+    notModeledChecks: [
+      "COD transaction validation", "NSLDS aggregate and lifetime limits", "R2T4 transaction processing",
+      "institutional SAP and final award approval", "institution-specific program classification",
+    ],
   };
 }
 

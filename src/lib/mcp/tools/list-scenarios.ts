@@ -1,13 +1,13 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { serializeFixturesForPublic } from "@/lib/sor.fixtures";
-import { ENGINE_VERSION, POLICY_YEAR } from "@/lib/sor.version";
+import { ENGINE_VERSION, POLICY_YEAR, RELEASE_ID } from "@/lib/sor.version";
 
 export default defineTool({
   name: "list_scenarios",
   title: "List canonical SOR scenarios",
   description:
-    "Return the full public parity-fixture set: canonical borrower scenarios, proportional-distribution edge cases, and the v55 child/module allocation fixture, with inputs, expected outputs, and public-source-register citations. Use this to discover valid input shapes for `calculate_sor` or to verify engine parity.",
+    "Return the full public parity-fixture set: canonical borrower scenarios, proportional-distribution edge cases, and the V56 child/module allocation fixture, with inputs, expected outputs, and public-source-register citations. Use this to discover valid input shapes for `calculate_sor` or to verify engine parity.",
   inputSchema: {
     id: z
       .string()
@@ -31,7 +31,8 @@ export default defineTool({
     const payload = {
       engineVersion: ENGINE_VERSION,
       policyYear: POLICY_YEAR,
-      sourceSet: ["direct-loan-sor-v1", "project-sor-v55-child-allocation"],
+      releaseId: RELEASE_ID,
+      sourceSet: ["direct-loan-sor-v1", "project-sor-v56-rule-corrections"],
       count: scenarios.length,
       scenarios,
     };

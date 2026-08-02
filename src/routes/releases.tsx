@@ -1,0 +1,18 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft, CalendarDays, ExternalLink } from "lucide-react";
+
+export const Route = createFileRoute("/releases")({
+  head: () => ({ meta: [{ title: "Project SOR Release History" }, { name: "description", content: "Version history for the Project SOR engine, web calculator, API, and MCP." }] }),
+  component: ReleasesPage,
+});
+
+const releases = [
+  { version: "V56", date: "2026-08-02", title: "Online parity, applicability guard, and student estimate", items: ["Aligned the web, REST API, and MCP metadata with the V56 engine release.", "Added a traditional proration guard so a valid traditional undergraduate proration path does not receive a second SOR reduction.", "Corrected single-term Grad PLUS sizing to use the scoped COA gap without halving it twice.", "Added structured stages, warnings, modeled and external checks, exact MCP follow-up questions, and the standard Fall and Spring student estimate."] },
+  { version: "V55", date: "2026-07-23", title: "Child and module allocation", items: ["Added optional child-term allocation by child credits or equal across active credited children.", "Preserved parent SOR as the authority and kept paid child amounts locked."] },
+  { version: "V42", date: "2026-05-01", title: "Net display and child-term foundation", items: ["Added gross-to-net display using configurable Direct Loan fee percentages.", "Added the first child-term ledger foundation and clearer paid-history handling."] },
+  { version: "V41", date: "2026-04-01", title: "Loan-period scope and balance-forward engine", items: ["Added annual and single-term scope, COA and OFA controls, Grad PLUS preview, and balance-forward disbursement history."] },
+];
+
+function ReleasesPage() {
+  return <main className="min-h-screen bg-background text-foreground"><header className="border-b border-border/70"><div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6"><Link to="/" className="text-sm font-semibold">Project SOR</Link><Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Calculator</Link></div></header><div className="mx-auto max-w-4xl space-y-8 px-4 py-10 sm:px-6"><div><p className="text-sm font-medium text-primary">Version history</p><h1 className="mt-2 text-3xl font-semibold tracking-normal">Project SOR releases</h1><p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">A compact record of the tested engine, web, API, and MCP changes. The live release metadata is available from the public health endpoints.</p></div><div className="space-y-4">{releases.map((release) => <article key={release.version} className="rounded-lg border border-border bg-card p-5"><div className="flex flex-wrap items-center gap-3"><span className="text-lg font-semibold">{release.version}</span><span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><CalendarDays className="h-3.5 w-3.5" /> {release.date}</span></div><h2 className="mt-2 font-medium">{release.title}</h2><ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">{release.items.map((item) => <li key={item}>{item}</li>)}</ul></article>)}</div><div className="flex flex-wrap gap-4 text-sm"><a className="inline-flex items-center gap-2 text-primary hover:underline" href="https://sor.myproduct.life/api/public/v2/health" target="_blank" rel="noreferrer">V2 health <ExternalLink className="h-4 w-4" /></a><a className="inline-flex items-center gap-2 text-primary hover:underline" href="https://github.com/tirath5u/project-sor/releases" target="_blank" rel="noreferrer">GitHub releases <ExternalLink className="h-4 w-4" /></a></div></div></main>;
+}

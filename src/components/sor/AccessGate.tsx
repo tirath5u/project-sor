@@ -5,16 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const STORAGE_KEY = "sor-access-v1";
-const ACCESS_PASSWORD = "sor2026";
+// Preserve the existing launch-window gate while allowing a deployment to override it.
+const ACCESS_PASSWORD = import.meta.env.VITE_SOR_ACCESS_PASSWORD || "sor2026";
 const LINKEDIN_URL = "https://www.linkedin.com/in/tirath-c-7228b814/";
 
 export function AccessGate({ children }: { children: React.ReactNode }) {
   const [unlocked, setUnlocked] = React.useState<boolean | null>(null);
+  const [publicRoute, setPublicRoute] = React.useState(false);
   const [pw, setPw] = React.useState("");
   const [error, setError] = React.useState(false);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
+    setPublicRoute(window.location.pathname === "/student");
     setUnlocked(
       window.sessionStorage.getItem(STORAGE_KEY) === "1" ||
         window.localStorage.getItem(STORAGE_KEY) === "1",
@@ -22,13 +25,13 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   }, []);
 
   // SSR / pre-hydration: render children so SEO and first paint aren't blocked
-  if (unlocked === null || unlocked === true) {
+  if (publicRoute || unlocked === null || unlocked === true) {
     return <>{children}</>;
   }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (pw.trim().toLowerCase() === ACCESS_PASSWORD) {
+    if (ACCESS_PASSWORD && pw.trim() === ACCESS_PASSWORD) {
       window.localStorage.setItem(STORAGE_KEY, "1");
       setUnlocked(true);
       setError(false);

@@ -17,7 +17,7 @@ function baseResults() {
   return { input, results: calculateSOR(input) };
 }
 
-describe("v55 child allocation", () => {
+describe("V56 child allocation", () => {
   it("splits each parent payout equally across credited children", () => {
     const { input, results } = baseResults();
     const allocated = allocateChildTerms(results, {

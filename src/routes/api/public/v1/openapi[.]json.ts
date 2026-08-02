@@ -2,8 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import "@tanstack/react-start";
 import {
   ENGINE_VERSION,
+  MCP_VERSION,
   POLICY_SNAPSHOT_DATE,
   POLICY_YEAR,
+  RELEASE_ID,
   SUPPORTED_AWARD_YEARS,
 } from "@/lib/sor.version";
 import { corsPreflightResponse, jsonResponse } from "@/lib/api-errors";
@@ -46,7 +48,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
             title: "Public Schedule of Reductions (SOR) Calculation API",
             version: ENGINE_VERSION,
             description:
-              "Public, free, portfolio-grade implementation of the Direct Loan SOR (Schedule of Reductions) calculation engine. " +
+              "Public, free, source-backed implementation of the V56 Direct Loan SOR (Schedule of Reductions) calculation engine. " +
               "Source code, fixtures, and parity tests are open. See /api-docs for usage guidance.",
             license: { name: "MIT" },
           },
@@ -65,8 +67,10 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                         example: {
                           status: "ok",
                           engineVersion: ENGINE_VERSION,
+                          mcpVersion: MCP_VERSION,
                           policyYear: POLICY_YEAR,
                           policySnapshotDate: POLICY_SNAPSHOT_DATE,
+                          releaseId: RELEASE_ID,
                           sourceCommit: "local-dev",
                           supportedAwardYears: SUPPORTED_AWARD_YEARS,
                           requestId: "demo-sor-001",
@@ -156,7 +160,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                             policyStatus: "supported-preliminary",
                             sourceSet: [
                               "direct-loan-sor-v1",
-                              "project-sor-v55-child-allocation",
+                              "project-sor-v56-rule-corrections",
                             ],
                             citations: [],
                             computedAt: "2026-04-26T00:00:00.000Z",
@@ -327,8 +331,10 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                 required: [
                   "status",
                   "engineVersion",
+                  "mcpVersion",
                   "policyYear",
                   "policySnapshotDate",
+                  "releaseId",
                   "sourceCommit",
                   "supportedAwardYears",
                   "requestId",
@@ -337,8 +343,10 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                 properties: {
                   status: { type: "string", enum: ["ok"] },
                   engineVersion: { type: "string", example: ENGINE_VERSION },
+                  mcpVersion: { type: "string", example: MCP_VERSION },
                   policyYear: { type: "string", example: POLICY_YEAR },
                   policySnapshotDate: { type: "string", example: POLICY_SNAPSHOT_DATE },
+                  releaseId: { type: "string", example: RELEASE_ID },
                   sourceCommit: { type: "string", example: "local-dev" },
                   supportedAwardYears: {
                     type: "object",
@@ -432,7 +440,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                 required: ["count", "allocationMethod", "parents"],
                 additionalProperties: false,
                 description:
-                  "Optional v55 allocation layer. Parent SOR is calculated first; child rows do not create " +
+                  "Optional V56 allocation layer. Parent SOR is calculated first; child rows do not create " +
                   "new SOR terms or level funds across parent terms.",
                 properties: {
                   count: { type: "integer", minimum: 0, maximum: 4, example: 2 },
@@ -555,7 +563,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                     items: { type: "string" },
                     example: [
                       "direct-loan-sor-v1",
-                      "project-sor-v55-child-allocation",
+                      "project-sor-v56-rule-corrections",
                     ],
                   },
                   citations: {

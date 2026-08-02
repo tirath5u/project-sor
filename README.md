@@ -15,9 +15,9 @@ Built and maintained by **Tirath Chhatriwala**, Product Manager with over 14 yea
 >
 > **Source:** <https://github.com/tirath5u/project-sor>
 >
-> **Remote MCP:** `https://sor.myproduct.life/mcp` after the current branch is published and endpoint discovery passes.
+> **Remote MCP:** `https://sor.myproduct.life/mcp` for MCP clients that support remote custom servers.
 >
-> **Web UI access:** The web calculator is behind a soft access gate during the launch window. Password: `sor2026`. The public API endpoints below require no password and no signup.
+> **Student estimate:** [sor.myproduct.life/student](https://sor.myproduct.life/student) provides a narrow standard Fall and Spring estimate with clear school-review boundaries.
 
 ---
 
@@ -48,7 +48,7 @@ The dollars you get from the API match the dollars you get from the web UI match
 
 ## What this is
 
-A reference implementation of the Schedule of Reductions math for award years 2025-26 and 2026-27, defined by 34 CFR 685.203 and amended by the OBBBA. Single source-of-truth engine (`src/lib/sor.ts`), exposed both as a web calculator at sor.myproduct.life and as a public HTTP API at /api/public/v1/. Fixtures, citations, methodology, and the 5-stage build process are all open and documented.
+A reference implementation of the Schedule of Reductions math for award years 2025-26 and 2026-27, defined by 34 CFR 685.203 and amended by the OBBBA. Project SOR is a source-backed Schedule of Reductions calculation engine available through Excel, the web, a REST API, and a remote MCP server. The same tested engine supports detailed staff workflows, student-friendly estimates, and AI-assisted scenario intake.
 
 ## What this is not
 
@@ -67,7 +67,7 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 - **Grad PLUS preview only for legacy or interim-exception scenarios.** The engine does not model NSLDS aggregate or lifetime remaining eligibility.
 - **Per-term disbursement amounts** with proper rounding-to-dollar correction so the term sum equals the reduced annual amount (no orphan pennies).
 - **History-anchored disbursement view:** committed Paid Sub / Paid Unsub per term anchor independently and the engine redistributes the remaining pool only across future eligible terms.
-- **v55 child/module allocation:** an optional child ledger allocates each already-calculated parent-term gross payout by child credits or equally across active credited child terms. Zero-credit children receive $0, paid child gross remains locked, and child allocation never runs a second SOR calculation.
+- **V56 child/module allocation:** an optional child ledger allocates each already-calculated parent-term gross payout by child credits or equally across active credited child terms. Zero-credit children receive $0, paid child gross remains locked, and child allocation never runs a second SOR calculation.
 - **Gross and net display:** eligibility remains gross. Net display uses configurable FY27 Direct Loan fee percentages, defaulting to 1.057% for Subsidized/Unsubsidized and 4.228% for Grad PLUS, with fee truncation to cents.
 - **Case-file PDF export** of inputs, calculated baselines, per-term disbursements, and the 6-step walkthrough.
 - **7 canonical fixtures** drawn from ED-published scenarios, each tagged with regulatory citations and a source-status label.
@@ -82,9 +82,15 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 | `/api/public/v1/scenarios`    | GET    | Fixture catalog with regulatory citations and source-status labels |
 | `/api/public/v1/calculate`    | POST   | Run the engine on supplied inputs                                  |
 | `/api/public/v1/openapi.json` | GET    | OpenAPI 3.1 specification                                          |
+| `/api/public/v2/health`       | GET    | V56 health, engine, MCP, release, and source metadata              |
+| `/api/public/v2/calculate`    | POST   | V56 calculation contract with stages and release metadata          |
+| `/api/public/v2/student-estimate` | POST | Standard Fall and Spring student estimate                     |
+| `/api/public/v2/openapi.json` | GET    | V2 OpenAPI 3.1 specification                                      |
 | `/api-docs`                   | GET    | Human-readable API guide with examples and challenge workflow      |
+| `/mcp-guide`                  | GET    | Human-readable remote MCP setup and boundaries                    |
+| `/releases`                   | GET    | Version history                                                    |
 
-### v55 child-term input
+### V56 child-term input
 
 The optional `childTerms` object is an allocation layer under the parent SOR result:
 
@@ -105,7 +111,11 @@ The optional `childTerms` object is an allocation layer under the parent SOR res
 
 Supported methods are `byChildCredits` and `equalAcrossActiveChildTerms`. The parent term is calculated first. Child terms do not create separate SOR terms, change the academic-year SOR percentage, or level funds across different parent terms. The response includes `data.childAllocations` when `childTerms.count` is greater than zero.
 
-The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. It is read-only and stateless. Consumers must verify the published `engineVersion` and `sourceCommit` before relying on a result.
+The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. It is read-only and stateless. Consumers must verify the published `engineVersion`, `releaseId`, and `sourceCommit` before relying on a result. When required facts are missing, the MCP returns `status: "needs_input"` with exact missing fields and follow-up questions rather than calculating from demo defaults.
+
+### Student estimate boundaries
+
+The student route is intentionally narrower than the staff calculator. It covers a standard two-term Fall and Spring estimate using the same engine, but does not model modules, child terms, summer or winter terms, single-term scope, paid history, R2T4, COD, NSLDS, aggregate limits, or final school packaging. It is an estimate, not an award, approval, or guarantee. The school determines the applicable full-time definition and final eligibility.
 
 **Rate limit:** 30 requests per minute and 5,000 per day per IP, best-effort per edge isolate. No keys, no signup. Header `X-RateLimit-Policy: best-effort-per-isolate` documents the constraint honestly.
 
@@ -113,7 +123,7 @@ The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. I
 reproduce a calculation against a specific snapshot of the rules. Top-level
 keys: `data` and `meta`. The `meta` object includes:
 
-- `engineVersion` - semantic version of the calculation engine (e.g. `1.1.0`)
+- `engineVersion` - semantic version of the calculation engine (e.g. `1.2.0`)
 - `policyYear` - award year the engine was evaluated against (e.g. `2026-27`)
 - `policySnapshotDate` - ISO date of the policy snapshot used
 - `policyStatus` - `confirmed` or `supported-preliminary`
@@ -151,7 +161,7 @@ bun install
 bun test
 ```
 
-72 tests pass against the current engine and v55 child-allocation regressions: 7 SOR parity scenarios, schema validation, numeric coercion edges, and child/module allocation cases. CI runs the same suite on every push and pull request.
+The current suite includes 76 passing tests across the shared engine, parity fixtures, schema validation, numeric coercion edges, child/module allocation, single-term Grad PLUS sizing, and traditional-proration suppression. CI runs the same suite on every push and pull request.
 
 A second verification path is executable contract testing: CI pulls the documented request example from `/api/public/v1/openapi.json`, posts it to `/api/public/v1/calculate`, and checks the documented stable fields. The exported Postman collection in `postman/` runs nightly through Newman against the live API.
 
@@ -255,7 +265,7 @@ bun run build    # production build
 
 **Tech stack:** TanStack Start v1 (React 19, file-based routing, SSR), Vite 7, Tailwind CSS v4, shadcn/ui, Zod, jsPDF for case-file export.
 
-The calculation engine lives in `src/lib/sor.ts` with parity tests in `src/lib/sor.parity.test.ts`. Fixtures are in `src/lib/sor.fixtures.ts`. Public API routes are under `src/routes/api/public/v1/`. UI components are in `src/routes/index.tsx` and `src/components/sor/*`.
+The calculation engine lives in `src/lib/sor.ts` with parity tests in `src/lib/sor.parity.test.ts`. Fixtures are in `src/lib/sor.fixtures.ts`. Public API routes are under `src/routes/api/public/v1/` and `src/routes/api/public/v2/`. Staff UI is in `src/routes/index.tsx`; student UI is in `src/routes/student.tsx`; MCP tools are in `src/lib/mcp/`.
 
 ---
 
