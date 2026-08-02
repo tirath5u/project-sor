@@ -113,6 +113,8 @@ Supported methods are `byChildCredits` and `equalAcrossActiveChildTerms`. The pa
 
 The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. It is read-only and stateless. Streamable HTTP clients should send `Accept: application/json, text/event-stream` and retain the MCP session identifier returned during initialization. Consumers must verify the published `engineVersion`, `releaseId`, and `deploymentMarker` before relying on a result. When required facts are missing, the MCP returns `status: "needs_input"` with exact missing fields and follow-up questions rather than calculating from demo defaults. Parent PLUS aggregate usage and remaining eligibility are external checks and are called out in the result rather than inferred by the service.
 
+V2 also accepts structured review context for Parent PLUS basis and aggregate usage, traditional proration status, AY denominator overrides, optional pre-SOR caps, borrower-requested Sub/Unsub amounts, remaining annual or aggregate limits, and COA scope. These fields preserve blank, null, zero, and positive-value meaning. The response returns a `contract` block with `calculationStatus`, `authoritative`, `policyDecision`, `eligibilityStages`, stable warning objects, modeled inputs, and explicit `externalChecks`. A field that the current shared engine cannot apply is disclosed there and is never silently treated as zero.
+
 ### Student estimate boundaries
 
 The student route is intentionally narrower than the staff calculator. It covers a standard two-term Fall and Spring estimate using the same engine, but does not model modules, child terms, summer or winter terms, single-term scope, paid history, R2T4, COD, NSLDS, aggregate limits, or final school packaging. It is an estimate, not an award, approval, or guarantee. The school determines the applicable full-time definition and final eligibility.
@@ -123,11 +125,11 @@ The student route is intentionally narrower than the staff calculator. It covers
 reproduce a calculation against a specific snapshot of the rules. Top-level
 keys: `data` and `meta`. The `meta` object includes:
 
-- `engineVersion` - semantic version of the calculation engine (e.g. `1.2.0`)
+- `engineVersion` - semantic version of the calculation engine (e.g. `1.3.0`)
 - `policyYear` - award year the engine was evaluated against (e.g. `2026-27`)
 - `policySnapshotDate` - ISO date of the policy snapshot used
 - `policyStatus` - `confirmed` or `supported-preliminary`
-- `deploymentMarker` - authoritative public deployment identifier; equals `releaseId` (e.g. `sor-v56-1.2.0-2026-07-23`)
+- `deploymentMarker` - authoritative public deployment identifier; equals `releaseId` (e.g. `sor-v56-1.3.0-2026-08-03`)
 - `sourceCommit` - `null`; the exact Git SHA is not available to the runtime
 - `sourceCommitStatus` - `not_available_in_lovable_build` (see note below)
 - `sourceSet` - identifiers of the rule packs used (e.g. `["direct-loan-sor-v1"]`)

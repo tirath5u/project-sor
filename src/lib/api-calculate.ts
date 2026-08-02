@@ -1,4 +1,11 @@
 import { CalculateInputSchema } from "@/lib/sor.schema";
+import { z } from "zod";
+import {
+  CalculateV2InputSchema,
+  normalizeV2Input,
+  toV2Warnings,
+  v2PolicyDecision,
+} from "@/lib/sor-v2-contract";
 import { calculateSORWithChildTerms, type SORInputs } from "@/lib/sor";
 import {
   corsPreflightResponse,
@@ -69,7 +76,7 @@ export async function handleCalculateRequest(request: Request, contractVersion: 
     return errorResponse("invalid_input", "Request body is not valid JSON.", undefined, undefined, requestId);
   }
 
-  const parsed = CalculateInputSchema.safeParse(body);
+  const parsed = (contractVersion === "v2" ? CalculateV2InputSchema : CalculateInputSchema).safeParse(body);
   if (!parsed.success) {
     return errorResponse(
       "schema_validation_failed",
@@ -80,9 +87,13 @@ export async function handleCalculateRequest(request: Request, contractVersion: 
     );
   }
 
+  const normalized = contractVersion === "v2"
+    ? normalizeV2Input(parsed.data as unknown as z.infer<typeof CalculateV2InputSchema>)
+    : { engineInput: parsed.data as unknown as z.infer<typeof CalculateInputSchema>, structured: undefined, externalChecks: [], warnings: [] };
+
   let data;
   try {
-    data = calculateSORWithChildTerms(parsed.data as unknown as SORInputs);
+    data = calculateSORWithChildTerms(normalized.engineInput as unknown as SORInputs);
   } catch (error) {
     return errorResponse(
       "internal_error",
@@ -94,8 +105,7 @@ export async function handleCalculateRequest(request: Request, contractVersion: 
   }
 
   const awardYear = parsed.data.awardYear ?? POLICY_YEAR;
-  return jsonResponse(
-    {
+  const response: Record<string, unknown> = {
       data,
       meta: {
         contractVersion,
@@ -111,7 +121,28 @@ export async function handleCalculateRequest(request: Request, contractVersion: 
         computedAt: new Date().toISOString(),
         requestId,
       },
-    },
+  };
+
+  if (contractVersion === "v2") {
+    const resultData = data as unknown as Record<string, unknown>;
+    const structuredWarnings = toV2Warnings(
+      [...(Array.isArray(resultData.warnings) ? resultData.warnings as string[] : []), ...normalized.warnings],
+      normalized.externalChecks,
+    );
+    response.contract = {
+      calculationStatus: normalized.externalChecks.length > 0 ? "calculated_with_external_checks" : "calculated",
+      authoritative: normalized.externalChecks.length === 0,
+      policyDecision: v2PolicyDecision(resultData),
+      eligibilityStages: resultData.calculationStages ?? [],
+      modeledInputs: resultData.modeledInputs ?? [],
+      externalChecks: normalized.externalChecks,
+      warnings: structuredWarnings,
+      inputPresence: Object.fromEntries(Object.entries(normalized.structured ?? {}).map(([key, value]) => [key, value !== undefined])),
+    };
+  }
+
+  return jsonResponse(
+    response,
     { headers: { "X-Request-Id": requestId } },
   );
 }

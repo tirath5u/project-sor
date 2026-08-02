@@ -21,11 +21,11 @@ A healthy response returns `200` with:
 ```json
 {
   "status": "ok",
-  "engineVersion": "1.2.0",
+  "engineVersion": "1.3.0",
   "policyYear": "2026-27",
   "policySnapshotDate": "...",
-  "releaseId": "sor-v56-1.2.0-2026-07-23",
-  "deploymentMarker": "sor-v56-1.2.0-2026-07-23",
+  "releaseId": "sor-v56-1.3.0-2026-08-03",
+  "deploymentMarker": "sor-v56-1.3.0-2026-08-03",
   "sourceCommit": null,
   "sourceCommitStatus": "not_available_in_lovable_build",
   "supportedAwardYears": { "2025-26": "supported", "2026-27": "supported-preliminary" }
@@ -63,7 +63,7 @@ curl -fsS https://sor.myproduct.life/api/public/v1/scenarios \
 Expected for `fixture-v19-001`:
 
 ```json
-{ "engineVersion": "1.2.0", "totalFinalSub": 2205, "totalFinalUnsub": 1260 }
+{ "engineVersion": "1.3.0", "totalFinalSub": 2205, "totalFinalUnsub": 1260 }
 ```
 
 Any drift in those two dollar figures is a P0 - the engine is the product.

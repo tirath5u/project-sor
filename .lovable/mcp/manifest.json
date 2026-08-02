@@ -8,14 +8,14 @@
   "mcp": {
     "server": {
       "name": "project-sor-mcp",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "title": "Project SOR: Schedule of Reductions"
     },
     "tools": [
       {
         "name": "calculate_sor",
         "title": "Calculate Schedule of Reductions",
-        "description": "Run the source-backed V56 Schedule of Reductions engine. The tool does not use demo defaults for required borrower, enrollment, loan-period, financial, or paid-history facts. If the request is incomplete, it returns exact follow-up questions. When complete, it returns gross and net results, calculation stages, warnings, modeled checks, and public citations.",
+        "description": "Run the source-backed V56 Schedule of Reductions engine. Incomplete requests return exact follow-up questions. Complete results include gross and net outputs, calculation stages, structured policy decisions, stable warnings, modeled inputs, explicit external checks, citations, and release metadata. Inputs the shared engine cannot apply are never silently ignored.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -268,7 +268,16 @@
                 ]
               }
             },
-            "childTerms": {},
+            "childTerms": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["count", "allocationMethod", "parents"],
+              "properties": {
+                "count": { "type": "integer", "enum": [0, 1, 2, 3, 4] },
+                "allocationMethod": { "type": "string", "enum": ["byChildCredits", "equalAcrossActiveChildTerms"] },
+                "parents": { "type": "object", "additionalProperties": true }
+              }
+            },
             "feeSubUnsubPercent": {
               "type": "number",
               "minimum": 0,
@@ -282,6 +291,41 @@
             "traditionalProrationApplies": {
               "type": "boolean"
             },
+            "parentPlusEligibilityBasis": {
+              "type": "string",
+              "enum": ["none", "adverseCreditDenied", "documentedExceptionalCircumstances", "otherOrUnverified"]
+            },
+            "parentPlusAggregateUsed": {
+              "type": ["number", "null"],
+              "minimum": 0
+            },
+            "traditionalProrationStatus": {
+              "type": "string",
+              "enum": ["notApplied", "shortProgram", "remainingPeriodShorterThanAcademicYear"]
+            },
+            "ayDenominatorOverride": {
+              "type": ["number", "null"],
+              "minimum": 0
+            },
+            "preSorCaps": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "sub": { "type": ["number", "null"], "minimum": 0 },
+                "unsub": { "type": ["number", "null"], "minimum": 0 },
+                "gradPlus": { "type": ["number", "null"], "minimum": 0 }
+              }
+            },
+            "requestedSub": { "type": ["number", "null"], "minimum": 0 },
+            "requestedUnsub": { "type": ["number", "null"], "minimum": 0 },
+            "remainingAnnualSub": { "type": ["number", "null"], "minimum": 0 },
+            "remainingAnnualUnsub": { "type": ["number", "null"], "minimum": 0 },
+            "remainingAnnualCombined": { "type": ["number", "null"], "minimum": 0 },
+            "remainingAggregateSub": { "type": ["number", "null"], "minimum": 0 },
+            "remainingAggregateUnsub": { "type": ["number", "null"], "minimum": 0 },
+            "remainingAggregateCombined": { "type": ["number", "null"], "minimum": 0 },
+            "coaScope": { "type": "string", "enum": ["academicYear", "singleTerm"] },
             "ayDenominatorVerified": {
               "type": "boolean"
             }

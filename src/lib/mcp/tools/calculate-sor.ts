@@ -1,7 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { calculateSORWithChildTerms, defaultInputs, TERM_ORDER, type SORInputs, type TermKey } from "@/lib/sor";
-import { CalculateInputSchema } from "@/lib/sor.schema";
+import { CalculateV2InputSchema, normalizeV2Input, toV2Warnings, v2PolicyDecision } from "@/lib/sor-v2-contract";
 import { ENGINE_VERSION, MCP_VERSION, POLICY_YEAR, POLICY_SNAPSHOT_DATE, RELEASE_ID, SOURCE_COMMIT, SOURCE_COMMIT_STATUS, DEPLOYMENT_MARKER } from "@/lib/sor.version";
 
 const TermPatchSchema = z.object({
@@ -62,6 +62,15 @@ const InputSchema = {
   terms: z.record(TermKeyEnum, TermPatchSchema).optional(),
   childTerms: ChildTermsSchema.optional(), feeSubUnsubPercent: z.number().min(0).max(100).optional(), feeGradPlusPercent: z.number().min(0).max(100).optional(),
   traditionalProrationApplies: z.boolean().optional(), ayDenominatorVerified: z.boolean().optional(),
+  parentPlusEligibilityBasis: z.enum(["none", "adverseCreditDenied", "documentedExceptionalCircumstances", "otherOrUnverified"]).optional(),
+  parentPlusAggregateUsed: z.number().min(0).nullable().optional(),
+  traditionalProrationStatus: z.enum(["notApplied", "shortProgram", "remainingPeriodShorterThanAcademicYear"]).optional(),
+  ayDenominatorOverride: z.number().min(0).nullable().optional(),
+  preSorCaps: z.object({ enabled: z.boolean().optional(), sub: z.number().min(0).nullable().optional(), unsub: z.number().min(0).nullable().optional(), gradPlus: z.number().min(0).nullable().optional() }).strict().optional(),
+  requestedSub: z.number().min(0).nullable().optional(), requestedUnsub: z.number().min(0).nullable().optional(),
+  remainingAnnualSub: z.number().min(0).nullable().optional(), remainingAnnualUnsub: z.number().min(0).nullable().optional(), remainingAnnualCombined: z.number().min(0).nullable().optional(),
+  remainingAggregateSub: z.number().min(0).nullable().optional(), remainingAggregateUnsub: z.number().min(0).nullable().optional(), remainingAggregateCombined: z.number().min(0).nullable().optional(),
+  coaScope: z.enum(["academicYear", "singleTerm"]).optional(),
 };
 
 const RequiredField = z.object(InputSchema).passthrough();
@@ -148,16 +157,35 @@ export default defineTool({
     }
     for (const key of TERM_ORDER) if (!merged.terms[key]) merged.terms[key] = base.terms[key];
 
-    const parsed = CalculateInputSchema.safeParse(merged);
+    const parsed = CalculateV2InputSchema.safeParse(merged);
     if (!parsed.success) {
       const result = { status: "needs_input", canCalculate: false, missingInputs: parsed.error.issues.map((issue) => ({ field: issue.path.join("."), label: issue.path.join("."), reason: issue.message, question: `Please provide a valid value for ${issue.path.join(".")}.` })), normalizedInputState: input, engineVersion: ENGINE_VERSION, mcpVersion: MCP_VERSION, releaseId: RELEASE_ID };
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], structuredContent: result as Record<string, unknown> };
     }
 
     try {
-      const data = calculateSORWithChildTerms(parsed.data as unknown as SORInputs) as unknown as Record<string, unknown>;
+      const normalized = normalizeV2Input(parsed.data);
+      const data = calculateSORWithChildTerms(normalized.engineInput as unknown as SORInputs) as unknown as Record<string, unknown>;
       const meta = { engineVersion: ENGINE_VERSION, mcpVersion: MCP_VERSION, policyYear: parsed.data.awardYear ?? POLICY_YEAR, policySnapshotDate: POLICY_SNAPSHOT_DATE, sourceCommit: SOURCE_COMMIT, sourceCommitStatus: SOURCE_COMMIT_STATUS, deploymentMarker: DEPLOYMENT_MARKER, releaseId: RELEASE_ID, sourceSet: ["direct-loan-sor-v1", "project-sor-v56-rule-corrections", "department-vfg-july-23-2026"], computedAt: new Date().toISOString() };
-      const result = { status: "calculated", canCalculate: true, data, meta, explanation: explanation(data) };
+      const result = {
+        status: normalized.externalChecks.length > 0 ? "calculated_with_external_checks" : "calculated",
+        canCalculate: true,
+        data,
+        meta,
+        contract: {
+          calculationStatus: normalized.externalChecks.length > 0 ? "calculated_with_external_checks" : "calculated",
+          authoritative: normalized.externalChecks.length === 0,
+          policyDecision: v2PolicyDecision(data),
+          eligibilityStages: data.calculationStages ?? [],
+          modeledInputs: data.modeledInputs ?? [],
+          externalChecks: normalized.externalChecks,
+          warnings: toV2Warnings(
+            [...(Array.isArray(data.warnings) ? data.warnings as string[] : []), ...normalized.warnings],
+            normalized.externalChecks,
+          ),
+        },
+        explanation: explanation(data),
+      };
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], structuredContent: result as Record<string, unknown> };
     } catch (error) {
       return { content: [{ type: "text", text: `Engine error: ${error instanceof Error ? error.message : String(error)}` }], isError: true };
