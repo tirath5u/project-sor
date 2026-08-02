@@ -6,6 +6,12 @@
 import { describe, it, expect } from "vitest";
 import { calculateSOR, defaultInputs, type TermKey } from "./sor";
 import { SCENARIOS } from "./scenarios";
+import {
+  DEPLOYMENT_MARKER,
+  RELEASE_ID,
+  SOURCE_COMMIT,
+  SOURCE_COMMIT_STATUS,
+} from "./sor.version";
 
 describe("SOR engine - scenario regression", () => {
   for (const s of SCENARIOS) {
@@ -796,5 +802,17 @@ describe("SOR engine - LTHT warnings", () => {
     expect(lthtWarning).toContain("Fall");
     expect(lthtWarning).toContain("Term 3");
     expect(lthtWarning).toContain("these terms");
+  });
+});
+
+describe("deployment markers", () => {
+  it("uses releaseId as the authoritative deployment marker", () => {
+    expect(DEPLOYMENT_MARKER).toBe(RELEASE_ID);
+    expect(RELEASE_ID).toBe("sor-v56-1.2.0-2026-07-23");
+  });
+
+  it("reports sourceCommit as null with an explanatory status, never local-dev", () => {
+    expect(SOURCE_COMMIT).toBeNull();
+    expect(SOURCE_COMMIT_STATUS).toBe("not_available_in_lovable_build");
   });
 });

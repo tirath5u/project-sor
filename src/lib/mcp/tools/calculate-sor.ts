@@ -2,7 +2,7 @@ import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { calculateSORWithChildTerms, defaultInputs, TERM_ORDER, type SORInputs, type TermKey } from "@/lib/sor";
 import { CalculateInputSchema } from "@/lib/sor.schema";
-import { ENGINE_VERSION, MCP_VERSION, POLICY_YEAR, POLICY_SNAPSHOT_DATE, RELEASE_ID, SOURCE_COMMIT } from "@/lib/sor.version";
+import { ENGINE_VERSION, MCP_VERSION, POLICY_YEAR, POLICY_SNAPSHOT_DATE, RELEASE_ID, SOURCE_COMMIT, SOURCE_COMMIT_STATUS, DEPLOYMENT_MARKER } from "@/lib/sor.version";
 
 const TermPatchSchema = z.object({
   key: z.enum(["term1", "term2", "term3", "term4", "summer1", "summer2", "winter1", "winter2"]).optional(),
@@ -139,7 +139,7 @@ export default defineTool({
 
     try {
       const data = calculateSORWithChildTerms(parsed.data as unknown as SORInputs) as unknown as Record<string, unknown>;
-      const meta = { engineVersion: ENGINE_VERSION, mcpVersion: MCP_VERSION, policyYear: parsed.data.awardYear ?? POLICY_YEAR, policySnapshotDate: POLICY_SNAPSHOT_DATE, sourceCommit: SOURCE_COMMIT, releaseId: RELEASE_ID, sourceSet: ["direct-loan-sor-v1", "project-sor-v56-rule-corrections", "department-vfg-july-23-2026"], computedAt: new Date().toISOString() };
+      const meta = { engineVersion: ENGINE_VERSION, mcpVersion: MCP_VERSION, policyYear: parsed.data.awardYear ?? POLICY_YEAR, policySnapshotDate: POLICY_SNAPSHOT_DATE, sourceCommit: SOURCE_COMMIT, sourceCommitStatus: SOURCE_COMMIT_STATUS, deploymentMarker: DEPLOYMENT_MARKER, releaseId: RELEASE_ID, sourceSet: ["direct-loan-sor-v1", "project-sor-v56-rule-corrections", "department-vfg-july-23-2026"], computedAt: new Date().toISOString() };
       const result = { status: "calculated", canCalculate: true, data, meta, explanation: explanation(data) };
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }], structuredContent: result as Record<string, unknown> };
     } catch (error) {

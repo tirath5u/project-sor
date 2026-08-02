@@ -24,7 +24,10 @@ A healthy response returns `200` with:
   "engineVersion": "1.2.0",
   "policyYear": "2026-27",
   "policySnapshotDate": "...",
-  "sourceCommit": "...",
+  "releaseId": "sor-v56-1.2.0-2026-07-23",
+  "deploymentMarker": "sor-v56-1.2.0-2026-07-23",
+  "sourceCommit": null,
+  "sourceCommitStatus": "not_available_in_lovable_build",
   "supportedAwardYears": { "2025-26": "supported", "2026-27": "supported-preliminary" }
 }
 ```
@@ -37,7 +40,7 @@ the deployment is broken - go to **Section 2**.
 | Symptom                                                   | First check                                            | Likely cause                                 | Action                                                                      |
 | --------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------- | --------------------------------------------------------------------------- |
 | `/health` returns 5xx or times out                        | [Cloudflare status](https://www.cloudflarestatus.com/) | Edge or Workers outage                       | Wait; nothing to fix on our side.                                           |
-| `/health` 200 but `sourceCommit` looks wrong              | GitHub Actions latest run on `main`                    | Deploy not propagated                        | Re-run the latest CI workflow, or push an empty commit to trigger redeploy. |
+| `/health` 200 but `deploymentMarker` looks stale          | `RELEASE_ID` in `src/lib/sor.version.ts` vs. live value | Deploy not propagated                        | Re-publish, or re-run the latest CI workflow on `main`.                     |
 | `/calculate` returns 5xx for valid fixture inputs         | Run a fixture replay (Section 3)                       | Engine regression                            | Roll back to the previous commit on `main` and open a bug.                  |
 | `/calculate` returns 422 for inputs that worked yesterday | Diff `src/lib/sor.schema.ts` against last green commit | Schema tightened without a migration note    | Revert the schema change or relax the new constraint.                       |
 | Many `429 rate_limited` responses from a single IP        | Expected                                               | In-process token bucket (30 req/min)         | This is by design. Tell the caller to back off or run their own copy.       |
@@ -90,9 +93,9 @@ These are documented gaps, not bugs. Do **not** page anyone for them.
 - **No alerting.** There is no Sentry, no PagerDuty, no email-on-error. The
   earliest signal of a problem is a user message or a failing CI smoke run.
   Acceptable for a free public reference API; revisit before commercial use.
-- **`sourceCommit` may report `local-dev`** depending on which build path
-  produced the deployment. Use the GitHub commit SHA on `main` as the source
-  of truth for "what is live."
+- **`sourceCommit` is always `null`** (`sourceCommitStatus:
+  not_available_in_lovable_build`). Use `deploymentMarker` / `releaseId` as
+  the public identifier of "what is live"; bump `RELEASE_ID` with each release.
 - **Worker logs are short-lived.** Cloudflare retains roughly the last hour
   of Worker invocation logs. Do post-mortems quickly or capture
   reproductions yourself.

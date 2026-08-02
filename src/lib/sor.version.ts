@@ -7,8 +7,11 @@
  * - POLICY_YEAR: the federal Award Year the engine treats as the default.
  * - POLICY_SNAPSHOT_DATE: ISO date when the cited regulatory sources were
  *   last reviewed against the engine.
- * - SOURCE_COMMIT: build-time injected commit SHA (CI sets VITE_COMMIT_SHA).
- *   Falls back to "local-dev" outside CI.
+ * - DEPLOYMENT_MARKER: authoritative public deployment identifier. Equals
+ *   RELEASE_ID. This is the value consumers should cite.
+ * - SOURCE_COMMIT: always null. Exact Git SHA is not available to the runtime
+ *   in the hosted build path; we do not fetch GitHub per request and do not
+ *   trust client headers. SOURCE_COMMIT_STATUS explains why.
  */
 
 export const ENGINE_VERSION = "1.2.0" as const;
@@ -17,11 +20,12 @@ export const POLICY_SNAPSHOT_DATE = "2026-07-23" as const;
 export const MCP_VERSION = "0.3.0" as const;
 export const RELEASE_ID = `sor-v56-${ENGINE_VERSION}-${POLICY_SNAPSHOT_DATE}` as const;
 
-export const SOURCE_COMMIT: string =
-  (typeof import.meta !== "undefined" &&
-    (import.meta as unknown as { env?: Record<string, string | undefined> }).env
-      ?.VITE_COMMIT_SHA) ||
-  "local-dev";
+export const DEPLOYMENT_MARKER: string = RELEASE_ID;
+
+export const SOURCE_COMMIT: string | null = null;
+
+export const SOURCE_COMMIT_STATUS =
+  "not_available_in_lovable_build" as const;
 
 /**
  * Award-year support matrix. Surfaced in /health and /openapi so consumers

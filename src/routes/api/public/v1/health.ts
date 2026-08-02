@@ -6,7 +6,9 @@ import {
   POLICY_YEAR,
   POLICY_SNAPSHOT_DATE,
   RELEASE_ID,
+  DEPLOYMENT_MARKER,
   SOURCE_COMMIT,
+  SOURCE_COMMIT_STATUS,
   SUPPORTED_AWARD_YEARS,
 } from "@/lib/sor.version";
 import {
@@ -32,7 +34,9 @@ export const Route = createFileRoute("/api/public/v1/health")({
             policyYear: POLICY_YEAR,
             policySnapshotDate: POLICY_SNAPSHOT_DATE,
             releaseId: RELEASE_ID,
+            deploymentMarker: DEPLOYMENT_MARKER,
             sourceCommit: SOURCE_COMMIT,
+            sourceCommitStatus: SOURCE_COMMIT_STATUS,
             supportedAwardYears: SUPPORTED_AWARD_YEARS,
             requestId,
           },

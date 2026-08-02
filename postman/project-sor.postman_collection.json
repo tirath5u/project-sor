@@ -25,7 +25,7 @@
               "  var json = pm.response.json();",
               "  pm.expect(json).to.have.property('policyYear');",
               "  pm.expect(json).to.have.property('policySnapshotDate');",
-              "  pm.expect(json).to.have.property('sourceCommit');",
+              "  pm.expect(json).to.have.property('deploymentMarker');",
               "});",
               "pm.test('Response has requestId', function () {",
               "  pm.expect(pm.response.json()).to.have.property('requestId');",
