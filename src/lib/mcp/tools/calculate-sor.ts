@@ -2,7 +2,7 @@ import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { calculateSORWithChildTerms, defaultInputs, TERM_ORDER, type SORInputs, type TermKey } from "@/lib/sor";
 import { CalculateInputSchema } from "@/lib/sor.schema";
-import { ENGINE_VERSION, MCP_VERSION, POLICY_YEAR, POLICY_SNAPSHOT_DATE, RELEASE_ID, SOURCE_COMMIT } from "@/lib/sor.version";
+import { ENGINE_VERSION, MCP_VERSION, POLICY_YEAR, POLICY_SNAPSHOT_DATE, RELEASE_ID, SOURCE_COMMIT, SOURCE_COMMIT_STATUS, DEPLOYMENT_MARKER } from "@/lib/sor.version";
 
 const TermPatchSchema = z.object({
   key: z.enum(["term1", "term2", "term3", "term4", "summer1", "summer2", "winter1", "winter2"]).optional(),

@@ -15,6 +15,8 @@ import {
   POLICY_SNAPSHOT_DATE,
   RELEASE_ID,
   SOURCE_COMMIT,
+  SOURCE_COMMIT_STATUS,
+  DEPLOYMENT_MARKER,
 } from "@/lib/sor.version";
 
 const MAX_BODY_BYTES = 1_000_000;

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { defaultInputs, calculateSORWithChildTerms, type TermKey } from "@/lib/sor";
 import { lookupLimits } from "@/lib/loanLimits";
 import { corsPreflightResponse, errorResponse, jsonResponse, methodNotAllowedResponse, resolveRequestId } from "@/lib/api-errors";
-import { ENGINE_VERSION, POLICY_YEAR, POLICY_SNAPSHOT_DATE, RELEASE_ID, SOURCE_COMMIT } from "@/lib/sor.version";
+import { ENGINE_VERSION, POLICY_YEAR, POLICY_SNAPSHOT_DATE, RELEASE_ID, SOURCE_COMMIT, SOURCE_COMMIT_STATUS, DEPLOYMENT_MARKER } from "@/lib/sor.version";
 
 const StudentEstimateSchema = z.object({
   awardYear: z.enum(["2025-26", "2026-27"]),
