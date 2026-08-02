@@ -3,10 +3,8 @@ import { Calculator, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getGateStatus, unlockSite } from "@/lib/gate.functions";
 
-const STORAGE_KEY = "sor-access-v1";
-// Preserve the existing launch-window gate while allowing a deployment to override it.
-const ACCESS_PASSWORD = import.meta.env.VITE_SOR_ACCESS_PASSWORD || "sor2026";
 const LINKEDIN_URL = "https://www.linkedin.com/in/tirath-c-7228b814/";
 
 export function AccessGate({ children }: { children: React.ReactNode }) {
@@ -14,14 +12,24 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   const [publicRoute, setPublicRoute] = React.useState(false);
   const [pw, setPw] = React.useState("");
   const [error, setError] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     setPublicRoute(window.location.pathname === "/student");
-    setUnlocked(
-      window.sessionStorage.getItem(STORAGE_KEY) === "1" ||
-        window.localStorage.getItem(STORAGE_KEY) === "1",
-    );
+    let cancelled = false;
+    // The unlocked flag lives in an encrypted httpOnly cookie; only the server
+    // can tell us whether this visitor is unlocked.
+    getGateStatus()
+      .then((status) => {
+        if (!cancelled) setUnlocked(status.unlocked);
+      })
+      .catch(() => {
+        if (!cancelled) setUnlocked(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // SSR / pre-hydration: render children so SEO and first paint aren't blocked
@@ -29,14 +37,22 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (ACCESS_PASSWORD && pw.trim() === ACCESS_PASSWORD) {
-      window.localStorage.setItem(STORAGE_KEY, "1");
-      setUnlocked(true);
-      setError(false);
-    } else {
+    setSubmitting(true);
+    try {
+      // Password is verified server-side; it never ships in the client bundle.
+      const { ok } = await unlockSite({ data: { password: pw } });
+      if (ok) {
+        setUnlocked(true);
+        setError(false);
+      } else {
+        setError(true);
+      }
+    } catch {
       setError(true);
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -82,8 +98,8 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
             </div>
             {error ? <p className="text-[11px] text-destructive">Incorrect password.</p> : null}
           </div>
-          <Button type="submit" className="w-full">
-            Unlock
+          <Button type="submit" className="w-full" disabled={submitting}>
+            {submitting ? "Checking..." : "Unlock"}
           </Button>
         </form>
         <div className="mt-6 border-t border-border/60 pt-4 text-center">
