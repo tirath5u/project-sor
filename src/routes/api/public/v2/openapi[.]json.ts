@@ -59,7 +59,7 @@ const spec = {
         type: "object",
         required: ["status", "contractVersion", "engineVersion", "mcpVersion", "policyYear", "policySnapshotDate", "releaseId", "deploymentMarker", "sourceCommit", "sourceCommitStatus", "supportedAwardYears"],
         properties: {
-          status: { type: "string", enum: ["ok"] }, contractVersion: { type: "string", example: "v2" }, engineVersion: { type: "string", example: ENGINE_VERSION }, mcpVersion: { type: "string", example: MCP_VERSION }, policyYear: { type: "string", example: POLICY_YEAR }, policySnapshotDate: { type: "string", example: POLICY_SNAPSHOT_DATE }, releaseId: { type: "string", example: RELEASE_ID }, deploymentMarker: { type: "string", example: RELEASE_ID }, sourceCommit: { type: "string", nullable: true, example: null }, sourceCommitStatus: { type: "string", example: "not_available_in_lovable_build" }, supportedAwardYears: { type: "object", additionalProperties: { type: "string" } },
+          status: { type: "string", enum: ["ok"] }, contractVersion: { type: "string", example: "v2" }, engineVersion: { type: "string", example: ENGINE_VERSION }, mcpVersion: { type: "string", example: MCP_VERSION }, policyYear: { type: "string", example: POLICY_YEAR }, policySnapshotDate: { type: "string", example: POLICY_SNAPSHOT_DATE }, releaseId: { type: "string", example: RELEASE_ID }, deploymentMarker: { type: "string", example: RELEASE_ID }, sourceCommit: { type: ["string", "null"], example: null }, sourceCommitStatus: { type: "string", example: "not_available_in_lovable_build" }, supportedAwardYears: { type: "object", additionalProperties: { type: "string" } },
         },
       },
       CalculateInput: {

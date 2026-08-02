@@ -354,7 +354,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                   policySnapshotDate: { type: "string", example: POLICY_SNAPSHOT_DATE },
                   releaseId: { type: "string", example: RELEASE_ID },
                   deploymentMarker: { type: "string", example: RELEASE_ID },
-                  sourceCommit: { type: "string", nullable: true, example: null },
+                  sourceCommit: { type: ["string", "null"], example: null },
                   sourceCommitStatus: { type: "string", example: "not_available_in_lovable_build" },
                   supportedAwardYears: {
                     type: "object",
