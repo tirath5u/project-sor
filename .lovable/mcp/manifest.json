@@ -15,7 +15,7 @@
       {
         "name": "calculate_sor",
         "title": "Calculate Schedule of Reductions",
-        "description": "Run the source-backed V56 SOR engine for a complete borrower and enrollment scenario. Returns per-term Sub, Unsub, and Grad PLUS results, gross and net outputs, calculation stages, warnings, modeled versus external checks, applied public sources, and release metadata. Incomplete requests return exact follow-up questions rather than using demo defaults.",
+        "description": "Run the source-backed V56 Schedule of Reductions engine. The tool does not use demo defaults for required borrower, enrollment, loan-period, financial, or paid-history facts. If the request is incomplete, it returns exact follow-up questions. When complete, it returns gross and net results, calculation stages, warnings, modeled checks, and public citations.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -29,12 +29,10 @@
               "enum": [
                 "2025-26",
                 "2026-27"
-              ],
-              "description": "Award year. Required for a complete calculation."
+              ]
             },
             "loanLimitException": {
-              "type": "boolean",
-              "description": "Loan Limit Exception (LLE). When true, use legacy pre-OBBB annual caps and allow Grad PLUS preview."
+              "type": "boolean"
             },
             "programLevel": {
               "type": "string",
@@ -44,24 +42,7 @@
               ]
             },
             "gradeLevel": {
-              "type": "string",
-              "enum": [
-                "g0",
-                "g1",
-                "g2",
-                "g3",
-                "g4",
-                "g5",
-                "g6",
-                "g7",
-                "g8",
-                "g9",
-                "g10",
-                "g11",
-                "g12",
-                "g13"
-              ],
-              "description": "Grade level code. Required for a complete calculation. g1=UG year 1, g8+=graduate/professional."
+              "type": "string"
             },
             "dependency": {
               "type": "string",
@@ -79,6 +60,30 @@
                 "SAY",
                 "BBAY1",
                 "BBAY2"
+              ]
+            },
+            "calType": {
+              "type": "number",
+              "enum": [
+                1,
+                2,
+                3,
+                4
+              ]
+            },
+            "summerPosition": {
+              "type": "string",
+              "enum": [
+                "none",
+                "trailer",
+                "header"
+              ]
+            },
+            "loanPeriodScope": {
+              "type": "string",
+              "enum": [
+                "annualMultiTerm",
+                "singleTerm"
               ]
             },
             "numStandardTerms": {
@@ -105,13 +110,11 @@
             "ayFtCredits": {
               "type": "number",
               "minimum": 0,
-              "maximum": 200,
-              "description": "Full-time AY credits."
+              "maximum": 200
             },
             "annualNeed": {
               "type": "number",
-              "minimum": 0,
-              "description": "Annual financial need in dollars."
+              "minimum": 0
             },
             "subStatutory": {
               "type": "number",
@@ -133,17 +136,8 @@
               "type": "number",
               "minimum": 0
             },
-            "feeSubUnsubPercent": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 100,
-              "description": "FY27 Sub/Unsub Direct Loan fee percentage. Defaults to 1.057."
-            },
-            "feeGradPlusPercent": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 100,
-              "description": "FY27 Grad PLUS fee percentage. Defaults to 4.228."
+            "overrideLimits": {
+              "type": "boolean"
             },
             "distributionModel": {
               "type": "string",
@@ -153,6 +147,9 @@
               ]
             },
             "applySubUnsubShift": {
+              "type": "boolean"
+            },
+            "applyDoubleReduction": {
               "type": "boolean"
             },
             "countLthtInAyPct": {
@@ -170,6 +167,22 @@
               "additionalProperties": {
                 "type": "object",
                 "properties": {
+                  "key": {
+                    "type": "string",
+                    "enum": [
+                      "term1",
+                      "term2",
+                      "term3",
+                      "term4",
+                      "summer1",
+                      "summer2",
+                      "winter1",
+                      "winter2"
+                    ]
+                  },
+                  "label": {
+                    "type": "string"
+                  },
                   "enabled": {
                     "type": "boolean"
                   },
@@ -253,108 +266,24 @@
                   "winter1",
                   "winter2"
                 ]
-              },
-              "description": "Per-term overrides keyed by term1..term4, summer1/summer2, winter1/winter2. Set `enabled: true` to include a term."
+              }
             },
-            "childTerms": {
-              "type": "object",
-              "properties": {
-                "count": {
-                  "type": "number",
-                  "enum": [
-                    0,
-                    1,
-                    2,
-                    3,
-                    4
-                  ]
-                },
-                "allocationMethod": {
-                  "type": "string",
-                  "enum": [
-                    "byChildCredits",
-                    "equalAcrossActiveChildTerms"
-                  ]
-                },
-                "parents": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "credits": {
-                          "type": "number",
-                          "minimum": 0,
-                          "maximum": 60
-                        },
-                        "paidGross": {
-                          "type": "object",
-                          "properties": {
-                            "sub": {
-                              "anyOf": [
-                                {
-                                  "type": "number",
-                                  "minimum": 0
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ]
-                            },
-                            "unsub": {
-                              "anyOf": [
-                                {
-                                  "type": "number",
-                                  "minimum": 0
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ]
-                            },
-                            "gradPlus": {
-                              "anyOf": [
-                                {
-                                  "type": "number",
-                                  "minimum": 0
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ]
-                            }
-                          },
-                          "additionalProperties": false
-                        }
-                      },
-                      "required": [
-                        "credits"
-                      ],
-                      "additionalProperties": false
-                    }
-                  },
-                  "propertyNames": {
-                    "enum": [
-                      "term1",
-                      "term2",
-                      "term3",
-                      "term4",
-                      "summer1",
-                      "summer2",
-                      "winter1",
-                      "winter2"
-                    ]
-                  }
-                }
-              },
-              "required": [
-                "count",
-                "allocationMethod",
-                "parents"
-              ],
-              "additionalProperties": false,
-              "description": "Optional V56 child/module allocation layer. Parent SOR is calculated first and child rows do not create a second SOR calculation."
+            "childTerms": {},
+            "feeSubUnsubPercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "feeGradPlusPercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "traditionalProrationApplies": {
+              "type": "boolean"
+            },
+            "ayDenominatorVerified": {
+              "type": "boolean"
             }
           },
           "additionalProperties": false,
@@ -365,7 +294,7 @@
       {
         "name": "list_scenarios",
         "title": "List canonical SOR scenarios",
-        "description": "Return the full public V56 parity-fixture set: canonical borrower scenarios, proportional-distribution edge cases, and child/module allocation fixtures, with inputs, expected outputs, and public-source-register citations. Use this to discover valid input shapes for `calculate_sor` or verify engine parity.",
+        "description": "Return the full public parity-fixture set: canonical borrower scenarios, proportional-distribution edge cases, and the V56 child/module allocation fixture, with inputs, expected outputs, and public-source-register citations. Use this to discover valid input shapes for `calculate_sor` or to verify engine parity.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
