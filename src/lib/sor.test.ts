@@ -399,7 +399,7 @@ describe("SOR engine - v19 Grad PLUS bucket", () => {
     const r = calculateSOR(inp);
     expect(r.subBaseline).toBe(0);
     expect(r.unsubBaseline).toBe(20500);
-    // initialGradPlus = MIN(15000, 40000-5000-0-20500) = MIN(15000, 14500) = 14500
+    // Full-time SOR leaves the ordinary reduced amounts unchanged.
     expect(r.initialGradPlus).toBe(14500);
     expect(r.sorPctRounded).toBe(1);
     expect(r.reducedGradPlus).toBe(14500);
@@ -440,8 +440,42 @@ describe("SOR engine - v19 Grad PLUS bucket", () => {
     inp.terms.term2 = { ...inp.terms.term2, enrolledCredits: 5 };
     const r = calculateSOR(inp);
     expect(Math.round(r.sorPctRounded * 100)).toBe(78);
-    // 78% × 14500 = 11310
-    expect(r.reducedGradPlus).toBe(11310);
+    // The Grad PLUS gap is sized after the SOR-reduced Unsub amount:
+    // 40,000 - 5,000 - 0 - 15,990 = 19,010, capped by the $15,000 request.
+    // The 78% SOR factor is then applied once: 15,000 × 78% = 11,700.
+    expect(r.initialGradPlus).toBe(15000);
+    expect(r.reducedGradPlus).toBe(11700);
+  });
+
+  it("sizes single-term Grad PLUS from the single-term COA gap without a second half-year reduction", () => {
+    const inp = gradTwoTerm({ loanPeriodScope: "singleTerm", loanLimitException: true, programLevel: "graduate" });
+    inp.numStandardTerms = 1;
+    inp.ayFtCredits = 9;
+    inp.coa = 19000;
+    inp.otherAid = 0;
+    inp.requestedGradPlus = 15000;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 9, enrolledCredits: 9 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: false };
+    const r = calculateSOR(inp);
+    expect(r.initialGradPlus).toBe(9500);
+    expect(r.reducedGradPlus).toBe(9500);
+  });
+});
+
+describe("V56 applicability guard", () => {
+  it("suppresses SOR when traditional undergraduate proration is selected", () => {
+    const inp = defaultInputs();
+    inp.awardYear = "2026-27";
+    inp.annualNeed = 5500;
+    inp.ayFtCredits = 24;
+    inp.traditionalProrationApplies = true;
+    inp.terms.term1 = { ...inp.terms.term1, enabled: true, ftCredits: 12, enrolledCredits: 6 };
+    inp.terms.term2 = { ...inp.terms.term2, enabled: true, ftCredits: 12, enrolledCredits: 6 };
+    const r = calculateSOR(inp);
+    expect(r.sorApplicable).toBe(false);
+    expect(r.sorPctRounded).toBe(1);
+    expect(r.reducedSub).toBe(r.subBaseline);
+    expect(r.warnings.some((warning) => warning.includes("suppressed"))).toBe(true);
   });
 });
 

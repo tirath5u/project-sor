@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import "@tanstack/react-start";
 import { serializeFixturesForPublic } from "@/lib/sor.fixtures";
-import { ENGINE_VERSION, POLICY_YEAR } from "@/lib/sor.version";
+import { ENGINE_VERSION, POLICY_YEAR, RELEASE_ID } from "@/lib/sor.version";
 import {
   corsPreflightResponse,
   jsonResponse,
@@ -22,6 +22,7 @@ export const Route = createFileRoute("/api/public/v1/scenarios")({
           {
             engineVersion: ENGINE_VERSION,
             policyYear: POLICY_YEAR,
+            releaseId: RELEASE_ID,
             count: scenarios.length,
             scenarios,
             requestId,

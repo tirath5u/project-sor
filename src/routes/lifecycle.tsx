@@ -33,10 +33,10 @@ export const Route = createFileRoute("/lifecycle")({
         property: "og:description",
         content: "Undergraduate cumulative aid tracker with aggregate cap monitoring.",
       },
-      { property: "og:url", content: "https://project-sor.lovable.app/lifecycle" },
+      { property: "og:url", content: "https://sor.myproduct.life/lifecycle" },
     ],
     links: [
-      { rel: "canonical", href: "https://project-sor.lovable.app/lifecycle" },
+      { rel: "canonical", href: "https://sor.myproduct.life/lifecycle" },
     ],
   }),
   component: LifecyclePage,

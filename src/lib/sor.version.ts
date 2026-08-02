@@ -11,9 +11,11 @@
  *   Falls back to "local-dev" outside CI.
  */
 
-export const ENGINE_VERSION = "1.1.0" as const;
+export const ENGINE_VERSION = "1.2.0" as const;
 export const POLICY_YEAR = "2026-27" as const;
-export const POLICY_SNAPSHOT_DATE = "2026-07-19" as const;
+export const POLICY_SNAPSHOT_DATE = "2026-07-23" as const;
+export const MCP_VERSION = "0.3.0" as const;
+export const RELEASE_ID = `sor-v56-${ENGINE_VERSION}-${POLICY_SNAPSHOT_DATE}` as const;
 
 export const SOURCE_COMMIT: string =
   (typeof import.meta !== "undefined" &&

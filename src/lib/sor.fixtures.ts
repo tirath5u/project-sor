@@ -249,7 +249,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   {
     id: "fixture-v19-007",
     description:
-      "Grad PLUS with SOR reduction - same as 006 but Spring=5 credits → AY% = 78, reduced PLUS = $11,310.",
+      "Grad PLUS with SOR reduction - same as 006 but Spring=5 credits → AY% = 78, reduced Unsub sizes the PLUS gap before one SOR pass.",
     sourceRefs: ["psr-002", "psr-004"],
     input: build(
       {
@@ -269,7 +269,8 @@ export const PARITY_FIXTURES: ParityFixture[] = [
       },
     ),
     expected: {
-      reducedGradPlus: 11310,
+      initialGradPlus: 15000,
+      reducedGradPlus: 11700,
     },
   },
 ];
@@ -456,9 +457,9 @@ PARITY_FIXTURES.push(
     },
   },
   {
-    id: "fixture-v55-child-equal-allocation",
+    id: "fixture-v56-child-equal-allocation",
     description:
-      "v55 child allocation - parent SOR is calculated first, then a 3/6 child pattern is allocated equally across credited child terms.",
+      "V56 child allocation - parent SOR is calculated first, then a 3/6 child pattern is allocated equally across credited child terms.",
     sourceRefs: ["psr-009", "psr-010"],
     sourceStatus: "preliminary",
     assertionLevel: "directional",

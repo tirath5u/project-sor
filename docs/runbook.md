@@ -21,7 +21,7 @@ A healthy response returns `200` with:
 ```json
 {
   "status": "ok",
-  "engineVersion": "1.1.0",
+  "engineVersion": "1.2.0",
   "policyYear": "2026-27",
   "policySnapshotDate": "...",
   "sourceCommit": "...",
@@ -60,7 +60,7 @@ curl -fsS https://sor.myproduct.life/api/public/v1/scenarios \
 Expected for `fixture-v19-001`:
 
 ```json
-{ "engineVersion": "1.1.0", "totalFinalSub": 2205, "totalFinalUnsub": 1260 }
+{ "engineVersion": "1.2.0", "totalFinalSub": 2205, "totalFinalUnsub": 1260 }
 ```
 
 Any drift in those two dollar figures is a P0 - the engine is the product.

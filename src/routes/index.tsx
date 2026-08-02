@@ -61,10 +61,10 @@ export const Route = createFileRoute("/")({
   component: SORCalculatorPage,
   head: () => ({
     meta: [
-      { property: "og:url", content: "https://project-sor.lovable.app/" },
+      { property: "og:url", content: "https://sor.myproduct.life/" },
     ],
     links: [
-      { rel: "canonical", href: "https://project-sor.lovable.app/" },
+      { rel: "canonical", href: "https://sor.myproduct.life/" },
     ],
   }),
 });
@@ -80,6 +80,16 @@ const OPTIONAL_KEYS: { key: TermKey; toggle: keyof SORInputs }[] = [
 type VersionEntry = { version: string; headline: string; changes: string[] };
 
 const VERSION_HISTORY: VersionEntry[] = [
+  {
+    version: "v56",
+    headline: "V56 online parity, applicability guard, structured explanations, and student estimate",
+    changes: [
+      "Corrected single-term Grad PLUS sizing so a loan-period COA gap is not halved twice.",
+      "Added a traditional 685.203 proration guard so a valid undergraduate proration path suppresses a second SOR reduction.",
+      "Added structured calculation stages, warnings, modeled-versus-external checks, and release metadata for online results.",
+      "Added a student-facing standard Fall and Spring estimate at /student using the same tested engine.",
+    ],
+  },
   {
     version: "v41",
     headline: "Loan-period scope, Single-term mode, COA/OFA caps, Grad PLUS grandfathering",
@@ -286,9 +296,9 @@ function SORCalculatorPage() {
             </div>
           </div>
           <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-[11px] text-primary">
-            <span className="font-semibold">v41 loan-period-scope update:</span> Single-term mode,
-            COA/OFA caps, Grad PLUS grandfathering, paid-history residuals, and gross whole-dollar
-            Direct Loan outputs are included.
+            <span className="font-semibold">Updated version V56:</span> the shared engine now
+            supports the V56 online parity contract, structured explanations, and a student-friendly
+            standard Fall and Spring estimate.
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1">
@@ -310,6 +320,13 @@ function SORCalculatorPage() {
             >
               <BookOpen className="h-4 w-4 text-primary" />
               API Docs
+            </Link>
+            <Link
+              to="/student"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition hover:bg-accent/10"
+            >
+              <GraduationCap className="h-4 w-4 text-primary" />
+              Student estimate
             </Link>
             <div className="hidden md:block">
               <div className="flex items-center gap-1">
@@ -1040,6 +1057,17 @@ function SORCalculatorPage() {
                   When the student's Sub need drops below the calculated Sub amount, shift the
                   unused Sub allowance into Unsub (up to the Combined Limit). Off = excess Sub is
                   forfeited.
+                </InfoTip>
+              </Label>
+              <Label className="flex h-8 cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 text-[11px]">
+                <Switch
+                  checked={Boolean(inputs.traditionalProrationApplies)}
+                  onCheckedChange={(v) => update({ traditionalProrationApplies: v })}
+                />
+                <span>Traditional proration</span>
+                <InfoTip>
+                  Use only when required undergraduate proration under 685.203 applies. This
+                  suppresses a second SOR reduction so the two reduction methods do not stack.
                 </InfoTip>
               </Label>
               <Label className="flex h-8 cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 text-[11px]">

@@ -31,10 +31,10 @@ export const Route = createFileRoute("/api-docs")({
         content:
           "REST API reference for the SOR calculator: health, scenarios, calculate, and OpenAPI spec for integrating SOR into your systems.",
       },
-      { property: "og:url", content: "https://project-sor.lovable.app/api-docs" },
+      { property: "og:url", content: "https://sor.myproduct.life/api-docs" },
     ],
     links: [
-      { rel: "canonical", href: "https://project-sor.lovable.app/api-docs" },
+      { rel: "canonical", href: "https://sor.myproduct.life/api-docs" },
     ],
   }),
   component: ApiDocsPage,
@@ -43,28 +43,33 @@ export const Route = createFileRoute("/api-docs")({
 const endpoints = [
   {
     method: "GET",
-    path: "/api/public/v1/health",
-    purpose: "Check liveness, engine version, policy year, and deployed source commit.",
+    path: "/api/public/v2/health",
+    purpose: "Check liveness, V56 engine and MCP versions, release, policy snapshot, and source commit.",
   },
   {
     method: "GET",
-    path: "/api/public/v1/scenarios",
+    path: "/api/public/v2/scenarios",
     purpose: "Fetch the public parity fixture catalog with inputs, expected outputs, and source IDs.",
   },
   {
     method: "POST",
-    path: "/api/public/v1/calculate",
-    purpose: "Run the SOR engine against a caller supplied input payload.",
+    path: "/api/public/v2/calculate",
+    purpose: "Run the V56 SOR engine with calculation stages, warnings, and release metadata.",
+  },
+  {
+    method: "POST",
+    path: "/api/public/v2/student-estimate",
+    purpose: "Estimate a standard two-term student scenario with explicit school-review boundaries.",
   },
   {
     method: "GET",
-    path: "/api/public/v1/openapi.json",
-    purpose: "Read the OpenAPI 3.1 contract for tooling and integration review.",
+    path: "/api/public/v2/openapi.json",
+    purpose: "Read the V2 OpenAPI 3.1 contract for tooling and integration review.",
   },
   {
     method: "POST",
     path: "/mcp",
-    purpose: "Use the read-only remote MCP server to discover scenarios and run the same v55 calculator engine.",
+    purpose: "Use the read-only remote MCP server to discover scenarios and run the same V56 engine with follow-up questions and explanations.",
   },
 ];
 
@@ -276,7 +281,7 @@ function ApiDocsPage() {
             <div className="mt-4 rounded-lg border border-border bg-background p-4 text-sm text-muted-foreground">
               <span className="font-semibold text-foreground">Import URL:</span>{" "}
               <code className="rounded bg-muted px-1.5 py-1 text-xs text-foreground">
-                https://sor.myproduct.life/api/public/v1/openapi.json
+                https://sor.myproduct.life/api/public/v2/openapi.json
               </code>
             </div>
             <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
@@ -286,7 +291,7 @@ function ApiDocsPage() {
                 https://sor.myproduct.life/mcp
               </code>
               . It exposes <code>list_scenarios</code> and <code>calculate_sor</code>, including
-              the optional v55 child/module allocation layer. MCP clients must support remote
+              the optional V56 child/module allocation layer. MCP clients must support remote
               MCP and may require workspace or administrator approval.
             </div>
           </div>

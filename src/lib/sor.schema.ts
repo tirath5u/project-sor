@@ -174,6 +174,8 @@ export const CalculateInputSchema = z
     childTerms: ChildTermsSchema.optional(),
     feeSubUnsubPercent: z.number().finite().min(0).max(100).optional().default(1.057),
     feeGradPlusPercent: z.number().finite().min(0).max(100).optional().default(4.228),
+    traditionalProrationApplies: z.boolean().optional().default(false),
+    ayDenominatorVerified: z.boolean().optional().default(false),
   })
   .strict();
 

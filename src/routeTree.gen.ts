@@ -9,7 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StudentRouteImport } from './routes/student'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ReleasesRouteImport } from './routes/releases'
+import { Route as McpGuideRouteImport } from './routes/mcp-guide'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
 import { Route as ApiDocsRouteImport } from './routes/api-docs'
@@ -17,14 +20,34 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as ApiPublicV2StudentEstimateRouteImport } from './routes/api/public/v2/student-estimate'
+import { Route as ApiPublicV2ScenariosRouteImport } from './routes/api/public/v2/scenarios'
+import { Route as ApiPublicV2OpenapiDotjsonRouteImport } from './routes/api/public/v2/openapi[.]json'
+import { Route as ApiPublicV2HealthRouteImport } from './routes/api/public/v2/health'
+import { Route as ApiPublicV2CalculateRouteImport } from './routes/api/public/v2/calculate'
 import { Route as ApiPublicV1ScenariosRouteImport } from './routes/api/public/v1/scenarios'
 import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
 import { Route as ApiPublicV1HealthRouteImport } from './routes/api/public/v1/health'
 import { Route as ApiPublicV1CalculateRouteImport } from './routes/api/public/v1/calculate'
 
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReleasesRoute = ReleasesRouteImport.update({
+  id: '/releases',
+  path: '/releases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpGuideRoute = McpGuideRouteImport.update({
+  id: '/mcp-guide',
+  path: '/mcp-guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -65,6 +88,33 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV2StudentEstimateRoute =
+  ApiPublicV2StudentEstimateRouteImport.update({
+    id: '/api/public/v2/student-estimate',
+    path: '/api/public/v2/student-estimate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV2ScenariosRoute = ApiPublicV2ScenariosRouteImport.update({
+  id: '/api/public/v2/scenarios',
+  path: '/api/public/v2/scenarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV2OpenapiDotjsonRoute =
+  ApiPublicV2OpenapiDotjsonRouteImport.update({
+    id: '/api/public/v2/openapi.json',
+    path: '/api/public/v2/openapi.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV2HealthRoute = ApiPublicV2HealthRouteImport.update({
+  id: '/api/public/v2/health',
+  path: '/api/public/v2/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV2CalculateRoute = ApiPublicV2CalculateRouteImport.update({
+  id: '/api/public/v2/calculate',
+  path: '/api/public/v2/calculate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1ScenariosRoute = ApiPublicV1ScenariosRouteImport.update({
   id: '/api/public/v1/scenarios',
   path: '/api/public/v1/scenarios',
@@ -92,7 +142,10 @@ export interface FileRoutesByFullPath {
   '/api-docs': typeof ApiDocsRoute
   '/lifecycle': typeof LifecycleRoute
   '/mcp': typeof McpRoute
+  '/mcp-guide': typeof McpGuideRoute
+  '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/student': typeof StudentRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -100,13 +153,21 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
   '/api/public/v1/scenarios': typeof ApiPublicV1ScenariosRoute
+  '/api/public/v2/calculate': typeof ApiPublicV2CalculateRoute
+  '/api/public/v2/health': typeof ApiPublicV2HealthRoute
+  '/api/public/v2/openapi.json': typeof ApiPublicV2OpenapiDotjsonRoute
+  '/api/public/v2/scenarios': typeof ApiPublicV2ScenariosRoute
+  '/api/public/v2/student-estimate': typeof ApiPublicV2StudentEstimateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api-docs': typeof ApiDocsRoute
   '/lifecycle': typeof LifecycleRoute
   '/mcp': typeof McpRoute
+  '/mcp-guide': typeof McpGuideRoute
+  '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/student': typeof StudentRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -114,6 +175,11 @@ export interface FileRoutesByTo {
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
   '/api/public/v1/scenarios': typeof ApiPublicV1ScenariosRoute
+  '/api/public/v2/calculate': typeof ApiPublicV2CalculateRoute
+  '/api/public/v2/health': typeof ApiPublicV2HealthRoute
+  '/api/public/v2/openapi.json': typeof ApiPublicV2OpenapiDotjsonRoute
+  '/api/public/v2/scenarios': typeof ApiPublicV2ScenariosRoute
+  '/api/public/v2/student-estimate': typeof ApiPublicV2StudentEstimateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -121,7 +187,10 @@ export interface FileRoutesById {
   '/api-docs': typeof ApiDocsRoute
   '/lifecycle': typeof LifecycleRoute
   '/mcp': typeof McpRoute
+  '/mcp-guide': typeof McpGuideRoute
+  '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/student': typeof StudentRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -129,6 +198,11 @@ export interface FileRoutesById {
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
   '/api/public/v1/scenarios': typeof ApiPublicV1ScenariosRoute
+  '/api/public/v2/calculate': typeof ApiPublicV2CalculateRoute
+  '/api/public/v2/health': typeof ApiPublicV2HealthRoute
+  '/api/public/v2/openapi.json': typeof ApiPublicV2OpenapiDotjsonRoute
+  '/api/public/v2/scenarios': typeof ApiPublicV2ScenariosRoute
+  '/api/public/v2/student-estimate': typeof ApiPublicV2StudentEstimateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,7 +211,10 @@ export interface FileRouteTypes {
     | '/api-docs'
     | '/lifecycle'
     | '/mcp'
+    | '/mcp-guide'
+    | '/releases'
     | '/sitemap.xml'
+    | '/student'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.mcp/invoke-tool/$tool'
@@ -145,13 +222,21 @@ export interface FileRouteTypes {
     | '/api/public/v1/health'
     | '/api/public/v1/openapi.json'
     | '/api/public/v1/scenarios'
+    | '/api/public/v2/calculate'
+    | '/api/public/v2/health'
+    | '/api/public/v2/openapi.json'
+    | '/api/public/v2/scenarios'
+    | '/api/public/v2/student-estimate'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/api-docs'
     | '/lifecycle'
     | '/mcp'
+    | '/mcp-guide'
+    | '/releases'
     | '/sitemap.xml'
+    | '/student'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.mcp/invoke-tool/$tool'
@@ -159,13 +244,21 @@ export interface FileRouteTypes {
     | '/api/public/v1/health'
     | '/api/public/v1/openapi.json'
     | '/api/public/v1/scenarios'
+    | '/api/public/v2/calculate'
+    | '/api/public/v2/health'
+    | '/api/public/v2/openapi.json'
+    | '/api/public/v2/scenarios'
+    | '/api/public/v2/student-estimate'
   id:
     | '__root__'
     | '/'
     | '/api-docs'
     | '/lifecycle'
     | '/mcp'
+    | '/mcp-guide'
+    | '/releases'
     | '/sitemap.xml'
+    | '/student'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.mcp/invoke-tool/$tool'
@@ -173,6 +266,11 @@ export interface FileRouteTypes {
     | '/api/public/v1/health'
     | '/api/public/v1/openapi.json'
     | '/api/public/v1/scenarios'
+    | '/api/public/v2/calculate'
+    | '/api/public/v2/health'
+    | '/api/public/v2/openapi.json'
+    | '/api/public/v2/scenarios'
+    | '/api/public/v2/student-estimate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -180,7 +278,10 @@ export interface RootRouteChildren {
   ApiDocsRoute: typeof ApiDocsRoute
   LifecycleRoute: typeof LifecycleRoute
   McpRoute: typeof McpRoute
+  McpGuideRoute: typeof McpGuideRoute
+  ReleasesRoute: typeof ReleasesRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StudentRoute: typeof StudentRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -188,15 +289,41 @@ export interface RootRouteChildren {
   ApiPublicV1HealthRoute: typeof ApiPublicV1HealthRoute
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
   ApiPublicV1ScenariosRoute: typeof ApiPublicV1ScenariosRoute
+  ApiPublicV2CalculateRoute: typeof ApiPublicV2CalculateRoute
+  ApiPublicV2HealthRoute: typeof ApiPublicV2HealthRoute
+  ApiPublicV2OpenapiDotjsonRoute: typeof ApiPublicV2OpenapiDotjsonRoute
+  ApiPublicV2ScenariosRoute: typeof ApiPublicV2ScenariosRoute
+  ApiPublicV2StudentEstimateRoute: typeof ApiPublicV2StudentEstimateRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/releases': {
+      id: '/releases'
+      path: '/releases'
+      fullPath: '/releases'
+      preLoaderRoute: typeof ReleasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp-guide': {
+      id: '/mcp-guide'
+      path: '/mcp-guide'
+      fullPath: '/mcp-guide'
+      preLoaderRoute: typeof McpGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -248,6 +375,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v2/student-estimate': {
+      id: '/api/public/v2/student-estimate'
+      path: '/api/public/v2/student-estimate'
+      fullPath: '/api/public/v2/student-estimate'
+      preLoaderRoute: typeof ApiPublicV2StudentEstimateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v2/scenarios': {
+      id: '/api/public/v2/scenarios'
+      path: '/api/public/v2/scenarios'
+      fullPath: '/api/public/v2/scenarios'
+      preLoaderRoute: typeof ApiPublicV2ScenariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v2/openapi.json': {
+      id: '/api/public/v2/openapi.json'
+      path: '/api/public/v2/openapi.json'
+      fullPath: '/api/public/v2/openapi.json'
+      preLoaderRoute: typeof ApiPublicV2OpenapiDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v2/health': {
+      id: '/api/public/v2/health'
+      path: '/api/public/v2/health'
+      fullPath: '/api/public/v2/health'
+      preLoaderRoute: typeof ApiPublicV2HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v2/calculate': {
+      id: '/api/public/v2/calculate'
+      path: '/api/public/v2/calculate'
+      fullPath: '/api/public/v2/calculate'
+      preLoaderRoute: typeof ApiPublicV2CalculateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/scenarios': {
       id: '/api/public/v1/scenarios'
       path: '/api/public/v1/scenarios'
@@ -284,7 +446,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDocsRoute: ApiDocsRoute,
   LifecycleRoute: LifecycleRoute,
   McpRoute: McpRoute,
+  McpGuideRoute: McpGuideRoute,
+  ReleasesRoute: ReleasesRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StudentRoute: StudentRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
@@ -293,6 +458,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV1HealthRoute: ApiPublicV1HealthRoute,
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
   ApiPublicV1ScenariosRoute: ApiPublicV1ScenariosRoute,
+  ApiPublicV2CalculateRoute: ApiPublicV2CalculateRoute,
+  ApiPublicV2HealthRoute: ApiPublicV2HealthRoute,
+  ApiPublicV2OpenapiDotjsonRoute: ApiPublicV2OpenapiDotjsonRoute,
+  ApiPublicV2ScenariosRoute: ApiPublicV2ScenariosRoute,
+  ApiPublicV2StudentEstimateRoute: ApiPublicV2StudentEstimateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

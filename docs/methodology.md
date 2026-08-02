@@ -52,7 +52,7 @@ the public `/api/public/v1/calculate` endpoint with `strictNumber` (no silent
 
 ## Child and Net Display Layer
 
-The v55 child layer is downstream of the SOR engine. It accepts child credits and
+The V56 child layer is downstream of the SOR engine. It accepts child credits and
 optional gross paid history, preserves paid child amounts, excludes zero-credit
 children from unpaid allocation, and returns scheduled gross and calculated net
 display values. Net is calculated from gross using the FY27 fee percentages and
