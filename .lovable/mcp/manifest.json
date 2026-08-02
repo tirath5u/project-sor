@@ -8,14 +8,14 @@
   "mcp": {
     "server": {
       "name": "project-sor-mcp",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "title": "Project SOR: Schedule of Reductions"
     },
     "tools": [
       {
         "name": "calculate_sor",
         "title": "Calculate Schedule of Reductions",
-        "description": "Run the SOR engine for a given borrower/enrollment scenario. Returns per-term Sub, Unsub, and Grad PLUS disbursements, the SOR%, and all engine diagnostics (warnings, baselines, term caps). Any field left unset falls back to safe defaults; supply `terms` to override per-term FT/enrolled credits and paid history.",
+        "description": "Run the source-backed V56 SOR engine for a complete borrower and enrollment scenario. Returns per-term Sub, Unsub, and Grad PLUS results, gross and net outputs, calculation stages, warnings, modeled versus external checks, applied public sources, and release metadata. Incomplete requests return exact follow-up questions rather than using demo defaults.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -30,7 +30,7 @@
                 "2025-26",
                 "2026-27"
               ],
-              "description": "Award year. Defaults to 2026-27 (OBBBA)."
+              "description": "Award year. Required for a complete calculation."
             },
             "loanLimitException": {
               "type": "boolean",
@@ -61,7 +61,7 @@
                 "g12",
                 "g13"
               ],
-              "description": "Grade level code. g1=UG yr 1, g8+=graduate/professional."
+              "description": "Grade level code. Required for a complete calculation. g1=UG year 1, g8+=graduate/professional."
             },
             "dependency": {
               "type": "string",
@@ -354,7 +354,7 @@
                 "parents"
               ],
               "additionalProperties": false,
-              "description": "Optional v55 child/module allocation layer. Parent SOR is calculated first."
+              "description": "Optional V56 child/module allocation layer. Parent SOR is calculated first and child rows do not create a second SOR calculation."
             }
           },
           "additionalProperties": false,
@@ -365,7 +365,7 @@
       {
         "name": "list_scenarios",
         "title": "List canonical SOR scenarios",
-        "description": "Return the full public parity-fixture set: canonical borrower scenarios, proportional-distribution edge cases, and the v55 child/module allocation fixture, with inputs, expected outputs, and public-source-register citations. Use this to discover valid input shapes for `calculate_sor` or to verify engine parity.",
+        "description": "Return the full public V56 parity-fixture set: canonical borrower scenarios, proportional-distribution edge cases, and child/module allocation fixtures, with inputs, expected outputs, and public-source-register citations. Use this to discover valid input shapes for `calculate_sor` or verify engine parity.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
