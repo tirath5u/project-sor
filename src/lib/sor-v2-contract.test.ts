@@ -57,6 +57,16 @@ describe("V2 contract normalization", () => {
     expect(normalized.warnings).toContain("Traditional proration fields conflict. Resolve the structured status before relying on the result.");
   });
 
+  it("does not broaden a non-denial Parent PLUS basis into the legacy denial uplift", () => {
+    const normalized = normalizeV2Input(CalculateV2InputSchema.parse({
+      ...defaultInputs(),
+      parentPlusEligibilityBasis: "documentedExceptionalCircumstances",
+      parentPlusAggregateUsed: 0,
+    }));
+    expect(normalized.engineInput.parentPlusDenied).toBe(false);
+    expect(normalized.externalChecks).toContain("Parent PLUS aggregate room and exception treatment must be verified against NSLDS or the institution's authoritative record.");
+  });
+
   it("emits stable warning objects without duplicating messages", () => {
     const warnings = toV2Warnings(
       ["Review: Proportional is not used because SOR is not reducing the current loan."],

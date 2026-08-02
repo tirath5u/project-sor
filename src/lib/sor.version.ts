@@ -14,10 +14,10 @@
  *   trust client headers. SOURCE_COMMIT_STATUS explains why.
  */
 
-export const ENGINE_VERSION = "1.3.0" as const;
+export const ENGINE_VERSION = "1.3.1" as const;
 export const POLICY_YEAR = "2026-27" as const;
 export const POLICY_SNAPSHOT_DATE = "2026-07-23" as const;
-export const MCP_VERSION = "0.4.0" as const;
+export const MCP_VERSION = "0.4.1" as const;
 export const RELEASE_ID = `sor-v56-${ENGINE_VERSION}-2026-08-03` as const;
 
 export const DEPLOYMENT_MARKER: string = RELEASE_ID;

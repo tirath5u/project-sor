@@ -89,7 +89,7 @@ export async function handleCalculateRequest(request: Request, contractVersion: 
 
   const normalized = contractVersion === "v2"
     ? normalizeV2Input(parsed.data as unknown as z.infer<typeof CalculateV2InputSchema>)
-    : { engineInput: parsed.data as unknown as z.infer<typeof CalculateInputSchema>, structured: undefined, externalChecks: [], warnings: [] };
+    : { engineInput: parsed.data as unknown as z.infer<typeof CalculateInputSchema>, structured: undefined, externalChecks: [], warnings: [], blocked: false };
 
   let data;
   try {
@@ -129,10 +129,15 @@ export async function handleCalculateRequest(request: Request, contractVersion: 
       [...(Array.isArray(resultData.warnings) ? resultData.warnings as string[] : []), ...normalized.warnings],
       normalized.externalChecks,
     );
+    const authoritative = normalized.externalChecks.length === 0 && !normalized.blocked;
     response.contract = {
-      calculationStatus: normalized.externalChecks.length > 0 ? "calculated_with_external_checks" : "calculated",
-      authoritative: normalized.externalChecks.length === 0,
-      policyDecision: v2PolicyDecision(resultData),
+      calculationStatus: normalized.blocked
+        ? "blocked"
+        : normalized.externalChecks.length > 0
+          ? "calculated_with_external_checks"
+          : "calculated",
+      authoritative,
+      policyDecision: v2PolicyDecision(resultData, authoritative),
       eligibilityStages: resultData.calculationStages ?? [],
       modeledInputs: resultData.modeledInputs ?? [],
       externalChecks: normalized.externalChecks,

@@ -167,15 +167,24 @@ export default defineTool({
       const normalized = normalizeV2Input(parsed.data);
       const data = calculateSORWithChildTerms(normalized.engineInput as unknown as SORInputs) as unknown as Record<string, unknown>;
       const meta = { engineVersion: ENGINE_VERSION, mcpVersion: MCP_VERSION, policyYear: parsed.data.awardYear ?? POLICY_YEAR, policySnapshotDate: POLICY_SNAPSHOT_DATE, sourceCommit: SOURCE_COMMIT, sourceCommitStatus: SOURCE_COMMIT_STATUS, deploymentMarker: DEPLOYMENT_MARKER, releaseId: RELEASE_ID, sourceSet: ["direct-loan-sor-v1", "project-sor-v56-rule-corrections", "department-vfg-july-23-2026"], computedAt: new Date().toISOString() };
+      const authoritative = normalized.externalChecks.length === 0 && !normalized.blocked;
       const result = {
-        status: normalized.externalChecks.length > 0 ? "calculated_with_external_checks" : "calculated",
+        status: normalized.blocked
+          ? "blocked"
+          : normalized.externalChecks.length > 0
+            ? "calculated_with_external_checks"
+            : "calculated",
         canCalculate: true,
         data,
         meta,
         contract: {
-          calculationStatus: normalized.externalChecks.length > 0 ? "calculated_with_external_checks" : "calculated",
-          authoritative: normalized.externalChecks.length === 0,
-          policyDecision: v2PolicyDecision(data),
+          calculationStatus: normalized.blocked
+            ? "blocked"
+            : normalized.externalChecks.length > 0
+              ? "calculated_with_external_checks"
+              : "calculated",
+          authoritative,
+          policyDecision: v2PolicyDecision(data, authoritative),
           eligibilityStages: data.calculationStages ?? [],
           modeledInputs: data.modeledInputs ?? [],
           externalChecks: normalized.externalChecks,

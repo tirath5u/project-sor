@@ -859,7 +859,7 @@ describe("SOR engine - LTHT warnings", () => {
 describe("deployment markers", () => {
   it("uses releaseId as the authoritative deployment marker", () => {
     expect(DEPLOYMENT_MARKER).toBe(RELEASE_ID);
-    expect(RELEASE_ID).toBe("sor-v56-1.3.0-2026-08-03");
+    expect(RELEASE_ID).toBe("sor-v56-1.3.1-2026-08-03");
   });
 
   it("reports sourceCommit as null with an explanatory status, never local-dev", () => {

@@ -55,6 +55,7 @@ export interface V2Normalization {
   structured: V2StructuredFields;
   externalChecks: string[];
   warnings: string[];
+  blocked: boolean;
 }
 
 function addExternal(checks: string[], check: string) {
@@ -124,7 +125,10 @@ export function normalizeV2Input(input: CalculateV2Input): V2Normalization {
   }
 
   if (parentPlusEligibilityBasis !== undefined) {
-    engineInput.parentPlusDenied = parentPlusEligibilityBasis === "adverseCreditDenied" || parentPlusEligibilityBasis === "documentedExceptionalCircumstances";
+    // The legacy engine boolean specifically models adverse-credit denial.
+    // Other structured bases must remain external until their rule path is
+    // implemented, rather than being broadened into the denial uplift.
+    engineInput.parentPlusDenied = parentPlusEligibilityBasis === "adverseCreditDenied";
     addExternal(externalChecks, "Parent PLUS aggregate room and exception treatment must be verified against NSLDS or the institution's authoritative record.");
     if (parentPlusAggregateUsed === null || parentPlusAggregateUsed === undefined) {
       warnings.push("Parent PLUS aggregate usage is missing. The result is not authoritative for additional dependent Unsubsidized eligibility.");
@@ -154,7 +158,8 @@ export function normalizeV2Input(input: CalculateV2Input): V2Normalization {
     warnings.push("COA scope is single-term but loanPeriodScope is not single-term. Resolve the scope before relying on Grad PLUS sizing.");
   }
 
-  return { engineInput, structured, externalChecks, warnings };
+  const blocked = warnings.some((message) => message.includes("conflict") || message.includes("Resolve the scope"));
+  return { engineInput, structured, externalChecks, warnings, blocked };
 }
 
 export interface V2Warning {
@@ -182,12 +187,12 @@ export function toV2Warnings(messages: string[], externalChecks: string[]): V2Wa
   }])).values());
 }
 
-export function v2PolicyDecision(data: Record<string, unknown>) {
+export function v2PolicyDecision(data: Record<string, unknown>, authoritative = true) {
   const sorApplicable = data.sorApplicable === true;
   return {
     sorApplicable,
     reasonCode: sorApplicable ? "SOR_APPLIES" : "SOR_NOT_APPLIED",
     selectedDistributionModel: data.effectiveDistributionModel ?? data.distributionModel ?? null,
-    authoritative: true,
+    authoritative,
   };
 }
