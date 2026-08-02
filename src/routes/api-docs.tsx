@@ -338,7 +338,8 @@ function ApiDocsPage() {
             <p>
               Successful calculations return a `data` block from the shared engine and
               a `meta` block with `engineVersion`, `policyYear`,
-              `policySnapshotDate`, `sourceCommit`, `policyStatus`, `sourceSet`,
+              `policySnapshotDate`, `deploymentMarker`, `sourceCommit` (null),
+              `sourceCommitStatus`, `policyStatus`, `sourceSet`,
               `citations`, `computedAt`, and `requestId`.
             </p>
             <p>

@@ -111,7 +111,7 @@ The optional `childTerms` object is an allocation layer under the parent SOR res
 
 Supported methods are `byChildCredits` and `equalAcrossActiveChildTerms`. The parent term is calculated first. Child terms do not create separate SOR terms, change the academic-year SOR percentage, or level funds across different parent terms. The response includes `data.childAllocations` when `childTerms.count` is greater than zero.
 
-The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. It is read-only and stateless. Consumers must verify the published `engineVersion`, `releaseId`, and `sourceCommit` before relying on a result. When required facts are missing, the MCP returns `status: "needs_input"` with exact missing fields and follow-up questions rather than calculating from demo defaults.
+The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. It is read-only and stateless. Consumers must verify the published `engineVersion`, `releaseId`, and `deploymentMarker` before relying on a result. When required facts are missing, the MCP returns `status: "needs_input"` with exact missing fields and follow-up questions rather than calculating from demo defaults.
 
 ### Student estimate boundaries
 
@@ -127,17 +127,21 @@ keys: `data` and `meta`. The `meta` object includes:
 - `policyYear` - award year the engine was evaluated against (e.g. `2026-27`)
 - `policySnapshotDate` - ISO date of the policy snapshot used
 - `policyStatus` - `confirmed` or `supported-preliminary`
-- `sourceCommit` - Git SHA of the deployed engine, or `local-dev` for
-  non-CI builds (see note below)
+- `deploymentMarker` - authoritative public deployment identifier; equals `releaseId` (e.g. `sor-v56-1.2.0-2026-07-23`)
+- `sourceCommit` - `null`; the exact Git SHA is not available to the runtime
+- `sourceCommitStatus` - `not_available_in_lovable_build` (see note below)
 - `sourceSet` - identifiers of the rule packs used (e.g. `["direct-loan-sor-v1"]`)
 - `citations` - regulatory citations applicable to the result (may be empty)
 - `computedAt` - ISO timestamp the response was produced
 - `requestId` - correlation ID; also returned in the `X-Request-Id` response header
 
-> **`sourceCommit` note.** GitHub CI injects the real commit SHA via
-> `VITE_COMMIT_SHA` at build time. Deployments triggered from the Lovable
-> editor do not set that variable and will return `sourceCommit: "local-dev"`.
-> For source-reproducible results, pin against a CI-built deployment.
+> **Deployment marker note.** Cite `deploymentMarker` / `releaseId` when
+> referencing a deployed build. `sourceCommit` is always `null` with
+> `sourceCommitStatus: "not_available_in_lovable_build"`, because the hosted
+> build path does not expose the Git SHA to the runtime and we deliberately do
+> not fetch GitHub per request or trust client-supplied headers. Exact SHA
+> tracking can be added later via a CI-managed deploy or a supported runtime
+> binding.
 
 **Error contract:** uniform `{ error: { code, message, details? } }` envelope. Status codes are RFC-correct: 400 for malformed JSON, 415 for wrong content type, 422 for valid JSON that fails schema, 429 for rate limit, 405 for wrong method, 413 for oversized body.
 

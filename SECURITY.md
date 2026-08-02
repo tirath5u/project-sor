@@ -29,7 +29,7 @@ When reporting, please include:
 
 - A description of the vulnerability and its potential impact.
 - Steps to reproduce (a minimal payload, fixture ID, or `curl` command is ideal).
-- The deployed `engineVersion` and `sourceCommit` from `/api/public/v1/health`
+- The deployed `engineVersion` and `deploymentMarker` from `/api/public/v1/health`
   at the time you observed the issue.
 - Any suggested remediation, if you have one.
 

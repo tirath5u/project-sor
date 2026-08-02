@@ -6,6 +6,12 @@
 import { describe, it, expect } from "vitest";
 import { calculateSOR, defaultInputs, type TermKey } from "./sor";
 import { SCENARIOS } from "./scenarios";
+import {
+  DEPLOYMENT_MARKER,
+  RELEASE_ID,
+  SOURCE_COMMIT,
+  SOURCE_COMMIT_STATUS,
+} from "./sor.version";
 
 describe("SOR engine - scenario regression", () => {
   for (const s of SCENARIOS) {
