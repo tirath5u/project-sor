@@ -152,6 +152,62 @@
   --sidebar-ring: oklch(0.7 0.15 295);
 }
 
+/*
+ * Student experience theme — myproduct.life brand tokens (crimson accent on
+ * slate neutrals). Scoped to /student and /student/advanced via .theme-student
+ * so the staff calculator keeps its existing palette.
+ */
+.theme-student {
+  --background: oklch(100% 0 0);
+  --foreground: oklch(12.9% 0.042 264.695);
+  --card: oklch(100% 0 0);
+  --card-foreground: oklch(12.9% 0.042 264.695);
+  --popover: oklch(100% 0 0);
+  --popover-foreground: oklch(12.9% 0.042 264.695);
+  --primary: oklch(51.5% 0.115 17);
+  --primary-foreground: oklch(98.4% 0.003 247.858);
+  --primary-glow: oklch(62% 0.12 20);
+  --secondary: oklch(96.8% 0.007 247.896);
+  --secondary-foreground: oklch(20.8% 0.042 265.755);
+  --muted: oklch(96.8% 0.007 247.896);
+  --muted-foreground: oklch(55.4% 0.046 257.417);
+  --accent: oklch(95.5% 0.025 17);
+  --accent-foreground: oklch(45% 0.13 17);
+  --border: oklch(92.9% 0.013 255.508);
+  --input: oklch(92.9% 0.013 255.508);
+  --ring: oklch(51.5% 0.115 17);
+  --brand: oklch(51.5% 0.115 17);
+  --brand-hover: oklch(45% 0.13 17);
+  --brand-soft: oklch(95.5% 0.025 17);
+  --brand-foreground: oklch(98.4% 0.003 247.858);
+  --gradient-primary: linear-gradient(135deg, oklch(45% 0.13 17), oklch(58% 0.13 25));
+  --shadow-elegant: 0 12px 40px -14px color-mix(in oklab, oklch(51.5% 0.115 17) 30%, transparent);
+}
+
+.dark .theme-student {
+  --background: oklch(12.9% 0.042 264.695);
+  --foreground: oklch(98.4% 0.003 247.858);
+  --card: oklch(20.8% 0.042 265.755);
+  --card-foreground: oklch(98.4% 0.003 247.858);
+  --popover: oklch(20.8% 0.042 265.755);
+  --popover-foreground: oklch(98.4% 0.003 247.858);
+  --primary: oklch(66% 0.14 20);
+  --primary-foreground: oklch(12.9% 0.042 264.695);
+  --secondary: oklch(27.9% 0.041 260.031);
+  --secondary-foreground: oklch(98.4% 0.003 247.858);
+  --muted: oklch(27.9% 0.041 260.031);
+  --muted-foreground: oklch(70.4% 0.04 256.788);
+  --accent: oklch(30% 0.05 20);
+  --accent-foreground: oklch(88% 0.06 20);
+  --border: oklch(100% 0 0 / 12%);
+  --input: oklch(100% 0 0 / 14%);
+  --ring: oklch(66% 0.14 20);
+  --brand: oklch(66% 0.14 20);
+  --brand-hover: oklch(72% 0.13 20);
+  --brand-soft: oklch(30% 0.05 20);
+  --brand-foreground: oklch(12.9% 0.042 264.695);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
