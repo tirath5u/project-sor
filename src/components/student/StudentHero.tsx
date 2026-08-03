@@ -29,7 +29,7 @@ export function StudentHero() {
         aria-hidden="true"
         className="pointer-events-none absolute -right-24 -top-32 h-72 w-72 rounded-full bg-primary/10 blur-3xl"
       />
-      <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+      <div className="relative mx-auto max-w-6xl px-4 py-10 pb-8 sm:px-6 sm:py-12 sm:pb-10">
         <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-background/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
           <Sparkles className="h-3.5 w-3.5" /> Free student loan estimator
         </span>
