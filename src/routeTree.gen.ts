@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StudentRouteImport } from './routes/student'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReleasesRouteImport } from './routes/releases'
 import { Route as MigrationRouteImport } from './routes/migration'
@@ -35,6 +36,11 @@ import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/publ
 import { Route as ApiPublicV1HealthRouteImport } from './routes/api/public/v1/health'
 import { Route as ApiPublicV1CalculateRouteImport } from './routes/api/public/v1/calculate'
 
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -81,9 +87,9 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentAdvancedRoute = StudentAdvancedRouteImport.update({
-  id: '/student/advanced',
-  path: '/student/advanced',
-  getParentRoute: () => rootRouteImport,
+  id: '/advanced',
+  path: '/advanced',
+  getParentRoute: () => StudentRoute,
 } as any)
 const Char91DotwellKnownChar93OauthProtectedResourceRoute =
   Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/migration': typeof MigrationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/student': typeof StudentRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/migration': typeof MigrationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/student': typeof StudentRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
@@ -234,6 +242,7 @@ export interface FileRoutesById {
   '/migration': typeof MigrationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/student': typeof StudentRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
@@ -263,6 +272,7 @@ export interface FileRouteTypes {
     | '/migration'
     | '/releases'
     | '/sitemap.xml'
+    | '/student'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
@@ -290,6 +300,7 @@ export interface FileRouteTypes {
     | '/migration'
     | '/releases'
     | '/sitemap.xml'
+    | '/student'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/migration'
     | '/releases'
     | '/sitemap.xml'
+    | '/student'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
@@ -345,9 +357,9 @@ export interface RootRouteChildren {
   MigrationRoute: typeof MigrationRoute
   ReleasesRoute: typeof ReleasesRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StudentRoute: typeof StudentRouteWithChildren
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  StudentAdvancedRoute: typeof StudentAdvancedRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicV1CalculateRoute: typeof ApiPublicV1CalculateRoute
   ApiPublicV1HealthRoute: typeof ApiPublicV1HealthRoute
@@ -365,6 +377,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -430,10 +449,10 @@ declare module '@tanstack/react-router' {
     }
     '/student/advanced': {
       id: '/student/advanced'
-      path: '/student/advanced'
+      path: '/advanced'
       fullPath: '/student/advanced'
       preLoaderRoute: typeof StudentAdvancedRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof StudentRoute
     }
     '/.well-known/oauth-protected-resource': {
       id: '/.well-known/oauth-protected-resource'
@@ -543,6 +562,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface StudentRouteChildren {
+  StudentAdvancedRoute: typeof StudentAdvancedRoute
+}
+
+const StudentRouteChildren: StudentRouteChildren = {
+  StudentAdvancedRoute: StudentAdvancedRoute,
+}
+
+const StudentRouteWithChildren =
+  StudentRoute._addFileChildren(StudentRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiDocsRoute: ApiDocsRoute,
@@ -553,10 +583,10 @@ const rootRouteChildren: RootRouteChildren = {
   MigrationRoute: MigrationRoute,
   ReleasesRoute: ReleasesRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StudentRoute: StudentRouteWithChildren,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
-  StudentAdvancedRoute: StudentAdvancedRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicV1CalculateRoute: ApiPublicV1CalculateRoute,
   ApiPublicV1HealthRoute: ApiPublicV1HealthRoute,
