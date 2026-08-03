@@ -40,12 +40,6 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-credit-maroon: var(--credit-maroon);
   --color-primary-glow: var(--primary-glow);
-  --color-brand: var(--brand);
-  --color-brand-hover: var(--brand-hover);
-  --color-brand-soft: var(--brand-soft);
-  --color-brand-foreground: var(--brand-foreground);
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -158,63 +152,6 @@
   --sidebar-ring: oklch(0.7 0.15 295);
 }
 
-/*
- * Student experience theme — myproduct.life brand tokens (crimson accent on
- * slate neutrals). Scoped to /student and /student/advanced via .theme-student
- * so the staff calculator keeps its existing palette.
- */
-.theme-student {
-  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --background: oklch(100% 0 0);
-  --foreground: oklch(12.9% 0.042 264.695);
-  --card: oklch(100% 0 0);
-  --card-foreground: oklch(12.9% 0.042 264.695);
-  --popover: oklch(100% 0 0);
-  --popover-foreground: oklch(12.9% 0.042 264.695);
-  --primary: oklch(51.5% 0.115 17);
-  --primary-foreground: oklch(98.4% 0.003 247.858);
-  --primary-glow: oklch(62% 0.12 20);
-  --secondary: oklch(96.8% 0.007 247.896);
-  --secondary-foreground: oklch(20.8% 0.042 265.755);
-  --muted: oklch(96.8% 0.007 247.896);
-  --muted-foreground: oklch(55.4% 0.046 257.417);
-  --accent: oklch(95.5% 0.025 17);
-  --accent-foreground: oklch(45% 0.13 17);
-  --border: oklch(92.9% 0.013 255.508);
-  --input: oklch(92.9% 0.013 255.508);
-  --ring: oklch(51.5% 0.115 17);
-  --brand: oklch(51.5% 0.115 17);
-  --brand-hover: oklch(45% 0.13 17);
-  --brand-soft: oklch(95.5% 0.025 17);
-  --brand-foreground: oklch(98.4% 0.003 247.858);
-  --gradient-primary: linear-gradient(135deg, oklch(45% 0.13 17), oklch(58% 0.13 25));
-  --shadow-elegant: 0 12px 40px -14px color-mix(in oklab, oklch(51.5% 0.115 17) 30%, transparent);
-}
-
-.dark .theme-student {
-  --background: oklch(12.9% 0.042 264.695);
-  --foreground: oklch(98.4% 0.003 247.858);
-  --card: oklch(20.8% 0.042 265.755);
-  --card-foreground: oklch(98.4% 0.003 247.858);
-  --popover: oklch(20.8% 0.042 265.755);
-  --popover-foreground: oklch(98.4% 0.003 247.858);
-  --primary: oklch(66% 0.14 20);
-  --primary-foreground: oklch(12.9% 0.042 264.695);
-  --secondary: oklch(27.9% 0.041 260.031);
-  --secondary-foreground: oklch(98.4% 0.003 247.858);
-  --muted: oklch(27.9% 0.041 260.031);
-  --muted-foreground: oklch(70.4% 0.04 256.788);
-  --accent: oklch(30% 0.05 20);
-  --accent-foreground: oklch(88% 0.06 20);
-  --border: oklch(100% 0 0 / 12%);
-  --input: oklch(100% 0 0 / 14%);
-  --ring: oklch(66% 0.14 20);
-  --brand: oklch(66% 0.14 20);
-  --brand-hover: oklch(72% 0.13 20);
-  --brand-soft: oklch(30% 0.05 20);
-  --brand-foreground: oklch(12.9% 0.042 264.695);
-}
-
 @layer base {
   * {
     border-color: var(--color-border);
@@ -273,4 +210,69 @@
     top: 0.5rem;
     outline: none;
   }
+}
+
+/*
+ * Student experience theme - myproduct.life brand tokens (maroon accent on
+ * slate neutrals). Scoped to /student and /student/advanced via .theme-student
+ * so the staff calculator keeps its existing palette.
+ */
+.theme-student {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.129 0.042 264.695);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.129 0.042 264.695);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.515 0.115 17);
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --primary-glow: oklch(0.62 0.12 20);
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.975 0.005 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.955 0.025 17);
+  --accent-foreground: oklch(0.45 0.13 17);
+  --success: oklch(0.55 0.13 155);
+  --success-foreground: oklch(0.99 0.005 150);
+  --warning: oklch(0.72 0.15 70);
+  --warning-foreground: oklch(0.24 0.07 70);
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.515 0.115 17);
+  --gradient-primary: linear-gradient(135deg, oklch(0.45 0.13 17), oklch(0.58 0.13 25));
+  --shadow-elegant: 0 12px 40px -14px color-mix(in oklab, oklch(0.515 0.115 17) 30%, transparent);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+.theme-student h1,
+.theme-student h2,
+.theme-student h3,
+.theme-student .font-display {
+  font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.dark .theme-student {
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.66 0.14 20);
+  --primary-foreground: oklch(0.129 0.042 264.695);
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.3 0.05 20);
+  --accent-foreground: oklch(0.88 0.06 20);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.66 0.14 20);
 }

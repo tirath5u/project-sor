@@ -1,6 +1,6 @@
-import * as React from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, GraduationCap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,176 +10,256 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { StudentForm } from "./shared";
 
-export type StudentForm = {
-  awardYear: string;
-  programLevel: string;
-  gradeLevel: string;
-  dependency: string;
-  fallCredits: string;
-  springCredits: string;
-  fullTimeCreditsPerTerm: string;
+const STUDENT_GRADE_LABELS: Record<string, string> = {
+  g0: "First year (no prior college)",
+  g1: "First year",
+  g2: "Second year",
+  g3: "Third year",
+  g4: "Fourth year",
+  g5: "Fifth year or beyond",
+  g6: "Graduate or professional",
+  g8: "Graduate",
+  g10: "Professional (medical, dental, law)",
 };
 
-const gradeLevels = [
-  { value: "g0", label: "First year, no prior college" },
-  { value: "g1", label: "First year" },
-  { value: "g2", label: "Second year" },
-  { value: "g3", label: "Third year" },
-  { value: "g4", label: "Fourth year" },
-  { value: "g8", label: "Graduate" },
-  { value: "g10", label: "Professional" },
-];
+const GRADES_BY_YEAR: Record<StudentForm["awardYear"], Record<StudentForm["programLevel"], string[]>> =
+  {
+    "2026-27": {
+      undergraduate: ["g0", "g1", "g2", "g3", "g4", "g5"],
+      graduate: ["g8", "g10"],
+    },
+    "2025-26": {
+      undergraduate: ["g0", "g1", "g2", "g3", "g4", "g5"],
+      graduate: ["g6"],
+    },
+  };
+
+function Required() {
+  return (
+    <>
+      <span aria-hidden="true" className="text-primary">
+        *
+      </span>
+      <span className="sr-only">Required</span>
+    </>
+  );
+}
 
 export function EstimateForm({
   form,
   set,
-  onSubmit,
   loading,
   error,
+  onSubmit,
 }: {
   form: StudentForm;
-  set: (key: keyof StudentForm, value: string) => void;
-  onSubmit: (event: React.FormEvent) => void;
+  set: (patch: Partial<StudentForm>) => void;
   loading: boolean;
   error: string | null;
+  onSubmit: (event: React.FormEvent) => void;
 }) {
+  const grades = GRADES_BY_YEAR[form.awardYear][form.programLevel];
+
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-6 rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-7"
+      className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6"
+      aria-label="Tell us about your enrollment"
     >
-      <div>
-        <h2 className="font-display text-xl font-bold tracking-tight">Your enrollment</h2>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-          All fields are required. Not sure about a value? Check your class schedule or ask your
-          financial aid advisor.
-        </p>
+      <div className="flex items-start gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">
+          <GraduationCap className="h-4 w-4" />
+        </span>
+        <div>
+          <h2 className="font-display text-lg font-semibold">Tell us about your enrollment</h2>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            Fields marked <Required /> are required. Your estimate updates as you type, and nothing
+            you enter is saved.
+          </p>
+        </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Row label="Award year" hint="The school year you're borrowing for.">
-          <Select value={form.awardYear} onValueChange={(value) => set("awardYear", value)}>
-            <SelectTrigger aria-label="Award year">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="awardYear">
+            School year <Required />
+          </Label>
+          <Select
+            value={form.awardYear}
+            onValueChange={(value) => {
+              const awardYear = value as StudentForm["awardYear"];
+              set({ awardYear, gradeLevel: GRADES_BY_YEAR[awardYear][form.programLevel][0] });
+            }}
+          >
+            <SelectTrigger id="awardYear" aria-required="true">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="2026-27">2026-27</SelectItem>
-              <SelectItem value="2025-26">2025-26</SelectItem>
+              <SelectItem value="2026-27">2026-27 (new rules)</SelectItem>
+              <SelectItem value="2025-26">2025-26 (current rules)</SelectItem>
             </SelectContent>
           </Select>
-        </Row>
-        <Row label="Program" hint="Undergraduate or graduate study.">
-          <Select value={form.programLevel} onValueChange={(value) => set("programLevel", value)}>
-            <SelectTrigger aria-label="Program level">
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="programLevel">
+            Program level <Required />
+          </Label>
+          <Select
+            value={form.programLevel}
+            onValueChange={(value) => {
+              const programLevel = value as StudentForm["programLevel"];
+              set({ programLevel, gradeLevel: GRADES_BY_YEAR[form.awardYear][programLevel][0] });
+            }}
+          >
+            <SelectTrigger id="programLevel" aria-required="true">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="undergraduate">Undergraduate</SelectItem>
-              <SelectItem value="graduate">Graduate</SelectItem>
+              <SelectItem value="graduate">Graduate or professional</SelectItem>
             </SelectContent>
           </Select>
-        </Row>
-        <Row label="Year in school" hint="Sets which loan-limit tier applies.">
-          <Select value={form.gradeLevel} onValueChange={(value) => set("gradeLevel", value)}>
-            <SelectTrigger aria-label="Year in school">
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="gradeLevel">
+            Year in school <Required />
+          </Label>
+          <Select value={form.gradeLevel} onValueChange={(value) => set({ gradeLevel: value })}>
+            <SelectTrigger id="gradeLevel" aria-required="true">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {gradeLevels.map((level) => (
-                <SelectItem key={level.value} value={level.value}>
-                  {level.label}
+              {grades.map((grade) => (
+                <SelectItem key={grade} value={grade}>
+                  {STUDENT_GRADE_LABELS[grade] ?? grade}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </Row>
-        <Row label="Dependency status" hint="From your FAFSA results.">
-          <Select value={form.dependency} onValueChange={(value) => set("dependency", value)}>
-            <SelectTrigger aria-label="Dependency status">
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="dependency">
+            Dependency status <Required />
+          </Label>
+          <Select
+            value={form.dependency}
+            onValueChange={(value) => set({ dependency: value as StudentForm["dependency"] })}
+          >
+            <SelectTrigger id="dependency" aria-required="true">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="dependent">Dependent undergraduate</SelectItem>
+              <SelectItem value="dependent">Dependent</SelectItem>
               <SelectItem value="independent">Independent</SelectItem>
             </SelectContent>
           </Select>
-        </Row>
+          <p className="text-xs leading-5 text-muted-foreground">
+            If your FAFSA asked for parent information, you are dependent.
+          </p>
+        </div>
       </div>
 
-      <div className="grid gap-4 rounded-xl bg-muted/50 p-4 sm:grid-cols-3">
-        <Row label="Fall credits" hint="Credits you plan to take." htmlFor="fall">
-          <Input
-            id="fall"
-            required
-            type="number"
-            min="0"
-            step="0.5"
-            value={form.fallCredits}
-            onChange={(event) => set("fallCredits", event.target.value)}
+      <div className="mt-7 flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="font-display text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Your credits
+        </p>
+        <label className="flex items-center gap-2.5 text-sm">
+          <Checkbox
+            id="summer"
+            checked={form.summer}
+            onCheckedChange={(checked) => set({ summer: Boolean(checked) })}
           />
-        </Row>
-        <Row label="Spring credits" hint="Credits you plan to take." htmlFor="spring">
-          <Input
-            id="spring"
-            required
-            type="number"
-            min="0"
-            step="0.5"
-            value={form.springCredits}
-            onChange={(event) => set("springCredits", event.target.value)}
-          />
-        </Row>
-        <Row label="Full-time credits" hint="Your school's published number." htmlFor="ft">
+          <span>I am taking summer classes this year too</span>
+        </label>
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="ft">
+            Full-time credits per term <Required />
+          </Label>
           <Input
             id="ft"
             required
             type="number"
             min="0.5"
             step="0.5"
+            inputMode="decimal"
             value={form.fullTimeCreditsPerTerm}
-            onChange={(event) => set("fullTimeCreditsPerTerm", event.target.value)}
+            onChange={(event) => set({ fullTimeCreditsPerTerm: event.target.value })}
           />
-        </Row>
+          <p className="text-xs leading-5 text-muted-foreground">
+            Use your school's published value. Most schools use 12.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="fall">
+            Fall credits <Required />
+          </Label>
+          <Input
+            id="fall"
+            required
+            type="number"
+            min="0"
+            step="0.5"
+            inputMode="decimal"
+            value={form.fallCredits}
+            onChange={(event) => set({ fallCredits: event.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="spring">
+            Spring credits <Required />
+          </Label>
+          <Input
+            id="spring"
+            required
+            type="number"
+            min="0"
+            step="0.5"
+            inputMode="decimal"
+            value={form.springCredits}
+            onChange={(event) => set({ springCredits: event.target.value })}
+          />
+        </div>
       </div>
 
+      {form.summer ? (
+        <p className="mt-4 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm leading-6">
+          Summer is handled differently at almost every school, so it is not part of this quick
+          estimate. Run the{" "}
+          <a href="/student/advanced" className="font-semibold underline underline-offset-2">
+            Advanced estimate
+          </a>{" "}
+          and ask your aid office whether summer belongs to this year or the next one.
+        </p>
+      ) : null}
+
       {error ? (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+        <div
+          role="alert"
+          className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+        >
           {error}
         </div>
       ) : null}
 
-      <Button
-        type="submit"
-        size="lg"
-        disabled={loading}
-        className="w-full bg-brand text-brand-foreground hover:bg-brand-hover sm:w-auto"
-      >
-        {loading ? "Calculating..." : "See my estimate"}
-        <ArrowRight className="h-4 w-4" />
+      <Button type="submit" size="lg" disabled={loading} className="mt-6 w-full sm:w-auto">
+        {loading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" /> Calculating...
+          </>
+        ) : (
+          <>
+            Calculate my estimate <ArrowRight className="h-4 w-4" />
+          </>
+        )}
       </Button>
     </form>
-  );
-}
-
-function Row({
-  label,
-  hint,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  hint: string;
-  htmlFor?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={htmlFor} className="text-sm font-medium">
-        {label}
-      </Label>
-      {children}
-      <p className="text-xs leading-4 text-muted-foreground">{hint}</p>
-    </div>
   );
 }

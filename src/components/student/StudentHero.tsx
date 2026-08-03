@@ -1,56 +1,62 @@
-import { CheckCircle2, Lock, Timer } from "lucide-react";
+import { CalendarClock, Layers, Sparkles, Sigma } from "lucide-react";
 
-const chips = [
-  { icon: Lock, label: "No login, no personal info" },
-  { icon: Timer, label: "About one minute" },
-  { icon: CheckCircle2, label: "Free to use" },
+const FACTS = [
+  {
+    icon: CalendarClock,
+    lead: "Starts 2026-27",
+    detail: "Nothing changes for the 2025-26 school year.",
+  },
+  {
+    icon: Layers,
+    lead: "Covers Sub, Unsub, and Grad PLUS",
+    detail: "Parent PLUS is not reduced by this rule.",
+  },
+  {
+    icon: Sigma,
+    lead: "Counts your whole year",
+    detail: "A light fall can be balanced by a heavier spring.",
+  },
 ];
 
-const steps = [
-  { n: "1", title: "Tell us your credits", body: "Fall and spring credits, plus what your school counts as full-time." },
-  { n: "2", title: "We apply the reduction", body: "The same tested engine financial aid offices use runs your numbers." },
-  { n: "3", title: "See your estimate", body: "Your reduced annual Direct Loan maximum, in plain dollars." },
-];
-
+/**
+ * Purpose-first hero. Leads with what the tool answers in plain language
+ * before naming the law, then grounds it with three fact cards.
+ */
 export function StudentHero() {
   return (
-    <div className="space-y-8">
-      <div className="space-y-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">For students</p>
-        <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl">
-          Will my student loan be <span className="text-brand">reduced</span> this year?
+    <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-accent/60 to-background">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 -top-32 h-72 w-72 rounded-full bg-primary/10 blur-3xl"
+      />
+      <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+        <span className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-background/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+          <Sparkles className="h-3.5 w-3.5" /> Free student loan estimator
+        </span>
+        <h1 className="mt-5 max-w-3xl font-display text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
+          Taking fewer than full-time credits? Find out how much federal loan you can still
+          borrow.
         </h1>
-        <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
-          If you are taking fewer credits than full-time, new federal rules can lower how much you
-          can borrow. Answer a few questions and see an estimate before your bill is due.
+        <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+          A new federal law, the One Big Beautiful Bill Act, changes Direct Loans starting with the
+          2026-27 school year. If you enroll less than full time, your yearly borrowing limit is cut
+          to match the credits you actually take. That cut is called the{" "}
+          <span className="font-semibold text-foreground">Schedule of Reductions</span>. Enter your
+          credits below to estimate your new limit and see exactly how it was worked out.
         </p>
+        <ul className="mt-8 grid gap-3 sm:grid-cols-3">
+          {FACTS.map((fact) => (
+            <li
+              key={fact.lead}
+              className="rounded-xl border border-border bg-card/80 p-4 shadow-sm backdrop-blur"
+            >
+              <fact.icon className="h-4 w-4 text-primary" aria-hidden="true" />
+              <p className="mt-2.5 font-display text-sm font-semibold">{fact.lead}</p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">{fact.detail}</p>
+            </li>
+          ))}
+        </ul>
       </div>
-
-      <ul className="flex flex-wrap gap-2">
-        {chips.map((chip) => (
-          <li
-            key={chip.label}
-            className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1.5 text-xs font-medium text-brand"
-          >
-            <chip.icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            {chip.label}
-          </li>
-        ))}
-      </ul>
-
-      <ol className="space-y-4 border-t border-border pt-6">
-        {steps.map((step) => (
-          <li key={step.n} className="flex gap-3">
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-foreground font-display text-xs font-bold text-background">
-              {step.n}
-            </span>
-            <div className="min-w-0">
-              <p className="font-display text-sm font-semibold">{step.title}</p>
-              <p className="text-sm leading-relaxed text-muted-foreground">{step.body}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </div>
+    </section>
   );
 }

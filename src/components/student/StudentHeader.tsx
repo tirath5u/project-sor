@@ -2,44 +2,50 @@ import { Link } from "@tanstack/react-router";
 import { Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Tab = "student" | "advanced" | "staff";
+const AUDIENCES = [
+  { to: "/student", label: "Student", exact: true },
+  { to: "/student/advanced", label: "Advanced estimate", exact: true },
+  { to: "/", label: "Financial aid staff", exact: true },
+  { to: "/api-docs", label: "Developers", exact: true },
+] as const;
 
-const tabs: { id: Tab; label: string; to: string }[] = [
-  { id: "student", label: "Student estimate", to: "/student" },
-  { id: "advanced", label: "Advanced estimate", to: "/student/advanced" },
-  { id: "staff", label: "Staff & developers", to: "/" },
-];
-
-export function StudentHeader({ active }: { active: Tab }) {
+/**
+ * Shared student-experience header: brand mark plus a segmented pill switcher
+ * across all four audiences. The active pill uses the brand maroon so the tab
+ * state reads as part of the brand instead of a neutral black chip.
+ */
+export function StudentHeader({ active }: { active: "/student" | "/student/advanced" }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 backdrop-blur">
-      <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:px-6">
-        <Link to="/student" className="flex min-w-0 items-center gap-2">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand text-brand-foreground">
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:px-6 md:flex-row md:items-center md:justify-between">
+        <Link to="/student" className="flex items-center gap-2 font-display text-base font-semibold">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
             <Calculator className="h-4 w-4" />
           </span>
-          <span className="truncate font-display text-sm font-semibold tracking-tight">
-            Project SOR
-          </span>
+          Project SOR
         </Link>
-        <nav
-          aria-label="Choose a calculator"
-          className="flex shrink-0 items-center gap-1 rounded-full border border-border bg-muted/60 p-1"
-        >
-          {tabs.map((tab) => (
-            <Link
-              key={tab.id}
-              to={tab.to}
-              className={cn(
-                "rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3.5 sm:text-sm",
-                tab.id === active
-                  ? "bg-brand text-brand-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {tab.label}
-            </Link>
-          ))}
+        <nav aria-label="Choose your audience" className="-mx-1 overflow-x-auto">
+          <ul className="flex items-center gap-1 rounded-full border border-border bg-muted/60 p-1">
+            {AUDIENCES.map((item) => {
+              const isActive = item.to === active;
+              return (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    aria-current={isActive ? "page" : undefined}
+                    className={cn(
+                      "block whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-background hover:text-foreground",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </nav>
       </div>
     </header>
