@@ -72,6 +72,11 @@ const endpoints = [
     purpose: "Run an institution-specific advanced student projection with stages, warnings, and external checks.",
   },
   {
+    method: "POST",
+    path: "/api/public/v2/migration-compare",
+    purpose: "Compare an approved V55 baseline fixture with the current V56 result.",
+  },
+  {
     method: "GET",
     path: "/api/public/v2/openapi.json",
     purpose: "Read the V2 OpenAPI 3.1 contract for tooling and integration review.",
@@ -304,7 +309,8 @@ function ApiDocsPage() {
                 https://sor.myproduct.life/mcp
               </code>
               . It exposes <code>list_scenarios</code>, <code>calculate_sor</code>,{" "}
-              <code>compare_sor</code>, and <code>advanced_student_estimate</code>, including
+              <code>compare_sor</code>, <code>advanced_student_estimate</code>, and{" "}
+              <code>compare_sor_versions</code>, including
               the optional V56 child/module allocation layer. MCP clients must support remote
               MCP and may require workspace or administrator approval. Streamable HTTP clients
               should send <code>Accept: application/json, text/event-stream</code> and retain

@@ -8,7 +8,7 @@
   "mcp": {
     "server": {
       "name": "project-sor-mcp",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "title": "Project SOR: Schedule of Reductions"
     },
     "tools": [
@@ -370,6 +370,28 @@
           "properties": {
             "input": { "type": "object", "additionalProperties": true },
             "resultDetail": { "type": "string", "enum": ["summary", "detailed"] }
+          },
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "compare_sor_versions",
+        "title": "Compare approved V55 and V56 results",
+        "description": "Compare an approved V55 baseline fixture with the current V56 engine. This is a read-only migration aid for approved fixtures only, not a general historical calculator.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "required": ["fixtureId"],
+          "properties": {
+            "fixtureId": {
+              "type": "string",
+              "enum": ["fixture-v19-007"]
+            }
           },
           "additionalProperties": false
         },

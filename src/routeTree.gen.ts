@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudentRouteImport } from './routes/student'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReleasesRouteImport } from './routes/releases'
+import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as McpGuideRouteImport } from './routes/mcp-guide'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
@@ -26,6 +27,7 @@ import { Route as ApiPublicV2StudentEstimateRouteImport } from './routes/api/pub
 import { Route as ApiPublicV2StudentAdvancedRouteImport } from './routes/api/public/v2/student-advanced'
 import { Route as ApiPublicV2ScenariosRouteImport } from './routes/api/public/v2/scenarios'
 import { Route as ApiPublicV2OpenapiDotjsonRouteImport } from './routes/api/public/v2/openapi[.]json'
+import { Route as ApiPublicV2MigrationCompareRouteImport } from './routes/api/public/v2/migration-compare'
 import { Route as ApiPublicV2HealthRouteImport } from './routes/api/public/v2/health'
 import { Route as ApiPublicV2CompareRouteImport } from './routes/api/public/v2/compare'
 import { Route as ApiPublicV2CalculateRouteImport } from './routes/api/public/v2/calculate'
@@ -47,6 +49,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ReleasesRoute = ReleasesRouteImport.update({
   id: '/releases',
   path: '/releases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MigrationRoute = MigrationRouteImport.update({
+  id: '/migration',
+  path: '/migration',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpGuideRoute = McpGuideRouteImport.update({
@@ -125,6 +132,12 @@ const ApiPublicV2OpenapiDotjsonRoute =
     path: '/api/public/v2/openapi.json',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV2MigrationCompareRoute =
+  ApiPublicV2MigrationCompareRouteImport.update({
+    id: '/api/public/v2/migration-compare',
+    path: '/api/public/v2/migration-compare',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV2HealthRoute = ApiPublicV2HealthRouteImport.update({
   id: '/api/public/v2/health',
   path: '/api/public/v2/health',
@@ -169,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/lifecycle': typeof LifecycleRoute
   '/mcp': typeof McpRoute
   '/mcp-guide': typeof McpGuideRoute
+  '/migration': typeof MigrationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/student': typeof StudentRouteWithChildren
@@ -183,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v2/calculate': typeof ApiPublicV2CalculateRoute
   '/api/public/v2/compare': typeof ApiPublicV2CompareRoute
   '/api/public/v2/health': typeof ApiPublicV2HealthRoute
+  '/api/public/v2/migration-compare': typeof ApiPublicV2MigrationCompareRoute
   '/api/public/v2/openapi.json': typeof ApiPublicV2OpenapiDotjsonRoute
   '/api/public/v2/scenarios': typeof ApiPublicV2ScenariosRoute
   '/api/public/v2/student-advanced': typeof ApiPublicV2StudentAdvancedRoute
@@ -195,6 +210,7 @@ export interface FileRoutesByTo {
   '/lifecycle': typeof LifecycleRoute
   '/mcp': typeof McpRoute
   '/mcp-guide': typeof McpGuideRoute
+  '/migration': typeof MigrationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/student': typeof StudentRouteWithChildren
@@ -209,6 +225,7 @@ export interface FileRoutesByTo {
   '/api/public/v2/calculate': typeof ApiPublicV2CalculateRoute
   '/api/public/v2/compare': typeof ApiPublicV2CompareRoute
   '/api/public/v2/health': typeof ApiPublicV2HealthRoute
+  '/api/public/v2/migration-compare': typeof ApiPublicV2MigrationCompareRoute
   '/api/public/v2/openapi.json': typeof ApiPublicV2OpenapiDotjsonRoute
   '/api/public/v2/scenarios': typeof ApiPublicV2ScenariosRoute
   '/api/public/v2/student-advanced': typeof ApiPublicV2StudentAdvancedRoute
@@ -222,6 +239,7 @@ export interface FileRoutesById {
   '/lifecycle': typeof LifecycleRoute
   '/mcp': typeof McpRoute
   '/mcp-guide': typeof McpGuideRoute
+  '/migration': typeof MigrationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/student': typeof StudentRouteWithChildren
@@ -236,6 +254,7 @@ export interface FileRoutesById {
   '/api/public/v2/calculate': typeof ApiPublicV2CalculateRoute
   '/api/public/v2/compare': typeof ApiPublicV2CompareRoute
   '/api/public/v2/health': typeof ApiPublicV2HealthRoute
+  '/api/public/v2/migration-compare': typeof ApiPublicV2MigrationCompareRoute
   '/api/public/v2/openapi.json': typeof ApiPublicV2OpenapiDotjsonRoute
   '/api/public/v2/scenarios': typeof ApiPublicV2ScenariosRoute
   '/api/public/v2/student-advanced': typeof ApiPublicV2StudentAdvancedRoute
@@ -250,6 +269,7 @@ export interface FileRouteTypes {
     | '/lifecycle'
     | '/mcp'
     | '/mcp-guide'
+    | '/migration'
     | '/releases'
     | '/sitemap.xml'
     | '/student'
@@ -264,6 +284,7 @@ export interface FileRouteTypes {
     | '/api/public/v2/calculate'
     | '/api/public/v2/compare'
     | '/api/public/v2/health'
+    | '/api/public/v2/migration-compare'
     | '/api/public/v2/openapi.json'
     | '/api/public/v2/scenarios'
     | '/api/public/v2/student-advanced'
@@ -276,6 +297,7 @@ export interface FileRouteTypes {
     | '/lifecycle'
     | '/mcp'
     | '/mcp-guide'
+    | '/migration'
     | '/releases'
     | '/sitemap.xml'
     | '/student'
@@ -290,6 +312,7 @@ export interface FileRouteTypes {
     | '/api/public/v2/calculate'
     | '/api/public/v2/compare'
     | '/api/public/v2/health'
+    | '/api/public/v2/migration-compare'
     | '/api/public/v2/openapi.json'
     | '/api/public/v2/scenarios'
     | '/api/public/v2/student-advanced'
@@ -302,6 +325,7 @@ export interface FileRouteTypes {
     | '/lifecycle'
     | '/mcp'
     | '/mcp-guide'
+    | '/migration'
     | '/releases'
     | '/sitemap.xml'
     | '/student'
@@ -316,6 +340,7 @@ export interface FileRouteTypes {
     | '/api/public/v2/calculate'
     | '/api/public/v2/compare'
     | '/api/public/v2/health'
+    | '/api/public/v2/migration-compare'
     | '/api/public/v2/openapi.json'
     | '/api/public/v2/scenarios'
     | '/api/public/v2/student-advanced'
@@ -329,6 +354,7 @@ export interface RootRouteChildren {
   LifecycleRoute: typeof LifecycleRoute
   McpRoute: typeof McpRoute
   McpGuideRoute: typeof McpGuideRoute
+  MigrationRoute: typeof MigrationRoute
   ReleasesRoute: typeof ReleasesRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StudentRoute: typeof StudentRouteWithChildren
@@ -342,6 +368,7 @@ export interface RootRouteChildren {
   ApiPublicV2CalculateRoute: typeof ApiPublicV2CalculateRoute
   ApiPublicV2CompareRoute: typeof ApiPublicV2CompareRoute
   ApiPublicV2HealthRoute: typeof ApiPublicV2HealthRoute
+  ApiPublicV2MigrationCompareRoute: typeof ApiPublicV2MigrationCompareRoute
   ApiPublicV2OpenapiDotjsonRoute: typeof ApiPublicV2OpenapiDotjsonRoute
   ApiPublicV2ScenariosRoute: typeof ApiPublicV2ScenariosRoute
   ApiPublicV2StudentAdvancedRoute: typeof ApiPublicV2StudentAdvancedRoute
@@ -369,6 +396,13 @@ declare module '@tanstack/react-router' {
       path: '/releases'
       fullPath: '/releases'
       preLoaderRoute: typeof ReleasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/migration': {
+      id: '/migration'
+      path: '/migration'
+      fullPath: '/migration'
+      preLoaderRoute: typeof MigrationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp-guide': {
@@ -469,6 +503,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV2OpenapiDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v2/migration-compare': {
+      id: '/api/public/v2/migration-compare'
+      path: '/api/public/v2/migration-compare'
+      fullPath: '/api/public/v2/migration-compare'
+      preLoaderRoute: typeof ApiPublicV2MigrationCompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v2/health': {
       id: '/api/public/v2/health'
       path: '/api/public/v2/health'
@@ -539,6 +580,7 @@ const rootRouteChildren: RootRouteChildren = {
   LifecycleRoute: LifecycleRoute,
   McpRoute: McpRoute,
   McpGuideRoute: McpGuideRoute,
+  MigrationRoute: MigrationRoute,
   ReleasesRoute: ReleasesRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StudentRoute: StudentRouteWithChildren,
@@ -553,6 +595,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV2CalculateRoute: ApiPublicV2CalculateRoute,
   ApiPublicV2CompareRoute: ApiPublicV2CompareRoute,
   ApiPublicV2HealthRoute: ApiPublicV2HealthRoute,
+  ApiPublicV2MigrationCompareRoute: ApiPublicV2MigrationCompareRoute,
   ApiPublicV2OpenapiDotjsonRoute: ApiPublicV2OpenapiDotjsonRoute,
   ApiPublicV2ScenariosRoute: ApiPublicV2ScenariosRoute,
   ApiPublicV2StudentAdvancedRoute: ApiPublicV2StudentAdvancedRoute,

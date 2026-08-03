@@ -101,6 +101,14 @@ const spec = {
         responses: { "200": { description: "Advanced estimate", content: { "application/json": { schema: { $ref: "#/components/schemas/AdvancedStudentEstimateResponse" } } } }, "422": { description: "Invalid advanced estimate inputs" } },
       },
     },
+    "/api/public/v2/migration-compare": {
+      post: {
+        summary: "Compare an approved V55 and V56 fixture",
+        description: "Runs the current V56 engine against a stored, approved V55 baseline. This is a stateless migration aid and does not accept arbitrary historical inputs.",
+        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/MigrationCompareRequest" } } } },
+        responses: { "200": { description: "Migration comparison", content: { "application/json": { schema: { $ref: "#/components/schemas/MigrationCompareResponse" } } } }, "422": { description: "Fixture is not approved for migration comparison" } },
+      },
+    },
   },
   components: {
     schemas: {
@@ -145,6 +153,17 @@ const spec = {
         type: "object",
         required: ["status", "audience", "estimate", "contract", "disclaimer", "meta"],
         properties: { status: { type: "string", enum: ["calculated", "calculated_with_external_checks", "blocked"] }, audience: { type: "string", enum: ["student-advanced"] }, estimate: { type: "object", additionalProperties: true }, contract: { type: "object", additionalProperties: true }, disclaimer: { type: "string" }, meta: { type: "object", additionalProperties: true } },
+      },
+      MigrationCompareRequest: {
+        type: "object",
+        additionalProperties: false,
+        required: ["fixtureId"],
+        properties: { fixtureId: { type: "string", enum: ["fixture-v19-007"] } },
+      },
+      MigrationCompareResponse: {
+        type: "object",
+        required: ["status", "audience", "comparison", "meta"],
+        properties: { status: { type: "string", enum: ["compared"] }, audience: { type: "string", enum: ["staff"] }, comparison: { type: "object", additionalProperties: true }, meta: { type: "object", additionalProperties: true } },
       },
     },
   },

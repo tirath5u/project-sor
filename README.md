@@ -20,6 +20,8 @@ Built and maintained by **Tirath Chhatriwala**, Product Manager with over 14 yea
 > **Student estimate:** [sor.myproduct.life/student](https://sor.myproduct.life/student) provides a narrow standard Fall and Spring estimate with clear school-review boundaries.
 >
 > **Phase B tools:** [Compare scenarios](https://sor.myproduct.life/compare) and [Advanced student estimate](https://sor.myproduct.life/student/advanced) run independent scenarios through the same shared engine. They are stateless and do not store student payloads.
+>
+> **Migration review:** [V55 versus V56](https://sor.myproduct.life/migration) is limited to approved historical fixtures and does not execute arbitrary historical inputs.
 
 ---
 
@@ -89,6 +91,7 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 | `/api/public/v2/student-estimate` | POST | Standard Fall and Spring student estimate                     |
 | `/api/public/v2/compare` | POST | Compare two complete V2 scenarios without storing payloads |
 | `/api/public/v2/student-advanced` | POST | Institution-specific advanced student projection |
+| `/api/public/v2/migration-compare` | POST | Approved V55 versus V56 migration comparison |
 | `/api/public/v2/openapi.json` | GET    | V2 OpenAPI 3.1 specification                                      |
 | `/api-docs`                   | GET    | Human-readable API guide with examples and challenge workflow      |
 | `/mcp-guide`                  | GET    | Human-readable remote MCP setup and boundaries                    |
@@ -115,7 +118,7 @@ The optional `childTerms` object is an allocation layer under the parent SOR res
 
 Supported methods are `byChildCredits` and `equalAcrossActiveChildTerms`. The parent term is calculated first. Child terms do not create separate SOR terms, change the academic-year SOR percentage, or level funds across different parent terms. The response includes `data.childAllocations` when `childTerms.count` is greater than zero.
 
-The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. Phase B adds `compare_sor` for two independent complete scenarios and `advanced_student_estimate` for institution-specific student projections. It is read-only and stateless. Streamable HTTP clients should send `Accept: application/json, text/event-stream` and retain the MCP session identifier returned during initialization. Consumers must verify the published `engineVersion`, `releaseId`, and `deploymentMarker` before relying on a result. When required facts are missing, the MCP returns `status: "needs_input"` with exact missing fields and follow-up questions rather than calculating from demo defaults. Parent PLUS aggregate usage and remaining eligibility are external checks and are called out in the result rather than inferred by the service.
+The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. Phase B adds `compare_sor` for two independent complete scenarios and `advanced_student_estimate` for institution-specific student projections. `compare_sor_versions` is limited to approved V55 baseline fixtures and does not execute arbitrary historical inputs. It is read-only and stateless. Streamable HTTP clients should send `Accept: application/json, text/event-stream` and retain the MCP session identifier returned during initialization. Consumers must verify the published `engineVersion`, `releaseId`, and `deploymentMarker` before relying on a result. When required facts are missing, the MCP returns `status: "needs_input"` with exact missing fields and follow-up questions rather than calculating from demo defaults. Parent PLUS aggregate usage and remaining eligibility are external checks and are called out in the result rather than inferred by the service.
 
 V2 also accepts structured review context for Parent PLUS basis and aggregate usage, traditional proration status, AY denominator overrides, optional pre-SOR caps, borrower-requested Sub/Unsub amounts, remaining annual or aggregate limits, and COA scope. These fields preserve blank, null, zero, and positive-value meaning. The response returns a `contract` block with `calculationStatus`, `authoritative`, `policyDecision`, `eligibilityStages`, stable warning objects, modeled inputs, and explicit `externalChecks`. A field that the current shared engine cannot apply is disclosed there and is never silently treated as zero.
 
@@ -252,7 +255,7 @@ Accepted challenges become fixtures first, code changes second. Issues are triag
 
 ## MCP and agent use
 
-The project exposes a read-only remote MCP server at `/mcp` when the deployment has MCP routes enabled. MCP clients can discover `list_scenarios`, call `calculate_sor`, compare two scenarios with `compare_sor`, and run an institution-specific projection with `advanced_student_estimate` when the client supports remote MCP and the user's workspace allows custom MCP apps. ChatGPT custom MCP apps require workspace support and administrator approval; this is not automatically available to every ChatGPT user or plan. Claude and other MCP clients have their own connection and approval requirements.
+The project exposes a read-only remote MCP server at `/mcp` when the deployment has MCP routes enabled. MCP clients can discover `list_scenarios`, call `calculate_sor`, compare two scenarios with `compare_sor`, run an institution-specific projection with `advanced_student_estimate`, and compare an approved V55 baseline with V56 using `compare_sor_versions` when the client supports remote MCP and the user's workspace allows custom MCP apps. ChatGPT custom MCP apps require workspace support and administrator approval; this is not automatically available to every ChatGPT user or plan. Claude and other MCP clients have their own connection and approval requirements.
 
 MCP responses include engine and policy metadata so an agent can report which calculator snapshot produced the result. Agents should not present results as Department-approved and should distinguish gross eligibility from net posting amounts and from external COD, NSLDS, aggregate, lifetime, proration, and packaging checks.
 

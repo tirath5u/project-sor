@@ -25,7 +25,7 @@ function McpGuidePage() {
         <section className="max-w-3xl space-y-4">
           <p className="text-sm font-medium text-primary">Remote MCP</p>
           <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">Ask an AI client to use Project SOR</h1>
-          <p className="text-base leading-7 text-muted-foreground">Project SOR is a source-backed Schedule of Reductions calculation engine available through Excel, the web, a REST API, and a remote MCP server. The same tested engine supports detailed staff workflows, student-friendly estimates, AI-assisted scenario intake, and stateless scenario comparison.</p>
+          <p className="text-base leading-7 text-muted-foreground">Project SOR is a source-backed Schedule of Reductions calculation engine available through Excel, the web, a REST API, and a remote MCP server. The same tested engine supports detailed staff workflows, student-friendly estimates, AI-assisted scenario intake, stateless scenario comparison, and approved V55 versus V56 migration review.</p>
           <div className="flex flex-wrap gap-3"><Button asChild><a href="https://sor.myproduct.life/mcp" target="_blank" rel="noreferrer">Open MCP endpoint <ExternalLink className="h-4 w-4" /></a></Button><Button asChild variant="outline"><a href="https://github.com/tirath5u/project-sor" target="_blank" rel="noreferrer">View source <ExternalLink className="h-4 w-4" /></a></Button></div>
         </section>
         <section className="grid gap-4 md:grid-cols-3">
