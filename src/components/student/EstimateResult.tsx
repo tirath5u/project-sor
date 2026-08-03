@@ -94,7 +94,7 @@ export function EstimateResult({
 
   return (
     <div
-      className="grid gap-4 lg:grid-cols-2"
+      className="grid gap-4"
       data-stale={stale ? "true" : undefined}
       aria-live="polite"
     >
