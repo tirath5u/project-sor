@@ -105,7 +105,7 @@ function StudentEstimatePage() {
       <StudentHeader active="/student" />
       <main id="main">
         <StudentHero />
-        <div className="mx-auto max-w-6xl space-y-12 px-4 py-12 sm:px-6">
+        <div className="mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6">
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,25rem)]">
             <EstimateForm
               form={form}
