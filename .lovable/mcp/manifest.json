@@ -15,7 +15,7 @@
       {
         "name": "calculate_sor",
         "title": "Calculate Schedule of Reductions",
-        "description": "Run the source-backed V56 Schedule of Reductions engine. Incomplete requests return exact follow-up questions. Complete results include gross and net outputs, calculation stages, structured policy decisions, stable warnings, modeled inputs, explicit external checks, citations, and release metadata. Inputs the shared engine cannot apply are never silently ignored.",
+        "description": "Run the source-backed V56 Schedule of Reductions engine. The tool does not use demo defaults for required borrower, enrollment, loan-period, financial, or paid-history facts. If the request is incomplete, it returns exact follow-up questions. When complete, it returns gross and net results, calculation stages, warnings, modeled checks, and public citations. Parent PLUS aggregate usage and remaining eligibility are not modeled, so the tool will identify that external check rather than inventing an answer.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -270,13 +270,102 @@
             },
             "childTerms": {
               "type": "object",
-              "additionalProperties": false,
-              "required": ["count", "allocationMethod", "parents"],
               "properties": {
-                "count": { "type": "integer", "enum": [0, 1, 2, 3, 4] },
-                "allocationMethod": { "type": "string", "enum": ["byChildCredits", "equalAcrossActiveChildTerms"] },
-                "parents": { "type": "object", "additionalProperties": true }
-              }
+                "count": {
+                  "type": "number",
+                  "enum": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                "allocationMethod": {
+                  "type": "string",
+                  "enum": [
+                    "byChildCredits",
+                    "equalAcrossActiveChildTerms"
+                  ]
+                },
+                "parents": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "credits": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 60
+                        },
+                        "paidGross": {
+                          "type": "object",
+                          "properties": {
+                            "sub": {
+                              "anyOf": [
+                                {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "unsub": {
+                              "anyOf": [
+                                {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "gradPlus": {
+                              "anyOf": [
+                                {
+                                  "type": "number",
+                                  "minimum": 0
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "credits"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "propertyNames": {
+                    "enum": [
+                      "term1",
+                      "term2",
+                      "term3",
+                      "term4",
+                      "summer1",
+                      "summer2",
+                      "winter1",
+                      "winter2"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "count",
+                "allocationMethod",
+                "parents"
+              ],
+              "additionalProperties": false
             },
             "feeSubUnsubPercent": {
               "type": "number",
@@ -291,87 +380,188 @@
             "traditionalProrationApplies": {
               "type": "boolean"
             },
+            "ayDenominatorVerified": {
+              "type": "boolean"
+            },
             "parentPlusEligibilityBasis": {
               "type": "string",
-              "enum": ["none", "adverseCreditDenied", "documentedExceptionalCircumstances", "otherOrUnverified"]
+              "enum": [
+                "none",
+                "adverseCreditDenied",
+                "documentedExceptionalCircumstances",
+                "otherOrUnverified"
+              ]
             },
             "parentPlusAggregateUsed": {
-              "type": ["number", "null"],
-              "minimum": 0
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "traditionalProrationStatus": {
               "type": "string",
-              "enum": ["notApplied", "shortProgram", "remainingPeriodShorterThanAcademicYear"]
+              "enum": [
+                "notApplied",
+                "shortProgram",
+                "remainingPeriodShorterThanAcademicYear"
+              ]
             },
             "ayDenominatorOverride": {
-              "type": ["number", "null"],
-              "minimum": 0
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "preSorCaps": {
               "type": "object",
-              "additionalProperties": false,
               "properties": {
-                "enabled": { "type": "boolean" },
-                "sub": { "type": ["number", "null"], "minimum": 0 },
-                "unsub": { "type": ["number", "null"], "minimum": 0 },
-                "gradPlus": { "type": ["number", "null"], "minimum": 0 }
-              }
+                "enabled": {
+                  "type": "boolean"
+                },
+                "sub": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "unsub": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "gradPlus": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
             },
-            "requestedSub": { "type": ["number", "null"], "minimum": 0 },
-            "requestedUnsub": { "type": ["number", "null"], "minimum": 0 },
-            "remainingAnnualSub": { "type": ["number", "null"], "minimum": 0 },
-            "remainingAnnualUnsub": { "type": ["number", "null"], "minimum": 0 },
-            "remainingAnnualCombined": { "type": ["number", "null"], "minimum": 0 },
-            "remainingAggregateSub": { "type": ["number", "null"], "minimum": 0 },
-            "remainingAggregateUnsub": { "type": ["number", "null"], "minimum": 0 },
-            "remainingAggregateCombined": { "type": ["number", "null"], "minimum": 0 },
-            "coaScope": { "type": "string", "enum": ["academicYear", "singleTerm"] },
-            "ayDenominatorVerified": {
-              "type": "boolean"
+            "requestedSub": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "requestedUnsub": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "remainingAnnualSub": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "remainingAnnualUnsub": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "remainingAnnualCombined": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "remainingAggregateSub": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "remainingAggregateUnsub": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "remainingAggregateCombined": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "coaScope": {
+              "type": "string",
+              "enum": [
+                "academicYear",
+                "singleTerm"
+              ]
             }
           },
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
-        },
-        "outputSchema": null
-      },
-      {
-        "name": "compare_sor",
-        "title": "Compare two SOR scenarios",
-        "description": "Run two complete scenarios independently through the shared V56 engine and return numeric deltas, warning changes, authoritative status, and calculation results. This tool is stateless and does not save student or scenario payloads.",
-        "annotations": {
-          "readOnlyHint": true,
-          "idempotentHint": true,
-          "openWorldHint": false
-        },
-        "inputSchema": {
-          "type": "object",
-          "required": ["left", "right"],
-          "properties": {
-            "left": { "type": "object", "additionalProperties": true },
-            "right": { "type": "object", "additionalProperties": true }
-          },
-          "additionalProperties": false
-        },
-        "outputSchema": null
-      },
-      {
-        "name": "advanced_student_estimate",
-        "title": "Run an advanced student estimate",
-        "description": "Run a complete institution-specific V2 scenario through the shared engine and return a student-readable gross estimate with stages, warnings, and external checks. This is decision support, not an award, and it is stateless.",
-        "annotations": {
-          "readOnlyHint": true,
-          "idempotentHint": true,
-          "openWorldHint": false
-        },
-        "inputSchema": {
-          "type": "object",
-          "required": ["input"],
-          "properties": {
-            "input": { "type": "object", "additionalProperties": true },
-            "resultDetail": { "type": "string", "enum": ["summary", "detailed"] }
-          },
-          "additionalProperties": false
         },
         "outputSchema": null
       },
@@ -414,6 +604,1027 @@
               "description": "Optional fixture id (e.g. 'fixture-v19-001'). When set, returns only that fixture."
             }
           },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "compare_sor",
+        "title": "Compare two SOR scenarios",
+        "description": "Run two complete scenarios independently through the shared V56 engine and return numeric deltas, warning changes, authoritative status, and calculation results. This tool is stateless and does not save student or scenario payloads.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "left": {
+              "type": "object",
+              "properties": {
+                "viewMode": {
+                  "type": "string",
+                  "enum": [
+                    "plan",
+                    "disbursement"
+                  ]
+                },
+                "calType": {
+                  "type": "number",
+                  "enum": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                "programLevel": {
+                  "type": "string",
+                  "enum": [
+                    "undergraduate",
+                    "graduate"
+                  ]
+                },
+                "summerPosition": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "trailer",
+                    "header"
+                  ]
+                },
+                "ayType": {
+                  "type": "string",
+                  "enum": [
+                    "SAY",
+                    "BBAY1",
+                    "BBAY2"
+                  ]
+                },
+                "loanPeriodScope": {
+                  "type": "string",
+                  "enum": [
+                    "annualMultiTerm",
+                    "singleTerm"
+                  ],
+                  "default": "annualMultiTerm"
+                },
+                "numStandardTerms": {
+                  "type": "number",
+                  "enum": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                "includeSummer1": {
+                  "type": "boolean"
+                },
+                "includeSummer2": {
+                  "type": "boolean"
+                },
+                "includeWinter1": {
+                  "type": "boolean"
+                },
+                "includeWinter2": {
+                  "type": "boolean"
+                },
+                "ayFtCredits": {},
+                "gradeLevel": {
+                  "type": "string",
+                  "enum": [
+                    "g0",
+                    "g1",
+                    "g2",
+                    "g3",
+                    "g4",
+                    "g5",
+                    "g6",
+                    "g7",
+                    "g8",
+                    "g9",
+                    "g10",
+                    "g11",
+                    "g12",
+                    "g13"
+                  ]
+                },
+                "dependency": {
+                  "type": "string",
+                  "enum": [
+                    "dependent",
+                    "independent"
+                  ]
+                },
+                "parentPlusDenied": {
+                  "type": "boolean"
+                },
+                "overrideLimits": {
+                  "type": "boolean"
+                },
+                "annualNeed": {},
+                "subStatutory": {},
+                "unsubStatutory": {},
+                "distributionModel": {
+                  "type": "string",
+                  "enum": [
+                    "equal",
+                    "proportional"
+                  ]
+                },
+                "applySubUnsubShift": {
+                  "type": "boolean"
+                },
+                "applyDoubleReduction": {
+                  "type": "boolean"
+                },
+                "countLthtInAyPct": {
+                  "type": "boolean"
+                },
+                "terms": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "enum": [
+                          "term1",
+                          "term2",
+                          "term3",
+                          "term4",
+                          "summer1",
+                          "summer2",
+                          "winter1",
+                          "winter2"
+                        ]
+                      },
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "ftCredits": {},
+                      "enrolledCredits": {},
+                      "disbursed": {
+                        "type": "boolean"
+                      },
+                      "actualCredits": {},
+                      "paidSub": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "paidUnsub": {
+                        "$ref": "#/properties/left/properties/terms/additionalProperties/properties/paidSub"
+                      },
+                      "refundSub": {
+                        "$ref": "#/properties/left/properties/terms/additionalProperties/properties/paidSub"
+                      },
+                      "refundUnsub": {
+                        "$ref": "#/properties/left/properties/terms/additionalProperties/properties/paidSub"
+                      },
+                      "coaCapSub": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "coaCapUnsub": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "paidGradPlus": {
+                        "$ref": "#/properties/left/properties/terms/additionalProperties/properties/paidSub"
+                      },
+                      "refundGradPlus": {
+                        "$ref": "#/properties/left/properties/terms/additionalProperties/properties/paidSub"
+                      },
+                      "coaCapGradPlus": {
+                        "type": "number",
+                        "minimum": 0,
+                        "default": 0
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "label",
+                      "enabled",
+                      "ftCredits",
+                      "enrolledCredits",
+                      "disbursed",
+                      "actualCredits",
+                      "paidSub",
+                      "paidUnsub",
+                      "refundSub",
+                      "refundUnsub",
+                      "coaCapSub",
+                      "coaCapUnsub"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "propertyNames": {
+                    "enum": [
+                      "term1",
+                      "term2",
+                      "term3",
+                      "term4",
+                      "summer1",
+                      "summer2",
+                      "winter1",
+                      "winter2"
+                    ]
+                  }
+                },
+                "awardYear": {
+                  "type": "string",
+                  "enum": [
+                    "2025-26",
+                    "2026-27"
+                  ],
+                  "default": "2026-27"
+                },
+                "loanLimitException": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "coa": {
+                  "$ref": "#/properties/left/properties/terms/additionalProperties/properties/coaCapGradPlus"
+                },
+                "otherAid": {
+                  "$ref": "#/properties/left/properties/terms/additionalProperties/properties/coaCapGradPlus"
+                },
+                "requestedGradPlus": {
+                  "$ref": "#/properties/left/properties/terms/additionalProperties/properties/coaCapGradPlus"
+                },
+                "childTerms": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number",
+                      "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                      ]
+                    },
+                    "allocationMethod": {
+                      "type": "string",
+                      "enum": [
+                        "byChildCredits",
+                        "equalAcrossActiveChildTerms"
+                      ]
+                    },
+                    "parents": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "credits": {},
+                            "paidGross": {
+                              "type": "object",
+                              "properties": {
+                                "sub": {
+                                  "anyOf": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "unsub": {
+                                  "anyOf": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "gradPlus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "credits"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "propertyNames": {
+                        "enum": [
+                          "term1",
+                          "term2",
+                          "term3",
+                          "term4",
+                          "summer1",
+                          "summer2",
+                          "winter1",
+                          "winter2"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "allocationMethod",
+                    "parents"
+                  ],
+                  "additionalProperties": false
+                },
+                "feeSubUnsubPercent": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "default": 1.057
+                },
+                "feeGradPlusPercent": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "default": 4.228
+                },
+                "traditionalProrationApplies": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "ayDenominatorVerified": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "parentPlusEligibilityBasis": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "adverseCreditDenied",
+                    "documentedExceptionalCircumstances",
+                    "otherOrUnverified"
+                  ]
+                },
+                "parentPlusAggregateUsed": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "traditionalProrationStatus": {
+                  "type": "string",
+                  "enum": [
+                    "notApplied",
+                    "shortProgram",
+                    "remainingPeriodShorterThanAcademicYear"
+                  ]
+                },
+                "ayDenominatorOverride": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "preSorCaps": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "sub": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "unsub": {
+                      "$ref": "#/properties/left/properties/preSorCaps/properties/sub"
+                    },
+                    "gradPlus": {
+                      "$ref": "#/properties/left/properties/preSorCaps/properties/sub"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "requestedSub": {
+                  "$ref": "#/properties/left/properties/preSorCaps/properties/sub"
+                },
+                "requestedUnsub": {
+                  "$ref": "#/properties/left/properties/preSorCaps/properties/sub"
+                },
+                "remainingAnnualSub": {
+                  "$ref": "#/properties/left/properties/preSorCaps/properties/sub"
+                },
+                "remainingAnnualUnsub": {
+                  "$ref": "#/properties/left/properties/preSorCaps/properties/sub"
+                },
+                "remainingAnnualCombined": {
+                  "$ref": "#/properties/left/properties/preSorCaps/properties/sub"
+                },
+                "remainingAggregateSub": {
+                  "$ref": "#/properties/left/properties/preSorCaps/properties/sub"
+                },
+                "remainingAggregateUnsub": {
+                  "$ref": "#/properties/left/properties/preSorCaps/properties/sub"
+                },
+                "remainingAggregateCombined": {
+                  "$ref": "#/properties/left/properties/preSorCaps/properties/sub"
+                },
+                "coaScope": {
+                  "type": "string",
+                  "enum": [
+                    "academicYear",
+                    "singleTerm"
+                  ]
+                }
+              },
+              "required": [
+                "viewMode",
+                "calType",
+                "programLevel",
+                "summerPosition",
+                "ayType",
+                "numStandardTerms",
+                "includeSummer1",
+                "includeSummer2",
+                "includeWinter1",
+                "includeWinter2",
+                "ayFtCredits",
+                "gradeLevel",
+                "dependency",
+                "parentPlusDenied",
+                "overrideLimits",
+                "annualNeed",
+                "subStatutory",
+                "unsubStatutory",
+                "distributionModel",
+                "applySubUnsubShift",
+                "applyDoubleReduction",
+                "countLthtInAyPct",
+                "terms"
+              ],
+              "additionalProperties": false
+            },
+            "right": {
+              "$ref": "#/properties/left"
+            }
+          },
+          "required": [
+            "left",
+            "right"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "advanced_student_estimate",
+        "title": "Run an advanced student estimate",
+        "description": "Run a complete institution-specific V2 scenario through the shared engine and return a student-readable gross estimate with stages, warnings, and external checks. This is decision support, not an award, and it is stateless.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "object",
+              "properties": {
+                "viewMode": {
+                  "type": "string",
+                  "enum": [
+                    "plan",
+                    "disbursement"
+                  ]
+                },
+                "calType": {
+                  "type": "number",
+                  "enum": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                "programLevel": {
+                  "type": "string",
+                  "enum": [
+                    "undergraduate",
+                    "graduate"
+                  ]
+                },
+                "summerPosition": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "trailer",
+                    "header"
+                  ]
+                },
+                "ayType": {
+                  "type": "string",
+                  "enum": [
+                    "SAY",
+                    "BBAY1",
+                    "BBAY2"
+                  ]
+                },
+                "loanPeriodScope": {
+                  "type": "string",
+                  "enum": [
+                    "annualMultiTerm",
+                    "singleTerm"
+                  ],
+                  "default": "annualMultiTerm"
+                },
+                "numStandardTerms": {
+                  "type": "number",
+                  "enum": [
+                    1,
+                    2,
+                    3,
+                    4
+                  ]
+                },
+                "includeSummer1": {
+                  "type": "boolean"
+                },
+                "includeSummer2": {
+                  "type": "boolean"
+                },
+                "includeWinter1": {
+                  "type": "boolean"
+                },
+                "includeWinter2": {
+                  "type": "boolean"
+                },
+                "ayFtCredits": {},
+                "gradeLevel": {
+                  "type": "string",
+                  "enum": [
+                    "g0",
+                    "g1",
+                    "g2",
+                    "g3",
+                    "g4",
+                    "g5",
+                    "g6",
+                    "g7",
+                    "g8",
+                    "g9",
+                    "g10",
+                    "g11",
+                    "g12",
+                    "g13"
+                  ]
+                },
+                "dependency": {
+                  "type": "string",
+                  "enum": [
+                    "dependent",
+                    "independent"
+                  ]
+                },
+                "parentPlusDenied": {
+                  "type": "boolean"
+                },
+                "overrideLimits": {
+                  "type": "boolean"
+                },
+                "annualNeed": {},
+                "subStatutory": {},
+                "unsubStatutory": {},
+                "distributionModel": {
+                  "type": "string",
+                  "enum": [
+                    "equal",
+                    "proportional"
+                  ]
+                },
+                "applySubUnsubShift": {
+                  "type": "boolean"
+                },
+                "applyDoubleReduction": {
+                  "type": "boolean"
+                },
+                "countLthtInAyPct": {
+                  "type": "boolean"
+                },
+                "terms": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "enum": [
+                          "term1",
+                          "term2",
+                          "term3",
+                          "term4",
+                          "summer1",
+                          "summer2",
+                          "winter1",
+                          "winter2"
+                        ]
+                      },
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "enabled": {
+                        "type": "boolean"
+                      },
+                      "ftCredits": {},
+                      "enrolledCredits": {},
+                      "disbursed": {
+                        "type": "boolean"
+                      },
+                      "actualCredits": {},
+                      "paidSub": {
+                        "anyOf": [
+                          {
+                            "type": "number"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "paidUnsub": {
+                        "$ref": "#/properties/input/properties/terms/additionalProperties/properties/paidSub"
+                      },
+                      "refundSub": {
+                        "$ref": "#/properties/input/properties/terms/additionalProperties/properties/paidSub"
+                      },
+                      "refundUnsub": {
+                        "$ref": "#/properties/input/properties/terms/additionalProperties/properties/paidSub"
+                      },
+                      "coaCapSub": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "coaCapUnsub": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "paidGradPlus": {
+                        "$ref": "#/properties/input/properties/terms/additionalProperties/properties/paidSub"
+                      },
+                      "refundGradPlus": {
+                        "$ref": "#/properties/input/properties/terms/additionalProperties/properties/paidSub"
+                      },
+                      "coaCapGradPlus": {
+                        "type": "number",
+                        "minimum": 0,
+                        "default": 0
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "label",
+                      "enabled",
+                      "ftCredits",
+                      "enrolledCredits",
+                      "disbursed",
+                      "actualCredits",
+                      "paidSub",
+                      "paidUnsub",
+                      "refundSub",
+                      "refundUnsub",
+                      "coaCapSub",
+                      "coaCapUnsub"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "propertyNames": {
+                    "enum": [
+                      "term1",
+                      "term2",
+                      "term3",
+                      "term4",
+                      "summer1",
+                      "summer2",
+                      "winter1",
+                      "winter2"
+                    ]
+                  }
+                },
+                "awardYear": {
+                  "type": "string",
+                  "enum": [
+                    "2025-26",
+                    "2026-27"
+                  ],
+                  "default": "2026-27"
+                },
+                "loanLimitException": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "coa": {
+                  "$ref": "#/properties/input/properties/terms/additionalProperties/properties/coaCapGradPlus"
+                },
+                "otherAid": {
+                  "$ref": "#/properties/input/properties/terms/additionalProperties/properties/coaCapGradPlus"
+                },
+                "requestedGradPlus": {
+                  "$ref": "#/properties/input/properties/terms/additionalProperties/properties/coaCapGradPlus"
+                },
+                "childTerms": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number",
+                      "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4
+                      ]
+                    },
+                    "allocationMethod": {
+                      "type": "string",
+                      "enum": [
+                        "byChildCredits",
+                        "equalAcrossActiveChildTerms"
+                      ]
+                    },
+                    "parents": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "credits": {},
+                            "paidGross": {
+                              "type": "object",
+                              "properties": {
+                                "sub": {
+                                  "anyOf": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "unsub": {
+                                  "anyOf": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "gradPlus": {
+                                  "anyOf": [
+                                    {
+                                      "type": "number",
+                                      "minimum": 0
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "credits"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "propertyNames": {
+                        "enum": [
+                          "term1",
+                          "term2",
+                          "term3",
+                          "term4",
+                          "summer1",
+                          "summer2",
+                          "winter1",
+                          "winter2"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "allocationMethod",
+                    "parents"
+                  ],
+                  "additionalProperties": false
+                },
+                "feeSubUnsubPercent": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "default": 1.057
+                },
+                "feeGradPlusPercent": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "default": 4.228
+                },
+                "traditionalProrationApplies": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "ayDenominatorVerified": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "parentPlusEligibilityBasis": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "adverseCreditDenied",
+                    "documentedExceptionalCircumstances",
+                    "otherOrUnverified"
+                  ]
+                },
+                "parentPlusAggregateUsed": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "traditionalProrationStatus": {
+                  "type": "string",
+                  "enum": [
+                    "notApplied",
+                    "shortProgram",
+                    "remainingPeriodShorterThanAcademicYear"
+                  ]
+                },
+                "ayDenominatorOverride": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "preSorCaps": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "sub": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "unsub": {
+                      "$ref": "#/properties/input/properties/preSorCaps/properties/sub"
+                    },
+                    "gradPlus": {
+                      "$ref": "#/properties/input/properties/preSorCaps/properties/sub"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "requestedSub": {
+                  "$ref": "#/properties/input/properties/preSorCaps/properties/sub"
+                },
+                "requestedUnsub": {
+                  "$ref": "#/properties/input/properties/preSorCaps/properties/sub"
+                },
+                "remainingAnnualSub": {
+                  "$ref": "#/properties/input/properties/preSorCaps/properties/sub"
+                },
+                "remainingAnnualUnsub": {
+                  "$ref": "#/properties/input/properties/preSorCaps/properties/sub"
+                },
+                "remainingAnnualCombined": {
+                  "$ref": "#/properties/input/properties/preSorCaps/properties/sub"
+                },
+                "remainingAggregateSub": {
+                  "$ref": "#/properties/input/properties/preSorCaps/properties/sub"
+                },
+                "remainingAggregateUnsub": {
+                  "$ref": "#/properties/input/properties/preSorCaps/properties/sub"
+                },
+                "remainingAggregateCombined": {
+                  "$ref": "#/properties/input/properties/preSorCaps/properties/sub"
+                },
+                "coaScope": {
+                  "type": "string",
+                  "enum": [
+                    "academicYear",
+                    "singleTerm"
+                  ]
+                }
+              },
+              "required": [
+                "viewMode",
+                "calType",
+                "programLevel",
+                "summerPosition",
+                "ayType",
+                "numStandardTerms",
+                "includeSummer1",
+                "includeSummer2",
+                "includeWinter1",
+                "includeWinter2",
+                "ayFtCredits",
+                "gradeLevel",
+                "dependency",
+                "parentPlusDenied",
+                "overrideLimits",
+                "annualNeed",
+                "subStatutory",
+                "unsubStatutory",
+                "distributionModel",
+                "applySubUnsubShift",
+                "applyDoubleReduction",
+                "countLthtInAyPct",
+                "terms"
+              ],
+              "additionalProperties": false
+            },
+            "resultDetail": {
+              "type": "string",
+              "enum": [
+                "summary",
+                "detailed"
+              ]
+            }
+          },
+          "required": [
+            "input"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
