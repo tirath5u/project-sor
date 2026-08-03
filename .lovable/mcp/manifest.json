@@ -566,28 +566,6 @@
         "outputSchema": null
       },
       {
-        "name": "compare_sor_versions",
-        "title": "Compare approved V55 and V56 results",
-        "description": "Compare an approved V55 baseline fixture with the current V56 engine. This is a read-only migration aid for approved fixtures only, not a general historical calculator.",
-        "annotations": {
-          "readOnlyHint": true,
-          "idempotentHint": true,
-          "openWorldHint": false
-        },
-        "inputSchema": {
-          "type": "object",
-          "required": ["fixtureId"],
-          "properties": {
-            "fixtureId": {
-              "type": "string",
-              "enum": ["fixture-v19-007"]
-            }
-          },
-          "additionalProperties": false
-        },
-        "outputSchema": null
-      },
-      {
         "name": "list_scenarios",
         "title": "List canonical SOR scenarios",
         "description": "Return the full public parity-fixture set: canonical borrower scenarios, proportional-distribution edge cases, and the V56 child/module allocation fixture, with inputs, expected outputs, and public-source-register citations. Use this to discover valid input shapes for `calculate_sor` or to verify engine parity.",
@@ -1624,6 +1602,33 @@
           },
           "required": [
             "input"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "compare_sor_versions",
+        "title": "Compare approved V55 and V56 results",
+        "description": "Compare an approved V55 baseline fixture with the current V56 engine. This is a read-only migration aid for approved fixtures only, not a general historical calculator.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "fixtureId": {
+              "type": "string",
+              "enum": [
+                "fixture-v19-007"
+              ]
+            }
+          },
+          "required": [
+            "fixtureId"
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
