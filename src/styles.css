@@ -164,6 +164,7 @@
  * so the staff calculator keeps its existing palette.
  */
 .theme-student {
+  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --background: oklch(100% 0 0);
   --foreground: oklch(12.9% 0.042 264.695);
   --card: oklch(100% 0 0);
