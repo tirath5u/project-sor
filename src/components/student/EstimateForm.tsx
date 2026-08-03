@@ -70,7 +70,7 @@ export function EstimateForm({
     >
       <div className="flex items-start gap-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">
-          <GraduationCap className="h-4.5 w-4.5" />
+          <GraduationCap className="h-4 w-4" />
         </span>
         <div>
           <h2 className="font-display text-lg font-semibold">Tell us about your enrollment</h2>
