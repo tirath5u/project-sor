@@ -62,6 +62,16 @@ const endpoints = [
     purpose: "Estimate a standard two-term student scenario with explicit school-review boundaries.",
   },
   {
+    method: "POST",
+    path: "/api/public/v2/compare",
+    purpose: "Compare two complete scenarios through independent shared-engine runs without storing payloads.",
+  },
+  {
+    method: "POST",
+    path: "/api/public/v2/student-advanced",
+    purpose: "Run an institution-specific advanced student projection with stages, warnings, and external checks.",
+  },
+  {
     method: "GET",
     path: "/api/public/v2/openapi.json",
     purpose: "Read the V2 OpenAPI 3.1 contract for tooling and integration review.",
@@ -214,7 +224,7 @@ function ApiDocsPage() {
                     <ArrowRight className="h-4 w-4" />
                   </a>
                 </Button>
-                <Button asChild variant="outline">
+            <Button asChild variant="outline">
                   <a
                     href="https://github.com/tirath5u/project-sor/issues/new?template=scenario-challenge.yml"
                     target="_blank"
@@ -223,7 +233,10 @@ function ApiDocsPage() {
                     Challenge a scenario
                     <GitPullRequest className="h-4 w-4" />
                   </a>
-                </Button>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/compare">Compare scenarios</Link>
+            </Button>
               </div>
             </div>
 
@@ -290,7 +303,8 @@ function ApiDocsPage() {
               <code className="rounded bg-muted px-1.5 py-1 text-xs text-foreground">
                 https://sor.myproduct.life/mcp
               </code>
-              . It exposes <code>list_scenarios</code> and <code>calculate_sor</code>, including
+              . It exposes <code>list_scenarios</code>, <code>calculate_sor</code>,{" "}
+              <code>compare_sor</code>, and <code>advanced_student_estimate</code>, including
               the optional V56 child/module allocation layer. MCP clients must support remote
               MCP and may require workspace or administrator approval. Streamable HTTP clients
               should send <code>Accept: application/json, text/event-stream</code> and retain

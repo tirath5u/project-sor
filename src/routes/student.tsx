@@ -40,7 +40,7 @@ function StudentEstimatePage() {
     <header className="border-b border-border/70 bg-background">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2 text-sm font-semibold"><Calculator className="h-4 w-4 text-primary" /> Project SOR</Link>
-        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">Staff calculator</Link>
+        <div className="flex items-center gap-2"><Link to="/student/advanced" className="text-sm text-muted-foreground hover:text-foreground">Advanced estimate</Link><Link to="/" className="text-sm text-muted-foreground hover:text-foreground">Staff calculator</Link></div>
       </div>
     </header>
     <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_360px]">

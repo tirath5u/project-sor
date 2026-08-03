@@ -57,7 +57,7 @@ const spec = {
   info: {
     title: "Project SOR V56 API",
     version: ENGINE_VERSION,
-    description: "Source-backed Schedule of Reductions calculation API. V2 adds release metadata, V56 calculation stages, warnings, and a student estimate route.",
+    description: "Source-backed Schedule of Reductions calculation API. V2 adds release metadata, V56 calculation stages, warnings, comparison, and student estimate routes.",
     license: { name: "MIT" },
   },
   servers: [{ url: "https://sor.myproduct.life", description: "Production" }],
@@ -85,6 +85,22 @@ const spec = {
         responses: { "200": { description: "Estimate", content: { "application/json": { schema: { type: "object", additionalProperties: true } } } }, "422": { description: "Invalid estimate inputs" } },
       },
     },
+    "/api/public/v2/compare": {
+      post: {
+        summary: "Compare two complete V2 scenarios",
+        description: "Runs both scenarios independently through the shared engine. The service is stateless and returns numeric deltas, warning changes, and authoritative status for each side.",
+        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/CompareRequest" } } } },
+        responses: { "200": { description: "Scenario comparison", content: { "application/json": { schema: { $ref: "#/components/schemas/CompareResponse" } } } }, "422": { description: "Invalid comparison inputs" } },
+      },
+    },
+    "/api/public/v2/student-advanced": {
+      post: {
+        summary: "Run an advanced student estimate",
+        description: "Runs a complete institution-specific V2 input through the shared engine and returns a student-readable projection with stages, warnings, and external checks. It is not an award and is stateless.",
+        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/AdvancedStudentEstimateRequest" } } } },
+        responses: { "200": { description: "Advanced estimate", content: { "application/json": { schema: { $ref: "#/components/schemas/AdvancedStudentEstimateResponse" } } } }, "422": { description: "Invalid advanced estimate inputs" } },
+      },
+    },
   },
   components: {
     schemas: {
@@ -107,6 +123,28 @@ const spec = {
       StudentEstimateInput: {
         type: "object", required: ["awardYear", "programLevel", "gradeLevel", "dependency", "fallCredits", "springCredits", "fullTimeCreditsPerTerm"],
         properties: { awardYear: { type: "string", enum: AWARD_YEARS }, programLevel: { type: "string", enum: ["undergraduate", "graduate"] }, gradeLevel: { type: "string" }, dependency: { type: "string", enum: ["dependent", "independent"] }, fallCredits: { type: "number", minimum: 0 }, springCredits: { type: "number", minimum: 0 }, fullTimeCreditsPerTerm: { type: "number", exclusiveMinimum: 0 } },
+      },
+      CompareRequest: {
+        type: "object",
+        additionalProperties: false,
+        required: ["left", "right"],
+        properties: { left: { $ref: "#/components/schemas/CalculateInput" }, right: { $ref: "#/components/schemas/CalculateInput" } },
+      },
+      CompareResponse: {
+        type: "object",
+        required: ["status", "left", "right", "comparison", "meta"],
+        properties: { status: { type: "string", enum: ["compared"] }, left: { type: "object", additionalProperties: true }, right: { type: "object", additionalProperties: true }, comparison: { type: "object", additionalProperties: true }, meta: { type: "object", additionalProperties: true } },
+      },
+      AdvancedStudentEstimateRequest: {
+        type: "object",
+        additionalProperties: false,
+        required: ["input"],
+        properties: { input: { $ref: "#/components/schemas/CalculateInput" }, resultDetail: { type: "string", enum: ["summary", "detailed"], default: "detailed" } },
+      },
+      AdvancedStudentEstimateResponse: {
+        type: "object",
+        required: ["status", "audience", "estimate", "contract", "disclaimer", "meta"],
+        properties: { status: { type: "string", enum: ["calculated", "calculated_with_external_checks", "blocked"] }, audience: { type: "string", enum: ["student-advanced"] }, estimate: { type: "object", additionalProperties: true }, contract: { type: "object", additionalProperties: true }, disclaimer: { type: "string" }, meta: { type: "object", additionalProperties: true } },
       },
     },
   },

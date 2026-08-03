@@ -8,7 +8,7 @@
   "mcp": {
     "server": {
       "name": "project-sor-mcp",
-      "version": "0.4.1",
+      "version": "0.5.0",
       "title": "Project SOR: Schedule of Reductions"
     },
     "tools": [
@@ -332,6 +332,46 @@
           },
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "compare_sor",
+        "title": "Compare two SOR scenarios",
+        "description": "Run two complete scenarios independently through the shared V56 engine and return numeric deltas, warning changes, authoritative status, and calculation results. This tool is stateless and does not save student or scenario payloads.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "required": ["left", "right"],
+          "properties": {
+            "left": { "type": "object", "additionalProperties": true },
+            "right": { "type": "object", "additionalProperties": true }
+          },
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "advanced_student_estimate",
+        "title": "Run an advanced student estimate",
+        "description": "Run a complete institution-specific V2 scenario through the shared engine and return a student-readable gross estimate with stages, warnings, and external checks. This is decision support, not an award, and it is stateless.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "required": ["input"],
+          "properties": {
+            "input": { "type": "object", "additionalProperties": true },
+            "resultDetail": { "type": "string", "enum": ["summary", "detailed"] }
+          },
+          "additionalProperties": false
         },
         "outputSchema": null
       },
