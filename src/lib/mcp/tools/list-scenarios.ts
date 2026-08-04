@@ -12,7 +12,9 @@ export default defineTool({
     id: z
       .string()
       .optional()
-      .describe("Optional fixture id (e.g. 'fixture-v19-001'). When set, returns only that fixture."),
+      .describe(
+        "Optional fixture id (e.g. 'fixture-v19-001'). When set, returns only that fixture.",
+      ),
   },
   annotations: {
     readOnlyHint: true,

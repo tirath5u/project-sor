@@ -40,7 +40,10 @@ export function ScopeNotes() {
             <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
               {column.items.map((item) => (
                 <li key={item} className="flex gap-2">
-                  <span aria-hidden="true" className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                  <span
+                    aria-hidden="true"
+                    className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-primary"
+                  />
                   {item}
                 </li>
               ))}

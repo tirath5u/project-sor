@@ -33,9 +33,7 @@ export const Route = createFileRoute("/api-docs")({
       },
       { property: "og:url", content: "https://sor.myproduct.life/api-docs" },
     ],
-    links: [
-      { rel: "canonical", href: "https://sor.myproduct.life/api-docs" },
-    ],
+    links: [{ rel: "canonical", href: "https://sor.myproduct.life/api-docs" }],
   }),
   component: ApiDocsPage,
 });
@@ -44,12 +42,14 @@ const endpoints = [
   {
     method: "GET",
     path: "/api/public/v2/health",
-    purpose: "Check liveness, V56 engine and MCP versions, release, policy snapshot, and source commit.",
+    purpose:
+      "Check liveness, V56 engine and MCP versions, release, policy snapshot, and source commit.",
   },
   {
     method: "GET",
     path: "/api/public/v2/scenarios",
-    purpose: "Fetch the public parity fixture catalog with inputs, expected outputs, and source IDs.",
+    purpose:
+      "Fetch the public parity fixture catalog with inputs, expected outputs, and source IDs.",
   },
   {
     method: "POST",
@@ -59,17 +59,20 @@ const endpoints = [
   {
     method: "POST",
     path: "/api/public/v2/student-estimate",
-    purpose: "Estimate a standard two-term student scenario with explicit school-review boundaries.",
+    purpose:
+      "Estimate a standard two-term student scenario with explicit school-review boundaries.",
   },
   {
     method: "POST",
     path: "/api/public/v2/compare",
-    purpose: "Compare two complete scenarios through independent shared-engine runs without storing payloads.",
+    purpose:
+      "Compare two complete scenarios through independent shared-engine runs without storing payloads.",
   },
   {
     method: "POST",
     path: "/api/public/v2/student-advanced",
-    purpose: "Run an institution-specific advanced student projection with stages, warnings, and external checks.",
+    purpose:
+      "Run an institution-specific advanced student projection with stages, warnings, and external checks.",
   },
   {
     method: "POST",
@@ -84,7 +87,8 @@ const endpoints = [
   {
     method: "POST",
     path: "/mcp",
-    purpose: "Use the read-only remote MCP server to discover scenarios and run the same V56 engine with follow-up questions and explanations.",
+    purpose:
+      "Use the read-only remote MCP server to discover scenarios and run the same V56 engine with follow-up questions and explanations.",
   },
 ];
 
@@ -107,7 +111,8 @@ const sourceStatuses = [
   },
   {
     label: "preliminary",
-    detail: "The behavior is supported by current public guidance, but may change after final federal guidance.",
+    detail:
+      "The behavior is supported by current public guidance, but may change after final federal guidance.",
   },
 ];
 
@@ -189,11 +194,7 @@ function ApiDocsPage() {
               <Link to="/">Calculator</Link>
             </Button>
             <Button asChild variant="outline" size="sm">
-              <a
-                href="https://github.com/tirath5u/project-sor"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href="https://github.com/tirath5u/project-sor" target="_blank" rel="noreferrer">
                 GitHub
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
@@ -216,10 +217,9 @@ function ApiDocsPage() {
                   Schedule of Reductions calculation API
                 </h1>
                 <p className="max-w-3xl text-base leading-7 text-muted-foreground">
-                  A public, source labeled implementation of the federal Direct Loan
-                  Schedule of Reductions calculation. Use it to inspect inputs, replay
-                  published scenarios, compare your own implementation, and challenge
-                  the math with a citation.
+                  A public, source labeled implementation of the federal Direct Loan Schedule of
+                  Reductions calculation. Use it to inspect inputs, replay published scenarios,
+                  compare your own implementation, and challenge the math with a citation.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -229,7 +229,7 @@ function ApiDocsPage() {
                     <ArrowRight className="h-4 w-4" />
                   </a>
                 </Button>
-            <Button asChild variant="outline">
+                <Button asChild variant="outline">
                   <a
                     href="https://github.com/tirath5u/project-sor/issues/new?template=scenario-challenge.yml"
                     target="_blank"
@@ -238,10 +238,10 @@ function ApiDocsPage() {
                     Challenge a scenario
                     <GitPullRequest className="h-4 w-4" />
                   </a>
-            </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/compare">Compare scenarios</Link>
-            </Button>
+                </Button>
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/compare">Compare scenarios</Link>
+                </Button>
               </div>
             </div>
 
@@ -254,8 +254,8 @@ function ApiDocsPage() {
                 <code>{`curl https://sor.myproduct.life/api/public/v1/health`}</code>
               </pre>
               <p className="mt-3 text-xs leading-5 text-muted-foreground">
-                The API is anonymous, requires no key, and returns JSON for every
-                successful response and handled error.
+                The API is anonymous, requires no key, and returns JSON for every successful
+                response and handled error.
               </p>
             </div>
           </div>
@@ -303,20 +303,20 @@ function ApiDocsPage() {
               </code>
             </div>
             <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">Agent integration:</span>{" "}
-              the read-only remote MCP server is available at{" "}
+              <span className="font-semibold text-foreground">Agent integration:</span> the
+              read-only remote MCP server is available at{" "}
               <code className="rounded bg-muted px-1.5 py-1 text-xs text-foreground">
                 https://sor.myproduct.life/mcp
               </code>
               . It exposes <code>list_scenarios</code>, <code>calculate_sor</code>,{" "}
               <code>compare_sor</code>, <code>advanced_student_estimate</code>, and{" "}
-              <code>compare_sor_versions</code>, including
-              the optional V56 child/module allocation layer. MCP clients must support remote
-              MCP and may require workspace or administrator approval. Streamable HTTP clients
-              should send <code>Accept: application/json, text/event-stream</code> and retain
-              the MCP session identifier returned during initialization. Parent PLUS aggregate
-              usage and remaining eligibility are external checks and are identified in the
-              calculation response rather than inferred by this service.
+              <code>compare_sor_versions</code>, including the optional V56 child/module allocation
+              layer. MCP clients must support remote MCP and may require workspace or administrator
+              approval. Streamable HTTP clients should send{" "}
+              <code>Accept: application/json, text/event-stream</code> and retain the MCP session
+              identifier returned during initialization. Parent PLUS aggregate usage and remaining
+              eligibility are external checks and are identified in the calculation response rather
+              than inferred by this service.
             </div>
           </div>
         </section>
@@ -360,15 +360,14 @@ function ApiDocsPage() {
             title="Response Contract"
           >
             <p>
-              Successful calculations return a `data` block from the shared engine and
-              a `meta` block with `engineVersion`, `policyYear`,
-              `policySnapshotDate`, `deploymentMarker`, `sourceCommit` (null),
-              `sourceCommitStatus`, `policyStatus`, `sourceSet`,
-              `citations`, `computedAt`, and `requestId`.
+              Successful calculations return a `data` block from the shared engine and a `meta`
+              block with `engineVersion`, `policyYear`, `policySnapshotDate`, `deploymentMarker`,
+              `sourceCommit` (null), `sourceCommitStatus`, `policyStatus`, `sourceSet`, `citations`,
+              `computedAt`, and `requestId`.
             </p>
             <p>
-              The live API sets `Cache-Control: no-store` and supports a caller
-              supplied `X-Request-Id` for reproducible issue reports.
+              The live API sets `Cache-Control: no-store` and supports a caller supplied
+              `X-Request-Id` for reproducible issue reports.
             </p>
           </InfoSection>
 
@@ -377,19 +376,18 @@ function ApiDocsPage() {
             title="Rate Limits And Safety"
           >
             <p>
-              The public API is free and anonymous with a best effort limit of 30
-              requests per minute per client fingerprint. The limiter uses a daily
-              salted hash so raw IPs are not stored by the application.
+              The public API is free and anonymous with a best effort limit of 30 requests per
+              minute per client fingerprint. The limiter uses a daily salted hash so raw IPs are not
+              stored by the application.
             </p>
             <p>
-              This is an educational and validation tool, not an official ED
-              calculator, legal advice, or an institutional policy substitute.
+              This is an educational and validation tool, not an official ED calculator, legal
+              advice, or an institutional policy substitute.
             </p>
             <p>
-              The SOR API does not calculate NSLDS remaining aggregate limits,
-              lifetime maximum eligibility, Parent PLUS remaining eligibility, or
-              consolidation allocation. Apply those ceilings before relying on a
-              graduate, professional, or Grad PLUS result.
+              The SOR API does not calculate NSLDS remaining aggregate limits, lifetime maximum
+              eligibility, Parent PLUS remaining eligibility, or consolidation allocation. Apply
+              those ceilings before relying on a graduate, professional, or Grad PLUS result.
             </p>
           </InfoSection>
         </section>
@@ -417,7 +415,10 @@ function ApiDocsPage() {
               </div>
               <div className="space-y-3">
                 {sourceStatuses.map((status) => (
-                  <div key={status.label} className="rounded-lg border border-border bg-background p-4">
+                  <div
+                    key={status.label}
+                    className="rounded-lg border border-border bg-background p-4"
+                  >
                     <Badge variant={status.label === "confirmed" ? "default" : "outline"}>
                       {status.label}
                     </Badge>
@@ -435,10 +436,9 @@ function ApiDocsPage() {
               <div>
                 <h2 className="text-xl font-semibold tracking-normal">Challenge The Calculation</h2>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                  If a published scenario or API response looks wrong, open a Scenario
-                  Challenge with the exact input JSON, observed output, expected output,
-                  and a public regulatory citation. Accepted challenges become fixtures
-                  first, then code changes.
+                  If a published scenario or API response looks wrong, open a Scenario Challenge
+                  with the exact input JSON, observed output, expected output, and a public
+                  regulatory citation. Accepted challenges become fixtures first, then code changes.
                 </p>
               </div>
               <Button asChild>

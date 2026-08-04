@@ -93,9 +93,13 @@ export function allocateChildTerms(
 
   for (const parent of activeParents) {
     const configured = input?.parents[parent.key] ?? [];
-    const children = Array.from({ length: count }, (_, index) => configured[index] ?? {
-      credits: Math.max(0, parent.effectiveCredits / count),
-    });
+    const children = Array.from(
+      { length: count },
+      (_, index) =>
+        configured[index] ?? {
+          credits: Math.max(0, parent.effectiveCredits / count),
+        },
+    );
     const eligible = children.map((child) => child.credits > 0);
 
     for (const bucket of ["sub", "unsub", "gradPlus"] as LoanBucket[]) {
@@ -148,22 +152,29 @@ export function allocateChildTerms(
               unsub: bucket === "unsub" ? grossToNet(scheduled, feePercent.subUnsub) : 0,
               gradPlus: bucket === "gradPlus" ? grossToNet(scheduled, feePercent.gradPlus) : 0,
             },
-            review: paid[index] > gross ? "Review: child paid exceeds parent gross" : "Remaining payable",
+            review:
+              paid[index] > gross ? "Review: child paid exceeds parent gross" : "Remaining payable",
           });
         }
       });
     }
 
     if (children.some((child) => child.credits === 0)) {
-      warnings.push(`${parent.label}: zero-credit child terms receive $0 and are excluded from allocation.`);
+      warnings.push(
+        `${parent.label}: zero-credit child terms receive $0 and are excluded from allocation.`,
+      );
     }
     if (children.every((child) => child.credits <= 0)) {
-      warnings.push(`${parent.label}: no child term has credits, so no child allocation is payable.`);
+      warnings.push(
+        `${parent.label}: no child term has credits, so no child allocation is payable.`,
+      );
     }
   }
 
   if (method === "equalAcrossActiveChildTerms") {
-    warnings.push("Equal child allocation splits each already-calculated parent payout. It does not rerun SOR.");
+    warnings.push(
+      "Equal child allocation splits each already-calculated parent payout. It does not rerun SOR.",
+    );
   }
   return { method, rows, warnings: Array.from(new Set(warnings)) };
 }

@@ -38,7 +38,11 @@ import {
   type GradeLevel,
   type Dependency,
 } from "./loanLimits";
-import { allocateChildTerms, type ChildTermsInput, type ChildAllocationResult } from "./child-terms";
+import {
+  allocateChildTerms,
+  type ChildTermsInput,
+  type ChildAllocationResult,
+} from "./child-terms";
 
 export type CalType = 1 | 2 | 3 | 4;
 export type ProgramLevel = "undergraduate" | "graduate";
@@ -593,7 +597,8 @@ function computeDisplayRows(args: {
   weights: number[];
   residualToFirst?: boolean;
 }): { share: number[]; calc: number[] } {
-  const { annual, termsInOrder, eligible, locked, distributionModel, weights, residualToFirst } = args;
+  const { annual, termsInOrder, eligible, locked, distributionModel, weights, residualToFirst } =
+    args;
   return distributeRunningPoolDetailed(
     annual,
     termsInOrder,
@@ -866,9 +871,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
     : 1;
   const currentSorReduction = sorApplicable && plannedSorPct < 1;
   const effectiveDistributionModel: DistributionModel =
-    loanPeriodScope === "singleTerm" || !currentSorReduction
-      ? "equal"
-      : inp.distributionModel;
+    loanPeriodScope === "singleTerm" || !currentSorReduction ? "equal" : inp.distributionModel;
   const residualToFirst = !currentSorReduction;
 
   const reductionBasesFor = (creditsFn: (t: TermInput) => number) => {
@@ -1206,9 +1209,17 @@ function assemble(args: {
     inp.applyDoubleReduction && (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);
 
   const reductionSubBase =
-    loanPeriodScope === "singleTerm" ? (singleTermEligible ? singleTermSubPreSORBase : 0) : subBaseline;
+    loanPeriodScope === "singleTerm"
+      ? singleTermEligible
+        ? singleTermSubPreSORBase
+        : 0
+      : subBaseline;
   const reductionUnsubBase =
-    loanPeriodScope === "singleTerm" ? (singleTermEligible ? singleTermUnsubPreSORBase : 0) : unsubBaseline;
+    loanPeriodScope === "singleTerm"
+      ? singleTermEligible
+        ? singleTermUnsubPreSORBase
+        : 0
+      : unsubBaseline;
   const reducedSubRaw = round(reductionSubBase * pct);
   const reducedUnsubRaw = round(reductionUnsubBase * pct);
   const additionalUnsubReduced = round(additionalUnsubBase * pct);
@@ -1249,9 +1260,8 @@ function assemble(args: {
     : 0;
   // A single-term COA gap is already scoped to the loan period. Do not halve
   // it again. The SOR percentage is applied once after the gap is established.
-  const gradPlusReductionBase = loanPeriodScope === "singleTerm"
-    ? singleTermEligible ? initialGradPlus : 0
-    : initialGradPlus;
+  const gradPlusReductionBase =
+    loanPeriodScope === "singleTerm" ? (singleTermEligible ? initialGradPlus : 0) : initialGradPlus;
   const reducedGradPlus = round(gradPlusReductionBase * pct);
 
   const enrolledSum = ordered.reduce((s, t, i) => {
@@ -1531,16 +1541,31 @@ function assemble(args: {
       {
         id: "net-display",
         label: "Net display",
-        output: { feeSubUnsubPercent: inp.feeSubUnsubPercent, feeGradPlusPercent: inp.feeGradPlusPercent },
+        output: {
+          feeSubUnsubPercent: inp.feeSubUnsubPercent,
+          feeGradPlusPercent: inp.feeGradPlusPercent,
+        },
       },
     ],
     modeledInputs: [
-      "awardYear", "gradeLevel", "dependency", "enrollment", "need", "COA", "otherAid",
-      "distributionModel", "paidHistory", "childTerms", "loanFees",
+      "awardYear",
+      "gradeLevel",
+      "dependency",
+      "enrollment",
+      "need",
+      "COA",
+      "otherAid",
+      "distributionModel",
+      "paidHistory",
+      "childTerms",
+      "loanFees",
     ],
     notModeledChecks: [
-      "COD transaction validation", "NSLDS aggregate and lifetime limits", "R2T4 transaction processing",
-      "Parent PLUS remaining eligibility and aggregate usage", "institutional SAP and final award approval",
+      "COD transaction validation",
+      "NSLDS aggregate and lifetime limits",
+      "R2T4 transaction processing",
+      "Parent PLUS remaining eligibility and aggregate usage",
+      "institutional SAP and final award approval",
       "institution-specific program classification",
     ],
   };

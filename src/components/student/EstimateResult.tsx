@@ -93,11 +93,7 @@ export function EstimateResult({
   ];
 
   return (
-    <div
-      className="grid gap-4"
-      data-stale={stale ? "true" : undefined}
-      aria-live="polite"
-    >
+    <div className="grid gap-4" data-stale={stale ? "true" : undefined} aria-live="polite">
       <section className="rounded-2xl border border-primary/25 bg-gradient-to-br from-accent/70 to-card p-5 shadow-sm sm:p-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-primary">
           Your Schedule of Reductions percentage

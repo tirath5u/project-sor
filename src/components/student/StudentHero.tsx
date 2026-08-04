@@ -34,8 +34,7 @@ export function StudentHero() {
           <Sparkles className="h-3.5 w-3.5" /> Free student loan estimator
         </span>
         <h1 className="mt-5 max-w-3xl font-display text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl">
-          Taking fewer than full-time credits? Find out how much federal loan you can still
-          borrow.
+          Taking fewer than full-time credits? Find out how much federal loan you can still borrow.
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
           A new federal law, the One Big Beautiful Bill Act, changes Direct Loans starting with the

@@ -21,7 +21,8 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
         const exampleResult = calculateSORWithChildTerms(exampleScenario.input);
         const exampleStableData = {
           totalFinalSub: exampleScenario.expected.totalFinalSub ?? exampleResult.totalFinalSub,
-          totalFinalUnsub: exampleScenario.expected.totalFinalUnsub ?? exampleResult.totalFinalUnsub,
+          totalFinalUnsub:
+            exampleScenario.expected.totalFinalUnsub ?? exampleResult.totalFinalUnsub,
           reducedSub: exampleScenario.expected.reducedSub ?? exampleResult.reducedSub,
           reducedUnsub: exampleScenario.expected.reducedUnsub ?? exampleResult.reducedUnsub,
           sorPctRounded: exampleResult.sorPctRounded,
@@ -162,10 +163,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                             sourceCommitStatus: "not_available_in_lovable_build",
                             deploymentMarker: RELEASE_ID,
                             policyStatus: "supported-preliminary",
-                            sourceSet: [
-                              "direct-loan-sor-v1",
-                              "project-sor-v56-rule-corrections",
-                            ],
+                            sourceSet: ["direct-loan-sor-v1", "project-sor-v56-rule-corrections"],
                             citations: [],
                             computedAt: "2026-04-26T00:00:00.000Z",
                             requestId: "demo-sor-001",
@@ -431,7 +429,8 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                     minimum: 0,
                     maximum: 100,
                     default: 1.057,
-                    description: "Direct Subsidized/Unsubsidized fee percentage applied to gross for net display.",
+                    description:
+                      "Direct Subsidized/Unsubsidized fee percentage applied to gross for net display.",
                   },
                   feeGradPlusPercent: {
                     type: "number",
@@ -573,10 +572,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                   sourceSet: {
                     type: "array",
                     items: { type: "string" },
-                    example: [
-                      "direct-loan-sor-v1",
-                      "project-sor-v56-rule-corrections",
-                    ],
+                    example: ["direct-loan-sor-v1", "project-sor-v56-rule-corrections"],
                   },
                   citations: {
                     type: "array",

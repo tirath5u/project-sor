@@ -80,7 +80,8 @@ function StudentEstimatePage() {
         }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error?.message || "The estimate could not be completed.");
+      if (!response.ok)
+        throw new Error(body.error?.message || "The estimate could not be completed.");
       setResult(body);
     } catch (err) {
       setError(err instanceof Error ? err.message : "The estimate could not be completed.");
