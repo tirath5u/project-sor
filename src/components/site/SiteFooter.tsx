@@ -16,9 +16,16 @@ export function SiteFooter() {
               myproduct<span className="text-primary">.life</span>
             </p>
             <p className="mt-2 max-w-xs text-xs leading-6 text-muted-foreground">
-              Product work on federal student aid: open calculators, a public API, and agent
-              integrations for the Direct Loan Schedule of Reductions.
+              Product management in higher-education technology. Built in public and source-backed:
+              open Schedule of Reductions calculators, a public API, and agent integrations for
+              federal student aid.
             </p>
+            <Link
+              to="/work"
+              className="mt-3 inline-flex text-xs font-medium text-primary underline-offset-2 hover:underline"
+            >
+              See the product work
+            </Link>
           </div>
           {NAV_GROUPS.map((group) => (
             <div key={group.label}>
