@@ -265,8 +265,8 @@ function SORCalculatorPage() {
       <a href="#results-region" className="skip-link">
         Skip to results
       </a>
-      {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 backdrop-blur">
+      {/* Page header (site-wide nav lives in the global header above this) */}
+      <header className="border-b border-border/60 bg-background/85">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -295,39 +295,7 @@ function SORCalculatorPage() {
               </p>
             </div>
           </div>
-          <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-[11px] text-primary">
-            <span className="font-semibold">Updated version V56:</span> the shared engine now
-            supports the V56 online parity contract, structured explanations, and a student-friendly
-            standard Fall and Spring estimate.
-          </div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1">
-              <Link
-                to="/lifecycle"
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition hover:bg-accent/10"
-              >
-                <GraduationCap className="h-4 w-4 text-primary" />
-                Lifecycle Tracker
-              </Link>
-              <InfoTip label="About Lifecycle Tracker">
-                Walk a single student through enrollment changes term-by-term across multiple
-                academic years.
-              </InfoTip>
-            </div>
-            <Link
-              to="/api-docs"
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition hover:bg-accent/10"
-            >
-              <BookOpen className="h-4 w-4 text-primary" />
-              API Docs
-            </Link>
-            <Link
-              to="/student"
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition hover:bg-accent/10"
-            >
-              <GraduationCap className="h-4 w-4 text-primary" />
-              Student estimate
-            </Link>
             <div className="hidden md:block">
               <div className="flex items-center gap-1">
                 <Select
