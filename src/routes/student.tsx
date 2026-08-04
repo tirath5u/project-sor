@@ -14,13 +14,16 @@ export const Route = createFileRoute("/student")({
   component: StudentEstimatePage,
   head: () => ({
     meta: [
-      { title: "Student Loan Limit Estimator - Schedule of Reductions" },
+      { title: "Student SOR Estimate - Federal Loan Limit Calculator 2026-27" },
       {
         name: "description",
         content:
           "Taking fewer than full-time credits in 2026-27? Estimate your reduced federal Direct Loan limit in seconds and see exactly how the number was worked out.",
       },
-      { property: "og:title", content: "Student Loan Limit Estimator - Schedule of Reductions" },
+      {
+        property: "og:title",
+        content: "Student SOR Estimate - Federal Loan Limit Calculator 2026-27",
+      },
       {
         property: "og:description",
         content:
@@ -140,7 +143,7 @@ function StudentEstimatePage() {
           <StudentFaq />
           <ScopeNotes />
 
-          <section className="rounded-2xl border border-border bg-gradient-to-br from-accent/70 to-card p-6 sm:p-8">
+          <section className="rounded-2xl border border-border bg-muted/40 p-6 sm:p-8">
             <h2 className="font-display text-xl font-semibold sm:text-2xl">Need more detail?</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               The advanced estimate takes your school's cost of attendance, other aid, summer and

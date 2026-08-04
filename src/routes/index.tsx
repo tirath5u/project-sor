@@ -1419,7 +1419,7 @@ function StartHereStripInner() {
             className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 transition hover:bg-accent/10"
           >
             <GraduationCap className="h-4 w-4 text-primary" />
-            Student estimate
+            Student SOR estimate
           </Link>
           <button
             type="button"
