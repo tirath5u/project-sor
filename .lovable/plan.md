@@ -1,72 +1,77 @@
-# Student page redesign — brand-aligned, student-first
+# Information architecture redesign — sor.myproduct.life (+ IA spec for myproduct.life)
 
-## Goal
-Turn `/student` from a plain form page into a confident, screenshot-worthy student landing + calculator that carries the myproduct.life brand (no Ellucian purple), reads instantly, and clearly routes the three audiences.
+Applying the IA discipline from the Aakash Gupta piece: organize and label so each audience finds its task fast. IA is structure, labels, taxonomy, metadata, wayfinding. The palette stays exactly as-is; everything else is open.
 
-## Brand palette (pulled from the live myproduct.life stylesheet)
-Your site already defines these tokens — I'll reuse them exactly, scoped to the student experience:
+## What's wrong today (verified in the code)
 
-- Accent (brand crimson): `oklch(51.5% 0.115 17)`
-- Accent hover: `oklch(45% 0.13 17)`
-- Accent soft (chip/wash): `oklch(95.5% 0.025 17)`
-- Accent foreground: `oklch(98.4% 0.003 247.858)`
-- Neutrals (slate family): bg `oklch(100% 0 0)`, foreground `oklch(12.9% 0.042 264.695)`, muted `oklch(96.8% 0.007 247.896)`, muted-foreground `oklch(55.4% 0.046 257.417)`, border `oklch(92.9% 0.013 255.508)`
-- Dark mode counterparts: bg `oklch(12.9% 0.042 264.695)`, card `oklch(20.8% 0.042 265.755)`
+- There is no global header or footer. `__root.tsx` renders only `<Outlet />` plus the access gate, so `/lifecycle`, `/api-docs`, `/mcp-guide`, `/releases`, `/compare`, and `/migration` are orphan pages reachable only by typing a URL. The only nav in the project is the 4-pill student header.
+- `/` is the full staff calculator with no orientation layer, so a recruiter or administrator landing there sees a dense form, not a product.
+- Two visual identities exist (Ellucian purple on staff pages, maroon `.theme-student` on student pages) with no shared chrome tying them together.
+- Nothing is labeled by audience. `/compare` and `/migration` are not even in the sitemap.
+- No personal-brand surface: nothing says who built this or why it exists.
 
-Zero purple on the student pages. Staff calculator keeps its current tokens untouched.
+## The new structure
 
-## Typography
-Space Grotesk for headings, DM Sans for body, loaded via `<link>` in the root route head and registered as `--font-display` / `--font-sans` theme tokens. Headlines get real size and tight tracking — no more tiny "Student estimate" label as the loudest thing on the page.
+The calculator stays at `/`, so no URL breaks. Orientation gets added around it, plus one global shell.
 
-## Layout — split screen
 ```text
-┌──────────────────────────── header ───────────────────────────┐
-│ Project SOR            [ Student · Advanced · For staff/devs ]│
-└───────────────────────────────────────────────────────────────┘
-┌─────────────── left rail ───────────┬──── right: calculator ──┐
-│ eyebrow: FOR STUDENTS               │  ┌───────────────────┐  │
-│ H1: Will my loan be reduced         │  │ Award year        │  │
-│     this year?                      │  │ Program / grade   │  │
-│ sub: One minute. No login. No       │  │ Fall / Spring cr. │  │
-│      personal info.                 │  │ [ See my estimate ]│ │
-│ 3 trust chips: no data stored ·     │  └───────────────────┘  │
-│   official formula · free           │  result card appears    │
-│ "How it works" 1-2-3 mini steps     │  inline under the form  │
-└─────────────────────────────────────┴─────────────────────────┘
-┌── Result hero (when calculated): big % + $ figures, brand wash ┐
-┌── "What this does / doesn't do" two-column explainer ─────────┐
-┌── Student FAQ (short accordion) ──────────────────────────────┐
-┌── Audience router cards: Advanced estimate · Staff & devs ────┐
+/                     Staff calculator + new "Start here" audience strip on top
+/student              Student estimator            (exists)
+/student/advanced     Advanced student estimate    (exists)
+/lifecycle            Aid lifecycle tracker        (exists)
+/api-docs             REST API                     (exists)
+/mcp-guide            AI agent / MCP               (exists)
+/compare  /migration  Parity + version tools       (exists, finally surfaced)
+/releases             Changelog                    (exists)
+/work                 NEW  Proof-of-work hub: shipped products, case study index
+/work/$slug           NEW  Case studies: Project SOR, COD annual update, MCP contract
+/about                NEW  Who I am, how I work, contact
+/methodology          NEW  Route wrapping docs/methodology.md: sources, rounding, caveats
 ```
 
-## Navigation (per your note)
-Header gets a real segmented pill switcher, not bare text links:
-- **Student estimate** (default, active)
-- **Advanced estimate** — labelled "Also for students"
-- **For financial aid staff & developers** → staff calculator / API / MCP
+## Global shell (the biggest single win)
 
-Advanced is presented as a peer student path, not a hidden staff tool. The same three options repeat as tappable cards at the page bottom so nothing depends on noticing the header.
+Add a persistent header and footer in `__root.tsx` — one component, theme-aware so it inherits maroon under `.theme-student` and purple elsewhere:
 
-## Result presentation (the LinkedIn screenshot moment)
-- Big brand-accent hero number: SOR % as the headline, dollar figures as supporting stats.
-- Plain-language one-liner: "Based on your credits, your annual Direct Loan maximum is reduced to about $X."
-- A simple horizontal bar showing full maximum vs. reduced amount, so the reduction is visual, not just numeric.
-- Warnings and the disclaimer stay verbatim, styled as a calm bordered note — not decorative, not hidden.
+- Wordmark "myproduct.life" — the personal brand, always visible.
+- Primary nav grouped by audience, not by feature: **Calculators** (Staff · Student · Advanced · Lifecycle) · **Developers** (API · MCP · Compare · Releases) · **Work** · **About**. Dropdown on desktop, sheet on mobile.
+- Right side: a status chip with engine version and policy year (from `sor.version.ts`) and a "Report a scenario" link.
+- Footer: full sitemap in three columns (Calculators / Developers / About & sources), disclaimer line, license, last-updated marker.
 
-## Content & tone changes (copy only, no math)
-- Headline speaks the student's question, not the policy term.
-- Every field gets a short helper line ("Ask your advisor or check your class schedule").
-- "What this can't tell you" list stays, reworded for a student reader.
-- Short FAQ: what SOR is, why credits matter, who decides the final award, what to do next.
+The student pill switcher folds into this shell so there is one nav model, not two.
 
-## Explicitly unchanged
-- All SOR math, `/api/public/v2/student-estimate`, engine, warnings text, disclaimers, and API/MCP surfaces.
-- Staff calculator (`/`), compare, lifecycle, api-docs visual design.
+## Per-audience task design
+
+- **Students** (`/student`): keep the current redesign; add a quiet "Not a student?" link row so misrouted visitors leave in one click.
+- **Staff and financial aid administrators** (`/`): a compact strip above the calculator — one line on what the tool does, the engine/policy version, and three chips: "Jump to calculator", "Methodology and sources", "Report a scenario". Collapsible and remembered, so daily users see it once.
+- **Recruiters and product leaders**: `/work` — a short positioning line, then one card per shipped artifact with the metric that matters (institutions reached, endpoints, tests passing, MCP tools). Each card opens a case study: Problem → Constraints → What I shipped → Evidence → What I'd do next. Contact and LinkedIn CTA at the bottom, with a condensed version of the same block on the home hub.
+- **Developers**: `/api-docs` and `/mcp-guide` cross-link to each other and to `/compare`, each opening with a copy-paste quickstart.
+
+## Metadata and findability
+
+- Unique `head()` on every new route (title, description, og:title/description); `og:image` on leaves only.
+- Add `/work`, `/work/$slug`, `/about`, `/methodology`, `/compare`, `/migration`, and `/student/advanced` to `sitemap.xml`, and rewrite `public/llms.txt` to match the new structure.
+- JSON-LD: `Person` on `/about`, `SoftwareApplication` on `/`, `FAQPage` on `/student`.
+- Breadcrumbs on case studies and documentation pages.
+
+## Colors and design system
+
+Palette unchanged — Ellucian purple tokens on staff and developer pages, `.theme-student` maroon on student pages, both already in `src/styles.css`. Improvements within that constraint: reuse Space Grotesk and DM Sans site-wide (already loaded) so the staff side stops looking like a different product; consistent card radius and shadow via existing tokens; a shared `PageHeader` so every route opens the same way.
+
+## Suggested improvements beyond the ask
+
+1. Global `Cmd/Ctrl+K` command palette over routes and scenarios — a real power move for staff who use this daily.
+2. Version chip in the header linking to `/releases`, so version questions never need an email.
+3. Shareable result URLs (student inputs encoded in search params) so an advisor can send a student their exact estimate.
+4. Print stylesheet for the `/` results so staff can attach output to a file review.
+
+## myproduct.life (separate project — IA spec to apply there)
+
+Delivered as a written spec at `docs/myproduct-life-ia.md` in this repo, ready to implement in the other project: home = who I am, what I ship, three proof tiles; `/products` listing SOR and COD Updates with cross-domain links; `/work` case studies on the same template; `/about`; identical shell, wordmark, and palette so both domains read as one brand. The spec includes nav labels, the route table, metadata rules, and cross-links back to sor.myproduct.life.
 
 ## Technical notes
-- Add brand tokens as a scoped token set in `src/styles.css` (e.g. a `.theme-student` class applied to the student route wrappers) plus `@theme inline` mappings, so `/student` and `/student/advanced` render brand crimson while the staff app keeps existing tokens. No hardcoded hex/`text-white` in components.
-- Fonts via `<link>` in `src/routes/__root.tsx` (never `@import` a URL in CSS).
-- New presentational components under `src/components/student/`: `StudentHeader` (segmented nav), `StudentHero`, `EstimateForm`, `EstimateResult`, `StudentFaq`, `AudienceCards`. `src/routes/student.tsx` becomes composition only; fetch logic stays as-is.
-- Apply the same header + tokens to `src/routes/student/advanced.tsx` so the two student pages feel like one product.
-- Add unique `head()` metadata (title, description, og/twitter) for both student routes.
-- Responsive: split screen collapses to single column under `lg`; verified at mobile width. Existing test suite must stay green.
+
+- New shell components under `src/components/site/` (`SiteHeader`, `SiteFooter`, `PageHeader`), mounted in `__root.tsx` inside the existing `AccessGate` boundary. API, MCP, and sitemap server routes are untouched.
+- Case studies as typed data in `src/content/work.ts` (no CMS, matching the case-studies-only choice), consumed by `/work` and `createFileRoute("/work/$slug")`.
+- No changes to `src/lib/sor.ts`, `loanLimits.ts`, `phase-b.ts`, or any endpoint — SOR math and API contracts stay byte-identical, and the existing test suite must stay green.
+- Build order: shell and footer → `/` orientation strip → `/work` and case studies → `/about` and `/methodology` → sitemap, llms.txt, JSON-LD → optional extras above.
