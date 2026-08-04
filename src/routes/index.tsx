@@ -1325,6 +1325,50 @@ function Segmented<T extends string>({
  * the choice is remembered locally.
  */
 function StartHereStrip() {
+  return <StartHereStripInner />;
+}
+
+/**
+ * Product voice: who builds this and how. Kept to one slim row so the working
+ * calculator stays the first thing staff see.
+ */
+function ProductVoiceStrip() {
+  const proof = [
+    { label: "Built in public", to: "/work" as const },
+    { label: "Source-backed methodology", to: "/methodology" as const },
+    { label: `Versioned releases · v${ENGINE_VERSION}`, to: "/releases" as const },
+    { label: "Open API & MCP", to: "/api-docs" as const },
+  ];
+
+  return (
+    <section aria-label="About this product" className="border-b border-border/60 bg-muted/30">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        <p className="text-sm leading-6 text-muted-foreground">
+          <span className="font-semibold text-foreground">myproduct.life</span> — product management
+          in higher-education technology: shipping federal student aid tooling from policy text to
+          tested engine.{" "}
+          <Link to="/about" className="font-medium text-primary underline-offset-2 hover:underline">
+            About Tirath
+          </Link>
+        </p>
+        <ul className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium">
+          {proof.map((item) => (
+            <li key={item.label}>
+              <Link
+                to={item.to}
+                className="inline-flex h-7 items-center rounded-full border border-border bg-background px-2.5 text-muted-foreground transition hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+function StartHereStripInner() {
   const [open, setOpen] = React.useState(true);
 
   React.useEffect(() => {
