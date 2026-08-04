@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/api-docs")({
   head: () => ({
     meta: [
-      { title: "SOR Public API Docs - Endpoints & OpenAPI" },
+      { title: "Public SOR API - Endpoints, Schemas & OpenAPI 3.1" },
       {
         name: "description",
         content:
