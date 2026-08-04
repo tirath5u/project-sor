@@ -114,13 +114,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const isStudent = pathname.startsWith("/student");
+  // The staff calculator at "/" keeps its long-standing palette; every other
+  // route wears the myproduct.life brand theme.
+  const isBrand = pathname !== "/";
 
   return (
     <TooltipProvider delayDuration={200} skipDelayDuration={100}>
       <AccessGate>
-        <div className={cn("flex min-h-screen flex-col", isStudent && "theme-student")}>
-          {/* One nav model everywhere; the student theme just recolors it. */}
+        <div className={cn("flex min-h-screen flex-col", isBrand && "theme-brand")}>
+          {/* One nav model everywhere; the brand theme just recolors it. */}
           <SiteHeader />
           <div className="flex-1">
             <Outlet />
