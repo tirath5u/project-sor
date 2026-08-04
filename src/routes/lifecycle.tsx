@@ -22,7 +22,7 @@ import {
 export const Route = createFileRoute("/lifecycle")({
   head: () => ({
     meta: [
-      { title: "Aid Lifecycle Tracker - SOR" },
+      { title: "SOR Lifecycle Tracker - Undergraduate Borrowing by Year" },
       {
         name: "description",
         content: "Track undergraduate Title IV Sub/Unsub disbursements against aggregate caps.",

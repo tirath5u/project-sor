@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/mcp-guide")({
   head: () => ({
     meta: [
-      { title: "Project SOR MCP Guide" },
+      { title: "Ask an AI Agent (MCP) - Project SOR" },
       {
         name: "description",
         content: "Connect an MCP client to the source-backed Project SOR calculation engine.",

@@ -7,7 +7,7 @@ export const Route = createFileRoute("/work/")({
   component: WorkIndexPage,
   head: () => ({
     meta: [
-      { title: "Work - Product case studies in federal student aid" },
+      { title: "Product Work - Case Studies in Federal Student Aid" },
       {
         name: "description",
         content:

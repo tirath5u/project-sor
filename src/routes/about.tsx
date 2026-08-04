@@ -7,7 +7,7 @@ export const Route = createFileRoute("/about")({
   component: AboutPage,
   head: () => ({
     meta: [
-      { title: "About - Tirath Chhatriwala, product in federal student aid" },
+      { title: "About Tirath - Product Management in Higher Ed Technology" },
       {
         name: "description",
         content:
