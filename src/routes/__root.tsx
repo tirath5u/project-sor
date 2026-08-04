@@ -120,9 +120,8 @@ function RootComponent() {
     <TooltipProvider delayDuration={200} skipDelayDuration={100}>
       <AccessGate>
         <div className={cn("flex min-h-screen flex-col", isStudent && "theme-student")}>
-          {/* Student routes keep their own audience switcher, so the global
-              header would be a second nav model on the same screen. */}
-          {isStudent ? null : <SiteHeader />}
+          {/* One nav model everywhere; the student theme just recolors it. */}
+          <SiteHeader />
           <div className="flex-1">
             <Outlet />
           </div>
