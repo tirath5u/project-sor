@@ -349,6 +349,8 @@ function SORCalculatorPage() {
         </div>
       </header>
 
+      <StartHereStrip />
+
       {/* Mobile scenario picker */}
       <div className="border-b border-border/60 bg-background/70 px-4 py-3 md:hidden">
         <Select
