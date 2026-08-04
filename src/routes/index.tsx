@@ -347,6 +347,7 @@ function SORCalculatorPage() {
         </div>
       </header>
 
+      <ProductVoiceStrip />
       <StartHereStrip />
 
       {/* Mobile scenario picker */}
