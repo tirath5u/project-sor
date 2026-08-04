@@ -33,6 +33,7 @@ import {
   type Dependency,
 } from "@/lib/loanLimits";
 import { SCENARIOS, type Scenario } from "@/lib/scenarios";
+import { ENGINE_VERSION, POLICY_YEAR, POLICY_SNAPSHOT_DATE } from "@/lib/sor.version";
 import { Section } from "@/components/sor/Section";
 import { NumberField } from "@/components/sor/NumberField";
 import { ResultsPanel } from "@/components/sor/ResultsPanel";
@@ -1322,5 +1323,79 @@ function Segmented<T extends string>({
         })}
       </div>
     </div>
+  );
+}
+
+/**
+ * Orientation strip for the staff calculator. New visitors get one line of
+ * context plus the three jumps they actually need; daily users dismiss it and
+ * the choice is remembered locally.
+ */
+function StartHereStrip() {
+  const [open, setOpen] = React.useState(true);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    setOpen(window.localStorage.getItem("sor-start-here-dismissed") !== "1");
+  }, []);
+
+  function dismiss() {
+    setOpen(false);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sor-start-here-dismissed", "1");
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <section
+      aria-label="Start here"
+      className="border-b border-border/60 bg-primary/5"
+    >
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-3xl">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+            Start here — financial aid staff
+          </p>
+          <p className="mt-1.5 text-sm leading-6 text-foreground/80">
+            Compute the OBBBA less-than-full-time Schedule of Reductions: the SOR percentage,
+            reduced Sub / Unsub / Grad PLUS annual pools, and per-term disbursements. Engine v
+            {ENGINE_VERSION}, policy year {POLICY_YEAR}, sources reviewed {POLICY_SNAPSHOT_DATE}.
+            Estimates only — never an award.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
+          <a
+            href="#results-region"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 transition hover:bg-accent/10"
+          >
+            <Calculator className="h-4 w-4 text-primary" />
+            Jump to results
+          </a>
+          <Link
+            to="/methodology"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 transition hover:bg-accent/10"
+          >
+            <BookOpen className="h-4 w-4 text-primary" />
+            Methodology &amp; sources
+          </Link>
+          <Link
+            to="/student"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 transition hover:bg-accent/10"
+          >
+            <GraduationCap className="h-4 w-4 text-primary" />
+            Student estimate
+          </Link>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="inline-flex h-9 items-center rounded-lg px-3 text-muted-foreground transition hover:bg-background"
+          >
+            Hide
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
