@@ -46,6 +46,11 @@ export function SiteHeader() {
               {open === group.label ? (
                 <div className="absolute left-0 top-full w-80 pt-1">
                   <ul className="rounded-xl border border-border bg-popover p-2 shadow-lg">
+                    {group.caption ? (
+                      <li className="px-3 pb-2 pt-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        {group.caption}
+                      </li>
+                    ) : null}
                     {group.items.map((item) => (
                       <li key={item.label}>
                         <Link
