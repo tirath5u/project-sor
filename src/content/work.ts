@@ -46,9 +46,23 @@ export const CASE_STUDIES: CaseStudy[] = [
       "A published source register, methodology document, and scenario-challenge process so anyone can dispute the math with citations.",
     ],
     evidence: [
-      { label: "Parity fixtures", value: "", detail: "Department-derived scenarios encoded as fixtures with source IDs, including rounding edge cases." },
-      { label: "Version discipline", value: "", detail: "Engine version, policy year, snapshot date, and release marker returned on every API response." },
-      { label: "Public contract", value: "", detail: "OpenAPI 3.1 spec with a CI contract check to keep docs and behaviour aligned." },
+      {
+        label: "Parity fixtures",
+        value: "",
+        detail:
+          "Department-derived scenarios encoded as fixtures with source IDs, including rounding edge cases.",
+      },
+      {
+        label: "Version discipline",
+        value: "",
+        detail:
+          "Engine version, policy year, snapshot date, and release marker returned on every API response.",
+      },
+      {
+        label: "Public contract",
+        value: "",
+        detail: "OpenAPI 3.1 spec with a CI contract check to keep docs and behaviour aligned.",
+      },
     ].map((entry) => ({ label: entry.label, detail: entry.detail })),
     next: [
       "Add a full NSLDS aggregate and lifetime-limit model so Grad PLUS and graduate aggregates can be reasoned about safely.",
@@ -85,12 +99,13 @@ export const CASE_STUDIES: CaseStudy[] = [
       "A gated access model so sensitive detail is not published openly.",
     ],
     evidence: [
-      { label: "Structure", detail: "One segment per award-year update, consistently formatted for scanning." },
+      {
+        label: "Structure",
+        detail: "One segment per award-year update, consistently formatted for scanning.",
+      },
       { label: "Governance", detail: "Redaction and gating applied before publication." },
     ],
-    next: [
-      "Cross-link COD segments to the SOR engine behaviour they affect.",
-    ],
+    next: ["Cross-link COD segments to the SOR engine behaviour they affect."],
   },
   {
     slug: "sor-agent-contract",
@@ -117,12 +132,16 @@ export const CASE_STUDIES: CaseStudy[] = [
       "A migration and compare surface so consumers can see exactly what changed between versions.",
     ],
     evidence: [
-      { label: "Transparency", detail: "Responses carry engine version, release marker, and an explicit unsupported list." },
-      { label: "Parity tooling", detail: "Public scenario catalogue lets any consumer replay and verify results." },
+      {
+        label: "Transparency",
+        detail: "Responses carry engine version, release marker, and an explicit unsupported list.",
+      },
+      {
+        label: "Parity tooling",
+        detail: "Public scenario catalogue lets any consumer replay and verify results.",
+      },
     ],
-    next: [
-      "Publish typed client SDKs generated from the OpenAPI spec.",
-    ],
+    next: ["Publish typed client SDKs generated from the OpenAPI spec."],
     links: [
       { label: "API docs", to: "/api-docs" },
       { label: "Agent guide", to: "/mcp-guide" },

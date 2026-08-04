@@ -13,7 +13,10 @@ export const Route = createFileRoute("/about")({
         content:
           "Who builds these tools and how. Product management at the seam of federal student aid regulation and software: interpretation, contracts, evidence, shipping.",
       },
-      { property: "og:title", content: "About - Tirath Chhatriwala, product in federal student aid" },
+      {
+        property: "og:title",
+        content: "About - Tirath Chhatriwala, product in federal student aid",
+      },
       {
         property: "og:description",
         content:

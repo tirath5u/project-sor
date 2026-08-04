@@ -20,9 +20,21 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Calculators",
     items: [
       { to: "/", label: "Staff calculator", blurb: "Full SOR engine for financial aid offices" },
-      { to: "/student", label: "Student estimate", blurb: "Fast Fall/Spring estimate for students" },
-      { to: "/student/advanced", label: "Advanced student estimate", blurb: "Add COA, other aid, and paid history" },
-      { to: "/lifecycle", label: "Lifecycle tracker", blurb: "Cumulative undergraduate borrowing by year" },
+      {
+        to: "/student",
+        label: "Student estimate",
+        blurb: "Fast Fall/Spring estimate for students",
+      },
+      {
+        to: "/student/advanced",
+        label: "Advanced student estimate",
+        blurb: "Add COA, other aid, and paid history",
+      },
+      {
+        to: "/lifecycle",
+        label: "Lifecycle tracker",
+        blurb: "Cumulative undergraduate borrowing by year",
+      },
     ],
   },
   {

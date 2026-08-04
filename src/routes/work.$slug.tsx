@@ -71,8 +71,13 @@ function CaseStudyPage() {
       >
         <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {study.metrics.map((metric) => (
-            <div key={metric.label} className="rounded-xl border border-border bg-background px-4 py-3">
-              <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{metric.label}</dt>
+            <div
+              key={metric.label}
+              className="rounded-xl border border-border bg-background px-4 py-3"
+            >
+              <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {metric.label}
+              </dt>
               <dd className="num mt-1 text-lg font-semibold">{metric.value}</dd>
             </div>
           ))}

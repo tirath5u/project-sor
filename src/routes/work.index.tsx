@@ -47,12 +47,18 @@ function WorkIndexPage() {
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {study.period} · {study.role}
                 </p>
-                <h2 className="mt-3 font-display text-lg font-semibold leading-snug">{study.title}</h2>
-                <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">{study.tagline}</p>
+                <h2 className="mt-3 font-display text-lg font-semibold leading-snug">
+                  {study.title}
+                </h2>
+                <p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">
+                  {study.tagline}
+                </p>
                 <dl className="mt-5 grid grid-cols-2 gap-3">
                   {study.metrics.slice(0, 4).map((metric) => (
                     <div key={metric.label} className="rounded-lg bg-muted/60 px-3 py-2">
-                      <dt className="text-[11px] leading-4 text-muted-foreground">{metric.label}</dt>
+                      <dt className="text-[11px] leading-4 text-muted-foreground">
+                        {metric.label}
+                      </dt>
                       <dd className="num text-sm font-semibold">{metric.value}</dd>
                     </div>
                   ))}

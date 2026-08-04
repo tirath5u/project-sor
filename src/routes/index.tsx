@@ -61,12 +61,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 export const Route = createFileRoute("/")({
   component: SORCalculatorPage,
   head: () => ({
-    meta: [
-      { property: "og:url", content: "https://sor.myproduct.life/" },
-    ],
-    links: [
-      { rel: "canonical", href: "https://sor.myproduct.life/" },
-    ],
+    meta: [{ property: "og:url", content: "https://sor.myproduct.life/" }],
+    links: [{ rel: "canonical", href: "https://sor.myproduct.life/" }],
   }),
 });
 
@@ -83,7 +79,8 @@ type VersionEntry = { version: string; headline: string; changes: string[] };
 const VERSION_HISTORY: VersionEntry[] = [
   {
     version: "v56",
-    headline: "V56 online parity, applicability guard, structured explanations, and student estimate",
+    headline:
+      "V56 online parity, applicability guard, structured explanations, and student estimate",
     changes: [
       "Corrected single-term Grad PLUS sizing so a loan-period COA gap is not halved twice.",
       "Added a traditional 685.203 proration guard so a valid undergraduate proration path suppresses a second SOR reduction.",
@@ -1134,10 +1131,7 @@ function SORCalculatorPage() {
           className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]"
         >
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h2
-              id="version-history-heading"
-              className="text-sm font-semibold text-foreground"
-            >
+            <h2 id="version-history-heading" className="text-sm font-semibold text-foreground">
               Version history
             </h2>
             <span className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
@@ -1155,9 +1149,7 @@ function SORCalculatorPage() {
                     <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
                       {entry.version}
                     </span>
-                    <span className="text-sm font-medium text-foreground">
-                      {entry.headline}
-                    </span>
+                    <span className="text-sm font-medium text-foreground">{entry.headline}</span>
                   </div>
                   <span className="mt-0.5 text-[11px] text-muted-foreground group-open:hidden">
                     Show
@@ -1349,10 +1341,7 @@ function StartHereStrip() {
   if (!open) return null;
 
   return (
-    <section
-      aria-label="Start here"
-      className="border-b border-border/60 bg-primary/5"
-    >
+    <section aria-label="Start here" className="border-b border-border/60 bg-primary/5">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">

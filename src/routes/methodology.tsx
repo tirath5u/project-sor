@@ -1,6 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/site/PageHeader";
-import { ENGINE_VERSION, POLICY_SNAPSHOT_DATE, POLICY_YEAR, DEPLOYMENT_MARKER } from "@/lib/sor.version";
+import {
+  ENGINE_VERSION,
+  POLICY_SNAPSHOT_DATE,
+  POLICY_YEAR,
+  DEPLOYMENT_MARKER,
+} from "@/lib/sor.version";
 
 export const Route = createFileRoute("/methodology")({
   component: MethodologyPage,
@@ -76,8 +81,13 @@ function MethodologyPage() {
             { label: "Sources reviewed", value: POLICY_SNAPSHOT_DATE },
             { label: "Release", value: DEPLOYMENT_MARKER },
           ].map((item) => (
-            <div key={item.label} className="rounded-xl border border-border bg-background px-4 py-3">
-              <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{item.label}</dt>
+            <div
+              key={item.label}
+              className="rounded-xl border border-border bg-background px-4 py-3"
+            >
+              <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {item.label}
+              </dt>
               <dd className="num mt-1 text-sm font-semibold break-words">{item.value}</dd>
             </div>
           ))}
@@ -102,7 +112,10 @@ function MethodologyPage() {
           <ul className="mt-3 space-y-2.5">
             {CAVEATS.map((caveat) => (
               <li key={caveat} className="flex gap-2.5 text-sm leading-6">
-                <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-warning-foreground/60" />
+                <span
+                  aria-hidden
+                  className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-warning-foreground/60"
+                />
                 {caveat}
               </li>
             ))}
@@ -116,13 +129,22 @@ function MethodologyPage() {
             contract is documented in the public API.
           </p>
           <div className="mt-5 flex flex-wrap gap-3 text-sm font-medium">
-            <Link to="/compare" className="rounded-lg border border-border px-4 py-2 transition-colors hover:bg-muted">
+            <Link
+              to="/compare"
+              className="rounded-lg border border-border px-4 py-2 transition-colors hover:bg-muted"
+            >
               Replay published scenarios
             </Link>
-            <Link to="/api-docs" className="rounded-lg border border-border px-4 py-2 transition-colors hover:bg-muted">
+            <Link
+              to="/api-docs"
+              className="rounded-lg border border-border px-4 py-2 transition-colors hover:bg-muted"
+            >
               API and schemas
             </Link>
-            <Link to="/releases" className="rounded-lg border border-border px-4 py-2 transition-colors hover:bg-muted">
+            <Link
+              to="/releases"
+              className="rounded-lg border border-border px-4 py-2 transition-colors hover:bg-muted"
+            >
               Version history
             </Link>
             <a
