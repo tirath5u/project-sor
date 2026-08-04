@@ -4,11 +4,26 @@
 
 The SOR Calculator is an open, source-labeled implementation of 34 CFR 685.203 reductions. Financial aid offices, students, and developers use it to inspect inputs, replay published scenarios, compare implementations, and challenge the math with citations.
 
-## Pages
+## Calculators
 
-- [SOR Calculator](/): Interactive calculator for the OBBBA Schedule of Reductions — pick award year, grade level, dependency, term structure, and enrollment to see reduced loan limits and per-term disbursements.
+- [SOR Calculator (staff)](/): Interactive calculator for the OBBBA Schedule of Reductions — pick award year, grade level, dependency, term structure, and enrollment to see reduced loan limits and per-term disbursements.
+- [Student estimate](/student): Fast Fall/Spring estimate for students, with a plain-language walkthrough of the arithmetic.
+- [Advanced student estimate](/student/advanced): Institution-specific inputs (COA, other aid, need, paid history) for a more detailed projection.
 - [Aid Lifecycle Tracker](/lifecycle): Track cumulative undergraduate Sub/Unsub borrowing across academic years against statutory aggregate caps.
+
+## Developers
+
 - [Public API Docs](/api-docs): REST API reference (health, scenarios, calculate, OpenAPI 3.1) for integrating SOR calculations into other systems.
+- [Agent / MCP guide](/mcp-guide): Public MCP server for querying the engine in natural language.
+- [Parity compare](/compare): Replay published scenarios side by side against the live engine.
+- [Version migration](/migration): Differences between the V1 and V2 public contracts.
+
+## About and evidence
+
+- [Work](/work): Product case studies — problem, constraints, what shipped, evidence, next steps.
+- [Methodology and sources](/methodology): Inputs, SOR percentage, rounding policy, distribution, and documented caveats.
+- [Releases](/releases): Version history and changelog.
+- [About](/about): Who builds these tools and how.
 
 ## API Endpoints
 
