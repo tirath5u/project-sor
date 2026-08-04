@@ -16,7 +16,17 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    setPublicRoute(window.location.pathname === "/student");
+    // Public, ungated surfaces: the student experience plus the brand /
+    // documentation pages that recruiters and search engines need to reach.
+    const path = window.location.pathname.replace(/\/+$/, "") || "/";
+    setPublicRoute(
+      path === "/student" ||
+        path === "/student/advanced" ||
+        path === "/about" ||
+        path === "/methodology" ||
+        path === "/work" ||
+        path.startsWith("/work/"),
+    );
     let cancelled = false;
     // The unlocked flag lives in an encrypted httpOnly cookie; only the server
     // can tell us whether this visitor is unlocked.

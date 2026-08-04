@@ -13,12 +13,16 @@ import { Route as StudentRouteImport } from './routes/student'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReleasesRouteImport } from './routes/releases'
 import { Route as MigrationRouteImport } from './routes/migration'
+import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as McpGuideRouteImport } from './routes/mcp-guide'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LifecycleRouteImport } from './routes/lifecycle'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as ApiDocsRouteImport } from './routes/api-docs'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WorkIndexRouteImport } from './routes/work.index'
+import { Route as WorkSlugRouteImport } from './routes/work.$slug'
 import { Route as StudentAdvancedRouteImport } from './routes/student/advanced'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -56,6 +60,11 @@ const MigrationRoute = MigrationRouteImport.update({
   path: '/migration',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MethodologyRoute = MethodologyRouteImport.update({
+  id: '/methodology',
+  path: '/methodology',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const McpGuideRoute = McpGuideRouteImport.update({
   id: '/mcp-guide',
   path: '/mcp-guide',
@@ -81,9 +90,24 @@ const ApiDocsRoute = ApiDocsRouteImport.update({
   path: '/api-docs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkIndexRoute = WorkIndexRouteImport.update({
+  id: '/work/',
+  path: '/work/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkSlugRoute = WorkSlugRouteImport.update({
+  id: '/work/$slug',
+  path: '/work/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentAdvancedRoute = StudentAdvancedRouteImport.update({
@@ -177,11 +201,13 @@ const ApiPublicV1CalculateRoute = ApiPublicV1CalculateRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/api-docs': typeof ApiDocsRoute
   '/compare': typeof CompareRoute
   '/lifecycle': typeof LifecycleRoute
   '/mcp': typeof McpRoute
   '/mcp-guide': typeof McpGuideRoute
+  '/methodology': typeof MethodologyRoute
   '/migration': typeof MigrationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -189,6 +215,8 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
+  '/work/$slug': typeof WorkSlugRoute
+  '/work/': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
@@ -205,11 +233,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/api-docs': typeof ApiDocsRoute
   '/compare': typeof CompareRoute
   '/lifecycle': typeof LifecycleRoute
   '/mcp': typeof McpRoute
   '/mcp-guide': typeof McpGuideRoute
+  '/methodology': typeof MethodologyRoute
   '/migration': typeof MigrationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -217,6 +247,8 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
+  '/work/$slug': typeof WorkSlugRoute
+  '/work': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
@@ -234,11 +266,13 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/api-docs': typeof ApiDocsRoute
   '/compare': typeof CompareRoute
   '/lifecycle': typeof LifecycleRoute
   '/mcp': typeof McpRoute
   '/mcp-guide': typeof McpGuideRoute
+  '/methodology': typeof MethodologyRoute
   '/migration': typeof MigrationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -246,6 +280,8 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
+  '/work/$slug': typeof WorkSlugRoute
+  '/work/': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
@@ -264,11 +300,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/api-docs'
     | '/compare'
     | '/lifecycle'
     | '/mcp'
     | '/mcp-guide'
+    | '/methodology'
     | '/migration'
     | '/releases'
     | '/sitemap.xml'
@@ -276,6 +314,8 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
+    | '/work/$slug'
+    | '/work/'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
@@ -292,11 +332,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/api-docs'
     | '/compare'
     | '/lifecycle'
     | '/mcp'
     | '/mcp-guide'
+    | '/methodology'
     | '/migration'
     | '/releases'
     | '/sitemap.xml'
@@ -304,6 +346,8 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
+    | '/work/$slug'
+    | '/work'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
@@ -320,11 +364,13 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/api-docs'
     | '/compare'
     | '/lifecycle'
     | '/mcp'
     | '/mcp-guide'
+    | '/methodology'
     | '/migration'
     | '/releases'
     | '/sitemap.xml'
@@ -332,6 +378,8 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
+    | '/work/$slug'
+    | '/work/'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
@@ -349,17 +397,21 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   ApiDocsRoute: typeof ApiDocsRoute
   CompareRoute: typeof CompareRoute
   LifecycleRoute: typeof LifecycleRoute
   McpRoute: typeof McpRoute
   McpGuideRoute: typeof McpGuideRoute
+  MethodologyRoute: typeof MethodologyRoute
   MigrationRoute: typeof MigrationRoute
   ReleasesRoute: typeof ReleasesRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StudentRoute: typeof StudentRouteWithChildren
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  WorkSlugRoute: typeof WorkSlugRoute
+  WorkIndexRoute: typeof WorkIndexRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicV1CalculateRoute: typeof ApiPublicV1CalculateRoute
   ApiPublicV1HealthRoute: typeof ApiPublicV1HealthRoute
@@ -405,6 +457,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MigrationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/methodology': {
+      id: '/methodology'
+      path: '/methodology'
+      fullPath: '/methodology'
+      preLoaderRoute: typeof MethodologyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mcp-guide': {
       id: '/mcp-guide'
       path: '/mcp-guide'
@@ -440,11 +499,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDocsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/work/': {
+      id: '/work/'
+      path: '/work'
+      fullPath: '/work/'
+      preLoaderRoute: typeof WorkIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/work/$slug': {
+      id: '/work/$slug'
+      path: '/work/$slug'
+      fullPath: '/work/$slug'
+      preLoaderRoute: typeof WorkSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/student/advanced': {
@@ -575,11 +655,13 @@ const StudentRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   ApiDocsRoute: ApiDocsRoute,
   CompareRoute: CompareRoute,
   LifecycleRoute: LifecycleRoute,
   McpRoute: McpRoute,
   McpGuideRoute: McpGuideRoute,
+  MethodologyRoute: MethodologyRoute,
   MigrationRoute: MigrationRoute,
   ReleasesRoute: ReleasesRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
@@ -587,6 +669,8 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  WorkSlugRoute: WorkSlugRoute,
+  WorkIndexRoute: WorkIndexRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicV1CalculateRoute: ApiPublicV1CalculateRoute,
   ApiPublicV1HealthRoute: ApiPublicV1HealthRoute,
@@ -604,12 +688,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
