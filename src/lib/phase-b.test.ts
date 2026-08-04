@@ -33,4 +33,3 @@ describe("Phase B canonical comparison", () => {
     expect(run.data.reducedSub).toEqual(expect.any(Number));
   });
 });
-

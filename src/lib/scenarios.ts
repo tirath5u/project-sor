@@ -367,7 +367,8 @@ export const SCENARIOS: Scenario[] = [
     whatsSpecial:
       "Spring is a shorter term with a lower FT count. The proportional model weights each term by its effective enrolled credits, so Fall gets ~⅔ and Spring ~⅓.",
     summary: "Independent G2 · Need $10,500 · Fall 12 (FT 12) / Spring 6 (FT 6) · 18 AY FT.",
-    expected: "AY % = 100 %. Equal model would split 50 / 50; proportional (enrolled-credit-weighted) gives roughly ⅔ / ⅓.",
+    expected:
+      "AY % = 100 %. Equal model would split 50 / 50; proportional (enrolled-credit-weighted) gives roughly ⅔ / ⅓.",
     build: () =>
       mk(
         {

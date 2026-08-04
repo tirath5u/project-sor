@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defaultInputs } from "./sor";
-import {
-  CalculateV2InputSchema,
-  normalizeV2Input,
-  toV2Warnings,
-} from "./sor-v2-contract";
+import { CalculateV2InputSchema, normalizeV2Input, toV2Warnings } from "./sor-v2-contract";
 
 describe("V2 contract normalization", () => {
   it("preserves explicit structured fields and discloses fields not modeled by the engine", () => {
@@ -31,40 +27,54 @@ describe("V2 contract normalization", () => {
   });
 
   it("maps a positive verified AY override and preserves zero as the derived path", () => {
-    const positive = normalizeV2Input(CalculateV2InputSchema.parse({
-      ...defaultInputs(),
-      ayDenominatorOverride: 30,
-    }));
+    const positive = normalizeV2Input(
+      CalculateV2InputSchema.parse({
+        ...defaultInputs(),
+        ayDenominatorOverride: 30,
+      }),
+    );
     expect(positive.engineInput.ayFtCredits).toBe(30);
     expect(positive.engineInput.ayDenominatorVerified).toBe(true);
 
-    const zero = normalizeV2Input(CalculateV2InputSchema.parse({
-      ...defaultInputs(),
-      ayDenominatorOverride: 0,
-    }));
+    const zero = normalizeV2Input(
+      CalculateV2InputSchema.parse({
+        ...defaultInputs(),
+        ayDenominatorOverride: 0,
+      }),
+    );
     expect(zero.engineInput.ayFtCredits).toBe(defaultInputs().ayFtCredits);
     expect(zero.warnings[0]).toContain("AY denominator override is zero");
-    expect(zero.externalChecks).toContain("Verify the derived AY denominator against the institution's published academic-year definition.");
+    expect(zero.externalChecks).toContain(
+      "Verify the derived AY denominator against the institution's published academic-year definition.",
+    );
   });
 
   it("turns structured proration into the legacy engine flag and flags conflicts", () => {
-    const normalized = normalizeV2Input(CalculateV2InputSchema.parse({
-      ...defaultInputs(),
-      traditionalProrationApplies: false,
-      traditionalProrationStatus: "shortProgram",
-    }));
+    const normalized = normalizeV2Input(
+      CalculateV2InputSchema.parse({
+        ...defaultInputs(),
+        traditionalProrationApplies: false,
+        traditionalProrationStatus: "shortProgram",
+      }),
+    );
     expect(normalized.engineInput.traditionalProrationApplies).toBe(true);
-    expect(normalized.warnings).toContain("Traditional proration fields conflict. Resolve the structured status before relying on the result.");
+    expect(normalized.warnings).toContain(
+      "Traditional proration fields conflict. Resolve the structured status before relying on the result.",
+    );
   });
 
   it("does not broaden a non-denial Parent PLUS basis into the legacy denial uplift", () => {
-    const normalized = normalizeV2Input(CalculateV2InputSchema.parse({
-      ...defaultInputs(),
-      parentPlusEligibilityBasis: "documentedExceptionalCircumstances",
-      parentPlusAggregateUsed: 0,
-    }));
+    const normalized = normalizeV2Input(
+      CalculateV2InputSchema.parse({
+        ...defaultInputs(),
+        parentPlusEligibilityBasis: "documentedExceptionalCircumstances",
+        parentPlusAggregateUsed: 0,
+      }),
+    );
     expect(normalized.engineInput.parentPlusDenied).toBe(false);
-    expect(normalized.externalChecks).toContain("Parent PLUS aggregate room and exception treatment must be verified against NSLDS or the institution's authoritative record.");
+    expect(normalized.externalChecks).toContain(
+      "Parent PLUS aggregate room and exception treatment must be verified against NSLDS or the institution's authoritative record.",
+    );
   });
 
   it("emits stable warning objects without duplicating messages", () => {

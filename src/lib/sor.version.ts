@@ -24,8 +24,7 @@ export const DEPLOYMENT_MARKER: string = RELEASE_ID;
 
 export const SOURCE_COMMIT: string | null = null;
 
-export const SOURCE_COMMIT_STATUS =
-  "not_available_in_lovable_build" as const;
+export const SOURCE_COMMIT_STATUS = "not_available_in_lovable_build" as const;
 
 /**
  * Award-year support matrix. Surfaced in /health and /openapi so consumers

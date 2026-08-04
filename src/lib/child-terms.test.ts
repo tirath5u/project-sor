@@ -104,9 +104,7 @@ describe("V56 child allocation", () => {
       },
       { subUnsub: 1.057, gradPlus: 4.228 },
     );
-    const child1 = allocated.rows.find(
-      (row) => row.parentTerm === "term1" && row.childIndex === 0,
-    );
+    const child1 = allocated.rows.find((row) => row.parentTerm === "term1" && row.childIndex === 0);
     expect(child1?.scheduledGross.sub).toBe(100);
     expect(child1?.calculatedNet.sub).toBe(98.95);
   });

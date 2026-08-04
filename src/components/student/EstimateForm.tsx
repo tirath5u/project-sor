@@ -24,17 +24,19 @@ const STUDENT_GRADE_LABELS: Record<string, string> = {
   g10: "Professional (medical, dental, law)",
 };
 
-const GRADES_BY_YEAR: Record<StudentForm["awardYear"], Record<StudentForm["programLevel"], string[]>> =
-  {
-    "2026-27": {
-      undergraduate: ["g0", "g1", "g2", "g3", "g4", "g5"],
-      graduate: ["g8", "g10"],
-    },
-    "2025-26": {
-      undergraduate: ["g0", "g1", "g2", "g3", "g4", "g5"],
-      graduate: ["g6"],
-    },
-  };
+const GRADES_BY_YEAR: Record<
+  StudentForm["awardYear"],
+  Record<StudentForm["programLevel"], string[]>
+> = {
+  "2026-27": {
+    undergraduate: ["g0", "g1", "g2", "g3", "g4", "g5"],
+    graduate: ["g8", "g10"],
+  },
+  "2025-26": {
+    undergraduate: ["g0", "g1", "g2", "g3", "g4", "g5"],
+    graduate: ["g6"],
+  },
+};
 
 function Required() {
   return (

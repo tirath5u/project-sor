@@ -1,8 +1,18 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+  Outlet,
+  Link,
+  createRootRoute,
+  HeadContent,
+  Scripts,
+  useRouterState,
+} from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AccessGate } from "@/components/sor/AccessGate";
+import { SiteHeader } from "@/components/site/SiteHeader";
+import { SiteFooter } from "@/components/site/SiteFooter";
+import { cn } from "@/lib/utils";
 
 function NotFoundComponent() {
   return (
@@ -103,10 +113,20 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isStudent = pathname.startsWith("/student");
+
   return (
     <TooltipProvider delayDuration={200} skipDelayDuration={100}>
       <AccessGate>
-        <Outlet />
+        <div className={cn("flex min-h-screen flex-col", isStudent && "theme-student")}>
+          {/* One nav model everywhere; the student theme just recolors it. */}
+          <SiteHeader />
+          <div className="flex-1">
+            <Outlet />
+          </div>
+          <SiteFooter />
+        </div>
       </AccessGate>
     </TooltipProvider>
   );

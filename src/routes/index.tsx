@@ -33,6 +33,7 @@ import {
   type Dependency,
 } from "@/lib/loanLimits";
 import { SCENARIOS, type Scenario } from "@/lib/scenarios";
+import { ENGINE_VERSION, POLICY_YEAR, POLICY_SNAPSHOT_DATE } from "@/lib/sor.version";
 import { Section } from "@/components/sor/Section";
 import { NumberField } from "@/components/sor/NumberField";
 import { ResultsPanel } from "@/components/sor/ResultsPanel";
@@ -60,12 +61,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 export const Route = createFileRoute("/")({
   component: SORCalculatorPage,
   head: () => ({
-    meta: [
-      { property: "og:url", content: "https://sor.myproduct.life/" },
-    ],
-    links: [
-      { rel: "canonical", href: "https://sor.myproduct.life/" },
-    ],
+    meta: [{ property: "og:url", content: "https://sor.myproduct.life/" }],
+    links: [{ rel: "canonical", href: "https://sor.myproduct.life/" }],
   }),
 });
 
@@ -82,7 +79,8 @@ type VersionEntry = { version: string; headline: string; changes: string[] };
 const VERSION_HISTORY: VersionEntry[] = [
   {
     version: "v56",
-    headline: "V56 online parity, applicability guard, structured explanations, and student estimate",
+    headline:
+      "V56 online parity, applicability guard, structured explanations, and student estimate",
     changes: [
       "Corrected single-term Grad PLUS sizing so a loan-period COA gap is not halved twice.",
       "Added a traditional 685.203 proration guard so a valid undergraduate proration path suppresses a second SOR reduction.",
@@ -265,8 +263,8 @@ function SORCalculatorPage() {
       <a href="#results-region" className="skip-link">
         Skip to results
       </a>
-      {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 backdrop-blur">
+      {/* Page header (site-wide nav lives in the global header above this) */}
+      <header className="border-b border-border/60 bg-background/85">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -295,39 +293,7 @@ function SORCalculatorPage() {
               </p>
             </div>
           </div>
-          <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-[11px] text-primary">
-            <span className="font-semibold">Updated version V56:</span> the shared engine now
-            supports the V56 online parity contract, structured explanations, and a student-friendly
-            standard Fall and Spring estimate.
-          </div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1">
-              <Link
-                to="/lifecycle"
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition hover:bg-accent/10"
-              >
-                <GraduationCap className="h-4 w-4 text-primary" />
-                Lifecycle Tracker
-              </Link>
-              <InfoTip label="About Lifecycle Tracker">
-                Walk a single student through enrollment changes term-by-term across multiple
-                academic years.
-              </InfoTip>
-            </div>
-            <Link
-              to="/api-docs"
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition hover:bg-accent/10"
-            >
-              <BookOpen className="h-4 w-4 text-primary" />
-              API Docs
-            </Link>
-            <Link
-              to="/student"
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground transition hover:bg-accent/10"
-            >
-              <GraduationCap className="h-4 w-4 text-primary" />
-              Student estimate
-            </Link>
             <div className="hidden md:block">
               <div className="flex items-center gap-1">
                 <Select
@@ -380,6 +346,8 @@ function SORCalculatorPage() {
           </div>
         </div>
       </header>
+
+      <StartHereStrip />
 
       {/* Mobile scenario picker */}
       <div className="border-b border-border/60 bg-background/70 px-4 py-3 md:hidden">
@@ -1163,10 +1131,7 @@ function SORCalculatorPage() {
           className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]"
         >
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h2
-              id="version-history-heading"
-              className="text-sm font-semibold text-foreground"
-            >
+            <h2 id="version-history-heading" className="text-sm font-semibold text-foreground">
               Version history
             </h2>
             <span className="rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
@@ -1184,9 +1149,7 @@ function SORCalculatorPage() {
                     <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
                       {entry.version}
                     </span>
-                    <span className="text-sm font-medium text-foreground">
-                      {entry.headline}
-                    </span>
+                    <span className="text-sm font-medium text-foreground">{entry.headline}</span>
                   </div>
                   <span className="mt-0.5 text-[11px] text-muted-foreground group-open:hidden">
                     Show
@@ -1352,5 +1315,76 @@ function Segmented<T extends string>({
         })}
       </div>
     </div>
+  );
+}
+
+/**
+ * Orientation strip for the staff calculator. New visitors get one line of
+ * context plus the three jumps they actually need; daily users dismiss it and
+ * the choice is remembered locally.
+ */
+function StartHereStrip() {
+  const [open, setOpen] = React.useState(true);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    setOpen(window.localStorage.getItem("sor-start-here-dismissed") !== "1");
+  }, []);
+
+  function dismiss() {
+    setOpen(false);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sor-start-here-dismissed", "1");
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <section aria-label="Start here" className="border-b border-border/60 bg-primary/5">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-3xl">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+            Start here — financial aid staff
+          </p>
+          <p className="mt-1.5 text-sm leading-6 text-foreground/80">
+            Compute the OBBBA less-than-full-time Schedule of Reductions: the SOR percentage,
+            reduced Sub / Unsub / Grad PLUS annual pools, and per-term disbursements. Engine v
+            {ENGINE_VERSION}, policy year {POLICY_YEAR}, sources reviewed {POLICY_SNAPSHOT_DATE}.
+            Estimates only — never an award.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
+          <a
+            href="#results-region"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 transition hover:bg-accent/10"
+          >
+            <Calculator className="h-4 w-4 text-primary" />
+            Jump to results
+          </a>
+          <Link
+            to="/methodology"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 transition hover:bg-accent/10"
+          >
+            <BookOpen className="h-4 w-4 text-primary" />
+            Methodology &amp; sources
+          </Link>
+          <Link
+            to="/student"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-3 transition hover:bg-accent/10"
+          >
+            <GraduationCap className="h-4 w-4 text-primary" />
+            Student estimate
+          </Link>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="inline-flex h-9 items-center rounded-lg px-3 text-muted-foreground transition hover:bg-background"
+          >
+            Hide
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }

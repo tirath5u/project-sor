@@ -1,9 +1,5 @@
 import { ChevronDown, FunctionSquare } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { money, num, type StudentForm, type StudentEstimate } from "./shared";
 
 /**

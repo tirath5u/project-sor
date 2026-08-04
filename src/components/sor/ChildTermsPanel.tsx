@@ -27,12 +27,18 @@ const EMPTY_CHILD_TERMS: ChildTermsInput = {
 function childEntries(inputs: SORInputs, key: TermKey, count: number): ChildTermInput[] {
   const current = inputs.childTerms?.parents[key] ?? [];
   const parentCredits = inputs.terms[key]?.enrolledCredits ?? 0;
-  return Array.from({ length: count }, (_, index) =>
-    current[index] ?? { credits: count > 0 ? parentCredits / count : 0 },
+  return Array.from(
+    { length: count },
+    (_, index) => current[index] ?? { credits: count > 0 ? parentCredits / count : 0 },
   );
 }
 
-export function ChildTermsPanel({ inputs, results, activeTermKeys, onChange }: ChildTermsPanelProps) {
+export function ChildTermsPanel({
+  inputs,
+  results,
+  activeTermKeys,
+  onChange,
+}: ChildTermsPanelProps) {
   const config = inputs.childTerms ?? EMPTY_CHILD_TERMS;
   const count = config.count;
   const allocation = results.childAllocations;
@@ -66,10 +72,15 @@ export function ChildTermsPanel({ inputs, results, activeTermKeys, onChange }: C
         <div className="space-y-1.5">
           <div className="flex items-center gap-1.5">
             <div className="text-xs font-medium text-foreground">Number of Child Terms</div>
-            <InfoTip>None leaves the child-term ledger inactive. Select 1 through 4 to enable it for active parent terms.</InfoTip>
+            <InfoTip>
+              None leaves the child-term ledger inactive. Select 1 through 4 to enable it for active
+              parent terms.
+            </InfoTip>
           </div>
           <Select value={String(count)} onValueChange={setCount}>
-            <SelectTrigger className="h-10 rounded-lg bg-background"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-10 rounded-lg bg-background">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="0">None</SelectItem>
               <SelectItem value="1">1</SelectItem>
@@ -82,13 +93,22 @@ export function ChildTermsPanel({ inputs, results, activeTermKeys, onChange }: C
         <div className="space-y-1.5">
           <div className="flex items-center gap-1.5">
             <div className="text-xs font-medium text-foreground">Child Term Allocation Method</div>
-            <InfoTip>This affects Section K only. Annual SOR and parent-term payouts are calculated first.</InfoTip>
+            <InfoTip>
+              This affects Section K only. Annual SOR and parent-term payouts are calculated first.
+            </InfoTip>
           </div>
-          <Select value={config.allocationMethod} onValueChange={(value) => setMethod(value as ChildTermsInput["allocationMethod"])}>
-            <SelectTrigger className="h-10 rounded-lg bg-background"><SelectValue /></SelectTrigger>
+          <Select
+            value={config.allocationMethod}
+            onValueChange={(value) => setMethod(value as ChildTermsInput["allocationMethod"])}
+          >
+            <SelectTrigger className="h-10 rounded-lg bg-background">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="byChildCredits">By Child Credits</SelectItem>
-              <SelectItem value="equalAcrossActiveChildTerms">Equal Across Active Child Terms</SelectItem>
+              <SelectItem value="equalAcrossActiveChildTerms">
+                Equal Across Active Child Terms
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -96,12 +116,15 @@ export function ChildTermsPanel({ inputs, results, activeTermKeys, onChange }: C
 
       {count === 0 ? (
         <p className="mt-3 rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-          Child terms are inactive. Select a number above to show the child-credit and child-paid inputs.
+          Child terms are inactive. Select a number above to show the child-credit and child-paid
+          inputs.
         </p>
       ) : (
         <>
           <p className="mt-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
-            Enter actual credits for each child term. Blank child rows default to an even split of the parent enrolled credits. Child paid amounts are gross and remain locked; net display applies the fee percentages shown in the calculator.
+            Enter actual credits for each child term. Blank child rows default to an even split of
+            the parent enrolled credits. Child paid amounts are gross and remain locked; net display
+            applies the fee percentages shown in the calculator.
           </p>
           <div className="mt-4 space-y-4">
             {activeTermKeys.map((key) => {
@@ -133,27 +156,77 @@ export function ChildTermsPanel({ inputs, results, activeTermKeys, onChange }: C
                       {children.map((child, index) => {
                         const row = rows.find((item) => item.childIndex === index);
                         return (
-                          <tr key={`${key}-${index}`} className="border-t border-border/40 align-top">
+                          <tr
+                            key={`${key}-${index}`}
+                            className="border-t border-border/40 align-top"
+                          >
                             <td className="px-3 py-2 font-medium">Child {index + 1}</td>
                             <td className="w-28 px-3 py-2">
-                              <NumberField label="" value={child.credits} onChange={(value) => updateChild(key, index, { credits: value })} step={0.5} inputClassName="h-8" />
+                              <NumberField
+                                label=""
+                                value={child.credits}
+                                onChange={(value) => updateChild(key, index, { credits: value })}
+                                step={0.5}
+                                inputClassName="h-8"
+                              />
                             </td>
                             <td className="w-32 px-3 py-2">
-                              <NumberField label="" value={child.paidGross?.sub ?? 0} onChange={(value) => updateChild(key, index, { paidGross: { ...child.paidGross, sub: value } })} inputClassName="h-8" />
+                              <NumberField
+                                label=""
+                                value={child.paidGross?.sub ?? 0}
+                                onChange={(value) =>
+                                  updateChild(key, index, {
+                                    paidGross: { ...child.paidGross, sub: value },
+                                  })
+                                }
+                                inputClassName="h-8"
+                              />
                             </td>
                             <td className="w-32 px-3 py-2">
-                              <NumberField label="" value={child.paidGross?.unsub ?? 0} onChange={(value) => updateChild(key, index, { paidGross: { ...child.paidGross, unsub: value } })} inputClassName="h-8" />
+                              <NumberField
+                                label=""
+                                value={child.paidGross?.unsub ?? 0}
+                                onChange={(value) =>
+                                  updateChild(key, index, {
+                                    paidGross: { ...child.paidGross, unsub: value },
+                                  })
+                                }
+                                inputClassName="h-8"
+                              />
                             </td>
                             <td className="w-32 px-3 py-2">
-                              <NumberField label="" value={child.paidGross?.gradPlus ?? 0} onChange={(value) => updateChild(key, index, { paidGross: { ...child.paidGross, gradPlus: value } })} inputClassName="h-8" />
+                              <NumberField
+                                label=""
+                                value={child.paidGross?.gradPlus ?? 0}
+                                onChange={(value) =>
+                                  updateChild(key, index, {
+                                    paidGross: { ...child.paidGross, gradPlus: value },
+                                  })
+                                }
+                                inputClassName="h-8"
+                              />
                             </td>
-                            <td className="px-3 py-2 font-semibold">{fmtCurrency(row?.scheduledGross.sub ?? 0)}</td>
-                            <td className="px-3 py-2 font-semibold">{fmtCurrency(row?.scheduledGross.unsub ?? 0)}</td>
-                            <td className="px-3 py-2 font-semibold">{fmtCurrency(row?.scheduledGross.gradPlus ?? 0)}</td>
-                            <td className="px-3 py-2 font-semibold">{fmtCurrency(row?.calculatedNet.sub ?? 0)}</td>
-                            <td className="px-3 py-2 font-semibold">{fmtCurrency(row?.calculatedNet.unsub ?? 0)}</td>
-                            <td className="px-3 py-2 font-semibold">{fmtCurrency(row?.calculatedNet.gradPlus ?? 0)}</td>
-                            <td className="px-3 py-2 text-muted-foreground">{row?.review ?? "Remaining payable"}</td>
+                            <td className="px-3 py-2 font-semibold">
+                              {fmtCurrency(row?.scheduledGross.sub ?? 0)}
+                            </td>
+                            <td className="px-3 py-2 font-semibold">
+                              {fmtCurrency(row?.scheduledGross.unsub ?? 0)}
+                            </td>
+                            <td className="px-3 py-2 font-semibold">
+                              {fmtCurrency(row?.scheduledGross.gradPlus ?? 0)}
+                            </td>
+                            <td className="px-3 py-2 font-semibold">
+                              {fmtCurrency(row?.calculatedNet.sub ?? 0)}
+                            </td>
+                            <td className="px-3 py-2 font-semibold">
+                              {fmtCurrency(row?.calculatedNet.unsub ?? 0)}
+                            </td>
+                            <td className="px-3 py-2 font-semibold">
+                              {fmtCurrency(row?.calculatedNet.gradPlus ?? 0)}
+                            </td>
+                            <td className="px-3 py-2 text-muted-foreground">
+                              {row?.review ?? "Remaining payable"}
+                            </td>
                           </tr>
                         );
                       })}

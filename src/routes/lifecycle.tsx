@@ -25,8 +25,7 @@ export const Route = createFileRoute("/lifecycle")({
       { title: "Aid Lifecycle Tracker - SOR" },
       {
         name: "description",
-        content:
-          "Track undergraduate Title IV Sub/Unsub disbursements against aggregate caps.",
+        content: "Track undergraduate Title IV Sub/Unsub disbursements against aggregate caps.",
       },
       { property: "og:title", content: "Aid Lifecycle Tracker - SOR" },
       {
@@ -35,9 +34,7 @@ export const Route = createFileRoute("/lifecycle")({
       },
       { property: "og:url", content: "https://sor.myproduct.life/lifecycle" },
     ],
-    links: [
-      { rel: "canonical", href: "https://sor.myproduct.life/lifecycle" },
-    ],
+    links: [{ rel: "canonical", href: "https://sor.myproduct.life/lifecycle" }],
   }),
   component: LifecyclePage,
 });
@@ -239,9 +236,9 @@ function LifecyclePage() {
         </div>
 
         <p className="rounded-xl border border-border bg-card px-4 py-3 text-[11px] text-muted-foreground">
-          This tracker is limited to undergraduate Sub/Unsub aggregate caps. Graduate,
-          professional, Grad PLUS, Parent PLUS, and lifetime maximum checks require NSLDS remaining
-          limit data and are outside this public SOR tool.
+          This tracker is limited to undergraduate Sub/Unsub aggregate caps. Graduate, professional,
+          Grad PLUS, Parent PLUS, and lifetime maximum checks require NSLDS remaining limit data and
+          are outside this public SOR tool.
         </p>
       </main>
     </div>

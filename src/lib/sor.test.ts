@@ -6,12 +6,7 @@
 import { describe, it, expect } from "vitest";
 import { calculateSOR, defaultInputs, type TermKey } from "./sor";
 import { SCENARIOS } from "./scenarios";
-import {
-  DEPLOYMENT_MARKER,
-  RELEASE_ID,
-  SOURCE_COMMIT,
-  SOURCE_COMMIT_STATUS,
-} from "./sor.version";
+import { DEPLOYMENT_MARKER, RELEASE_ID, SOURCE_COMMIT, SOURCE_COMMIT_STATUS } from "./sor.version";
 
 describe("SOR engine - scenario regression", () => {
   for (const s of SCENARIOS) {
@@ -136,7 +131,9 @@ describe("SOR engine - invariants", () => {
     expect(t3.finalSub).toBe(613);
     expect(r.totalFinalSub).toBe(1840);
     expect(r.effectiveDistributionModel).toBe("equal");
-    expect(r.warnings.some((warning) => warning.includes("Remaining allocation uses Equal"))).toBe(true);
+    expect(r.warnings.some((warning) => warning.includes("Remaining allocation uses Equal"))).toBe(
+      true,
+    );
   });
 
   it("annual Sub never exceeds the reduced annual cap", () => {
@@ -458,7 +455,11 @@ describe("SOR engine - v19 Grad PLUS bucket", () => {
   });
 
   it("sizes single-term Grad PLUS from the single-term COA gap without a second half-year reduction", () => {
-    const inp = gradTwoTerm({ loanPeriodScope: "singleTerm", loanLimitException: true, programLevel: "graduate" });
+    const inp = gradTwoTerm({
+      loanPeriodScope: "singleTerm",
+      loanLimitException: true,
+      programLevel: "graduate",
+    });
     inp.numStandardTerms = 1;
     inp.ayFtCredits = 9;
     inp.coa = 19000;

@@ -1,7 +1,6 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
-import { StudentHeader } from "@/components/student/StudentHeader";
 import { StudentHero } from "@/components/student/StudentHero";
 import { EstimateForm } from "@/components/student/EstimateForm";
 import { EstimateResult } from "@/components/student/EstimateResult";
@@ -81,7 +80,8 @@ function StudentEstimatePage() {
         }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error?.message || "The estimate could not be completed.");
+      if (!response.ok)
+        throw new Error(body.error?.message || "The estimate could not be completed.");
       setResult(body);
     } catch (err) {
       setError(err instanceof Error ? err.message : "The estimate could not be completed.");
@@ -101,8 +101,7 @@ function StudentEstimatePage() {
   const estimate = result?.estimate;
 
   return (
-    <div className="theme-student min-h-screen">
-      <StudentHeader active="/student" />
+    <div>
       <main id="main">
         <StudentHero />
         <div className="mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6">

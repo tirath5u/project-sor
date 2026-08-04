@@ -64,7 +64,10 @@ function numberOrNull(value: unknown): number | null {
 }
 
 export interface V2Comparison {
-  fields: Record<NumericResultKey, { left: number | null; right: number | null; delta: number | null }>;
+  fields: Record<
+    NumericResultKey,
+    { left: number | null; right: number | null; delta: number | null }
+  >;
   warningIdsAdded: string[];
   warningIdsRemoved: string[];
   authoritativeChanged: boolean;
@@ -76,7 +79,14 @@ export function compareCanonicalRuns(left: CanonicalV2Run, right: CanonicalV2Run
     NUMERIC_RESULT_KEYS.map((key) => {
       const leftValue = numberOrNull(left.data[key]);
       const rightValue = numberOrNull(right.data[key]);
-      return [key, { left: leftValue, right: rightValue, delta: leftValue === null || rightValue === null ? null : rightValue - leftValue }];
+      return [
+        key,
+        {
+          left: leftValue,
+          right: rightValue,
+          delta: leftValue === null || rightValue === null ? null : rightValue - leftValue,
+        },
+      ];
     }),
   ) as V2Comparison["fields"];
   const leftWarnings = new Set(left.warnings.map((warning) => warning.id));

@@ -64,7 +64,12 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Does this reduce my parents' Parent PLUS loan?",
-    a: <>No. The Schedule of Reductions applies to Subsidized, Unsubsidized, and Grad PLUS. Parent PLUS is not reduced by this rule.</>,
+    a: (
+      <>
+        No. The Schedule of Reductions applies to Subsidized, Unsubsidized, and Grad PLUS. Parent
+        PLUS is not reduced by this rule.
+      </>
+    ),
   },
   {
     q: "I heard some students are grandfathered. Is that me?",
@@ -108,10 +113,16 @@ export function StudentFaq() {
           Questions students usually ask
         </h2>
       </div>
-      <Accordion type="single" collapsible className="mt-5 rounded-2xl border border-border bg-card px-5 sm:px-6">
+      <Accordion
+        type="single"
+        collapsible
+        className="mt-5 rounded-2xl border border-border bg-card px-5 sm:px-6"
+      >
         {FAQ.map((item, index) => (
           <AccordionItem key={item.q} value={`faq-${index}`}>
-            <AccordionTrigger className="text-left text-base font-medium">{item.q}</AccordionTrigger>
+            <AccordionTrigger className="text-left text-base font-medium">
+              {item.q}
+            </AccordionTrigger>
             <AccordionContent className="text-sm leading-7 text-muted-foreground">
               {item.a}
             </AccordionContent>
