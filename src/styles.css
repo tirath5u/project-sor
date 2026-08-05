@@ -32,6 +32,10 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-complement: var(--accent-complement);
+  --color-accent-complement-foreground: var(--accent-complement-foreground);
+  --color-accent-complement-soft: var(--accent-complement-soft);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
@@ -234,6 +238,12 @@
   --muted-foreground: oklch(0.554 0.046 257.417);
   --accent: oklch(0.972 0.006 20);
   --accent-foreground: oklch(0.4 0.115 18);
+  /* warm gray, not a pink wash */
+  --accent-soft: oklch(0.96 0.008 17);
+  /* orange - the one complement, no navy, no pink */
+  --accent-complement: oklch(0.55 0.14 50);
+  --accent-complement-foreground: oklch(0.984 0.003 247.858);
+  --accent-complement-soft: oklch(0.93 0.04 55);
   --success: oklch(0.55 0.13 155);
   --success-foreground: oklch(0.99 0.005 150);
   --warning: oklch(0.72 0.15 70);
@@ -281,4 +291,82 @@
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 14%);
   --ring: oklch(0.66 0.14 20);
+}
+
+/*
+ * Motion utilities shared with the myproduct.life hub design: traveling arrow,
+ * breathing node, lifting card, and the live pulse dot.
+ */
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes nodeGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--pulse-color, var(--accent-soft));
+  }
+}
+@keyframes arrowMove {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  14% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% - 9px);
+    opacity: 0;
+  }
+}
+
+@utility flow-track {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  min-width: 24px;
+}
+
+@utility flow-arrowhead {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 9px solid var(--flow-color, var(--accent));
+  transform: translateY(-50%);
+  animation: arrowMove 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.35s);
+}
+
+@utility flow-node {
+  animation: nodeGlow 3.2s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.35s);
+}
+
+@utility hover-tile {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px -8px oklch(0.129 0.042 264.695 / 0.18);
+    background-color: var(--muted);
+  }
 }
