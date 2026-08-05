@@ -292,3 +292,81 @@
   --input: oklch(1 0 0 / 14%);
   --ring: oklch(0.66 0.14 20);
 }
+
+/*
+ * Motion utilities shared with the myproduct.life hub design: traveling arrow,
+ * breathing node, lifting card, and the live pulse dot.
+ */
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes nodeGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--pulse-color, var(--accent-soft));
+  }
+}
+@keyframes arrowMove {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  14% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% - 9px);
+    opacity: 0;
+  }
+}
+
+@utility flow-track {
+  position: relative;
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  min-width: 24px;
+}
+
+@utility flow-arrowhead {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 9px solid var(--flow-color, var(--accent));
+  transform: translateY(-50%);
+  animation: arrowMove 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.35s);
+}
+
+@utility flow-node {
+  animation: nodeGlow 3.2s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.35s);
+}
+
+@utility hover-tile {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px -8px oklch(0.129 0.042 264.695 / 0.18);
+    background-color: var(--muted);
+  }
+}
