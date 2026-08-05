@@ -4,7 +4,6 @@ import {
   createRootRoute,
   HeadContent,
   Scripts,
-  useRouterState,
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
@@ -12,7 +11,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AccessGate } from "@/components/sor/AccessGate";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
-import { cn } from "@/lib/utils";
 
 function NotFoundComponent() {
   return (
