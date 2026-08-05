@@ -32,6 +32,10 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-complement: var(--accent-complement);
+  --color-accent-complement-foreground: var(--accent-complement-foreground);
+  --color-accent-complement-soft: var(--accent-complement-soft);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
@@ -234,6 +238,12 @@
   --muted-foreground: oklch(0.554 0.046 257.417);
   --accent: oklch(0.972 0.006 20);
   --accent-foreground: oklch(0.4 0.115 18);
+  /* warm gray, not a pink wash */
+  --accent-soft: oklch(0.96 0.008 17);
+  /* orange - the one complement, no navy, no pink */
+  --accent-complement: oklch(0.55 0.14 50);
+  --accent-complement-foreground: oklch(0.984 0.003 247.858);
+  --accent-complement-soft: oklch(0.93 0.04 55);
   --success: oklch(0.55 0.13 155);
   --success-foreground: oklch(0.99 0.005 150);
   --warning: oklch(0.72 0.15 70);
