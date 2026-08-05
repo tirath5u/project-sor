@@ -111,15 +111,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
-  // The staff calculator at "/" keeps its long-standing palette; every other
-  // route wears the myproduct.life brand theme.
-  const isBrand = pathname !== "/";
-
   return (
     <TooltipProvider delayDuration={200} skipDelayDuration={100}>
       <AccessGate>
-        <div className={cn("flex min-h-screen flex-col", isBrand && "theme-brand")}>
+        {/* One maroon palette and type system on every route, including "/". */}
+        <div className="theme-brand flex min-h-screen flex-col">
           {/* One nav model everywhere; the brand theme just recolors it. */}
           <SiteHeader />
           <div className="flex-1">

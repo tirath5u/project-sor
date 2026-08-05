@@ -21,7 +21,7 @@ interface ExportArgs {
  */
 type DocWithAutoTable = jsPDF & { lastAutoTable: { finalY: number } };
 
-const COLOR_PRIMARY: [number, number, number] = [75, 46, 131]; // #4B2E83 deep purple
+const COLOR_PRIMARY: [number, number, number] = [122, 31, 46]; // #7A1F2E maroon
 const COLOR_INK: [number, number, number] = [33, 25, 56];
 const COLOR_MUTED: [number, number, number] = [110, 105, 130];
 const COLOR_DIVIDER: [number, number, number] = [225, 222, 235];
