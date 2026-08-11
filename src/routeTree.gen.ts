@@ -23,6 +23,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkIndexRouteImport } from './routes/work.index'
 import { Route as WorkSlugRouteImport } from './routes/work.$slug'
+import { Route as StudentLoanLimitExceptionRouteImport } from './routes/student/loan-limit-exception'
 import { Route as StudentAdvancedRouteImport } from './routes/student/advanced'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -32,6 +33,7 @@ import { Route as ApiPublicV2StudentAdvancedRouteImport } from './routes/api/pub
 import { Route as ApiPublicV2ScenariosRouteImport } from './routes/api/public/v2/scenarios'
 import { Route as ApiPublicV2OpenapiDotjsonRouteImport } from './routes/api/public/v2/openapi[.]json'
 import { Route as ApiPublicV2MigrationCompareRouteImport } from './routes/api/public/v2/migration-compare'
+import { Route as ApiPublicV2LoanLimitExceptionRouteImport } from './routes/api/public/v2/loan-limit-exception'
 import { Route as ApiPublicV2HealthRouteImport } from './routes/api/public/v2/health'
 import { Route as ApiPublicV2CompareRouteImport } from './routes/api/public/v2/compare'
 import { Route as ApiPublicV2CalculateRouteImport } from './routes/api/public/v2/calculate'
@@ -110,6 +112,12 @@ const WorkSlugRoute = WorkSlugRouteImport.update({
   path: '/work/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentLoanLimitExceptionRoute =
+  StudentLoanLimitExceptionRouteImport.update({
+    id: '/loan-limit-exception',
+    path: '/loan-limit-exception',
+    getParentRoute: () => StudentRoute,
+  } as any)
 const StudentAdvancedRoute = StudentAdvancedRouteImport.update({
   id: '/advanced',
   path: '/advanced',
@@ -160,6 +168,12 @@ const ApiPublicV2MigrationCompareRoute =
   ApiPublicV2MigrationCompareRouteImport.update({
     id: '/api/public/v2/migration-compare',
     path: '/api/public/v2/migration-compare',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV2LoanLimitExceptionRoute =
+  ApiPublicV2LoanLimitExceptionRouteImport.update({
+    id: '/api/public/v2/loan-limit-exception',
+    path: '/api/public/v2/loan-limit-exception',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicV2HealthRoute = ApiPublicV2HealthRouteImport.update({
@@ -215,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
+  '/student/loan-limit-exception': typeof StudentLoanLimitExceptionRoute
   '/work/$slug': typeof WorkSlugRoute
   '/work/': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -225,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v2/calculate': typeof ApiPublicV2CalculateRoute
   '/api/public/v2/compare': typeof ApiPublicV2CompareRoute
   '/api/public/v2/health': typeof ApiPublicV2HealthRoute
+  '/api/public/v2/loan-limit-exception': typeof ApiPublicV2LoanLimitExceptionRoute
   '/api/public/v2/migration-compare': typeof ApiPublicV2MigrationCompareRoute
   '/api/public/v2/openapi.json': typeof ApiPublicV2OpenapiDotjsonRoute
   '/api/public/v2/scenarios': typeof ApiPublicV2ScenariosRoute
@@ -247,6 +263,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
+  '/student/loan-limit-exception': typeof StudentLoanLimitExceptionRoute
   '/work/$slug': typeof WorkSlugRoute
   '/work': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -257,6 +274,7 @@ export interface FileRoutesByTo {
   '/api/public/v2/calculate': typeof ApiPublicV2CalculateRoute
   '/api/public/v2/compare': typeof ApiPublicV2CompareRoute
   '/api/public/v2/health': typeof ApiPublicV2HealthRoute
+  '/api/public/v2/loan-limit-exception': typeof ApiPublicV2LoanLimitExceptionRoute
   '/api/public/v2/migration-compare': typeof ApiPublicV2MigrationCompareRoute
   '/api/public/v2/openapi.json': typeof ApiPublicV2OpenapiDotjsonRoute
   '/api/public/v2/scenarios': typeof ApiPublicV2ScenariosRoute
@@ -280,6 +298,7 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
+  '/student/loan-limit-exception': typeof StudentLoanLimitExceptionRoute
   '/work/$slug': typeof WorkSlugRoute
   '/work/': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -290,6 +309,7 @@ export interface FileRoutesById {
   '/api/public/v2/calculate': typeof ApiPublicV2CalculateRoute
   '/api/public/v2/compare': typeof ApiPublicV2CompareRoute
   '/api/public/v2/health': typeof ApiPublicV2HealthRoute
+  '/api/public/v2/loan-limit-exception': typeof ApiPublicV2LoanLimitExceptionRoute
   '/api/public/v2/migration-compare': typeof ApiPublicV2MigrationCompareRoute
   '/api/public/v2/openapi.json': typeof ApiPublicV2OpenapiDotjsonRoute
   '/api/public/v2/scenarios': typeof ApiPublicV2ScenariosRoute
@@ -314,6 +334,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
+    | '/student/loan-limit-exception'
     | '/work/$slug'
     | '/work/'
     | '/.mcp/invoke-tool/$tool'
@@ -324,6 +345,7 @@ export interface FileRouteTypes {
     | '/api/public/v2/calculate'
     | '/api/public/v2/compare'
     | '/api/public/v2/health'
+    | '/api/public/v2/loan-limit-exception'
     | '/api/public/v2/migration-compare'
     | '/api/public/v2/openapi.json'
     | '/api/public/v2/scenarios'
@@ -346,6 +368,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
+    | '/student/loan-limit-exception'
     | '/work/$slug'
     | '/work'
     | '/.mcp/invoke-tool/$tool'
@@ -356,6 +379,7 @@ export interface FileRouteTypes {
     | '/api/public/v2/calculate'
     | '/api/public/v2/compare'
     | '/api/public/v2/health'
+    | '/api/public/v2/loan-limit-exception'
     | '/api/public/v2/migration-compare'
     | '/api/public/v2/openapi.json'
     | '/api/public/v2/scenarios'
@@ -378,6 +402,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
+    | '/student/loan-limit-exception'
     | '/work/$slug'
     | '/work/'
     | '/.mcp/invoke-tool/$tool'
@@ -388,6 +413,7 @@ export interface FileRouteTypes {
     | '/api/public/v2/calculate'
     | '/api/public/v2/compare'
     | '/api/public/v2/health'
+    | '/api/public/v2/loan-limit-exception'
     | '/api/public/v2/migration-compare'
     | '/api/public/v2/openapi.json'
     | '/api/public/v2/scenarios'
@@ -420,6 +446,7 @@ export interface RootRouteChildren {
   ApiPublicV2CalculateRoute: typeof ApiPublicV2CalculateRoute
   ApiPublicV2CompareRoute: typeof ApiPublicV2CompareRoute
   ApiPublicV2HealthRoute: typeof ApiPublicV2HealthRoute
+  ApiPublicV2LoanLimitExceptionRoute: typeof ApiPublicV2LoanLimitExceptionRoute
   ApiPublicV2MigrationCompareRoute: typeof ApiPublicV2MigrationCompareRoute
   ApiPublicV2OpenapiDotjsonRoute: typeof ApiPublicV2OpenapiDotjsonRoute
   ApiPublicV2ScenariosRoute: typeof ApiPublicV2ScenariosRoute
@@ -527,6 +554,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/loan-limit-exception': {
+      id: '/student/loan-limit-exception'
+      path: '/loan-limit-exception'
+      fullPath: '/student/loan-limit-exception'
+      preLoaderRoute: typeof StudentLoanLimitExceptionRouteImport
+      parentRoute: typeof StudentRoute
+    }
     '/student/advanced': {
       id: '/student/advanced'
       path: '/advanced'
@@ -590,6 +624,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV2MigrationCompareRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v2/loan-limit-exception': {
+      id: '/api/public/v2/loan-limit-exception'
+      path: '/api/public/v2/loan-limit-exception'
+      fullPath: '/api/public/v2/loan-limit-exception'
+      preLoaderRoute: typeof ApiPublicV2LoanLimitExceptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v2/health': {
       id: '/api/public/v2/health'
       path: '/api/public/v2/health'
@@ -644,10 +685,12 @@ declare module '@tanstack/react-router' {
 
 interface StudentRouteChildren {
   StudentAdvancedRoute: typeof StudentAdvancedRoute
+  StudentLoanLimitExceptionRoute: typeof StudentLoanLimitExceptionRoute
 }
 
 const StudentRouteChildren: StudentRouteChildren = {
   StudentAdvancedRoute: StudentAdvancedRoute,
+  StudentLoanLimitExceptionRoute: StudentLoanLimitExceptionRoute,
 }
 
 const StudentRouteWithChildren =
@@ -679,6 +722,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV2CalculateRoute: ApiPublicV2CalculateRoute,
   ApiPublicV2CompareRoute: ApiPublicV2CompareRoute,
   ApiPublicV2HealthRoute: ApiPublicV2HealthRoute,
+  ApiPublicV2LoanLimitExceptionRoute: ApiPublicV2LoanLimitExceptionRoute,
   ApiPublicV2MigrationCompareRoute: ApiPublicV2MigrationCompareRoute,
   ApiPublicV2OpenapiDotjsonRoute: ApiPublicV2OpenapiDotjsonRoute,
   ApiPublicV2ScenariosRoute: ApiPublicV2ScenariosRoute,

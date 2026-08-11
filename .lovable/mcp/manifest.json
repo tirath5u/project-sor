@@ -8,7 +8,7 @@
   "mcp": {
     "server": {
       "name": "project-sor-mcp",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "title": "Project SOR: Schedule of Reductions"
     },
     "tools": [
@@ -1603,6 +1603,101 @@
           "required": [
             "input"
           ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "check_loan_limit_exception",
+        "title": "Check whether a Loan Limit Exception needs school review",
+        "description": "Triage a student's self-reported program-continuity facts against the 2026-27 interim exception conditions. Returns one of school_confirmation_needed, likely_not_available_from_answers, insufficient_information, or school_record_conflict, with the external checks and a copyable aid-office question. This never returns eligible, grandfathered, or approved, never determines eligibility, and never promises a disbursement. Ask any missing question one at a time using the returned nextQuestion. Stateless and public.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "programContinuity": {
+              "type": "object",
+              "properties": {
+                "seekingGradProfBorrowing": {
+                  "type": "string",
+                  "enum": [
+                    "yes",
+                    "no",
+                    "unknown"
+                  ]
+                },
+                "enrolledOnJune30": {
+                  "type": "string",
+                  "enum": [
+                    "yes",
+                    "no",
+                    "unknown"
+                  ]
+                },
+                "priorDirectLoanBeforeJuly1": {
+                  "type": "string",
+                  "enum": [
+                    "yes",
+                    "no",
+                    "unknown"
+                  ]
+                },
+                "statusSinceJune30": {
+                  "type": "string",
+                  "enum": [
+                    "still_enrolled",
+                    "withdrew",
+                    "changed_school",
+                    "changed_degree_or_credential",
+                    "approved_leave_of_absence",
+                    "unsure_how_school_reported",
+                    "unknown"
+                  ]
+                },
+                "schoolChangedProgramOrEndDate": {
+                  "type": "string",
+                  "enum": [
+                    "no",
+                    "yes_program_or_credential",
+                    "yes_end_date_only",
+                    "unknown"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "loanLimitExceptionEvidence": {
+              "type": "string",
+              "enum": [
+                "student_reported_y",
+                "student_reported_n",
+                "unknown",
+                "school_record_conflict"
+              ]
+            },
+            "professionalClassification": {
+              "type": "string",
+              "enum": [
+                "school_confirmed",
+                "not_confirmed",
+                "unknown"
+              ]
+            },
+            "schoolConfirmedLoanLimitException": {
+              "type": "boolean"
+            },
+            "hasSchoolProvidedCoaAndOfa": {
+              "type": "boolean"
+            },
+            "studentDisclosureAcknowledged": {
+              "type": "boolean"
+            }
+          },
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
