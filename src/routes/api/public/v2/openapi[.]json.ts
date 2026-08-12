@@ -188,6 +188,32 @@ const spec = {
         },
       },
     },
+    "/api/public/v2/loan-limit-exception": {
+      post: {
+        summary: "Triage a student's Loan Limit Exception facts",
+        description:
+          "Classifies self-reported program-continuity facts into one of four review states: school_confirmation_needed, likely_not_available_from_answers, insufficient_information, or school_record_conflict. It never returns an eligibility determination, never returns eligible or grandfathered or approved, and never promises a disbursement. Self-reported facts are used for triage only and are never mapped onto the authoritative loanLimitException calculation input. Stateless, and it accepts no identifying data.",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/LoanLimitExceptionRequest" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Loan Limit Exception triage result",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/LoanLimitExceptionResponse" },
+              },
+            },
+          },
+          "422": { description: "Invalid or undocumented triage inputs" },
+        },
+      },
+    },
     "/api/public/v2/migration-compare": {
       post: {
         summary: "Compare an approved V55 and V56 fixture",
@@ -446,6 +472,102 @@ const spec = {
           estimate: { type: "object", additionalProperties: true },
           contract: { type: "object", additionalProperties: true },
           disclaimer: { type: "string" },
+          meta: { type: "object", additionalProperties: true },
+        },
+      },
+      LoanLimitExceptionRequest: {
+        type: "object",
+        additionalProperties: false,
+        description:
+          "Self-reported triage facts only. No identifying data, free text, FAFSA data, or credentials are accepted.",
+        properties: {
+          programContinuity: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              seekingGradProfBorrowing: { type: "string", enum: ["yes", "no", "unknown"] },
+              enrolledOnJune30: { type: "string", enum: ["yes", "no", "unknown"] },
+              priorDirectLoanBeforeJuly1: { type: "string", enum: ["yes", "no", "unknown"] },
+              statusSinceJune30: {
+                type: "string",
+                enum: [
+                  "still_enrolled",
+                  "withdrew",
+                  "changed_school",
+                  "changed_degree_or_credential",
+                  "approved_leave_of_absence",
+                  "unsure_how_school_reported",
+                  "unknown",
+                ],
+              },
+              schoolChangedProgramOrEndDate: {
+                type: "string",
+                enum: ["no", "yes_program_or_credential", "yes_end_date_only", "unknown"],
+              },
+            },
+          },
+          loanLimitExceptionEvidence: {
+            type: "string",
+            enum: ["student_reported_y", "student_reported_n", "unknown", "school_record_conflict"],
+          },
+          professionalClassification: {
+            type: "string",
+            enum: ["school_confirmed", "not_confirmed", "unknown"],
+          },
+          schoolConfirmedLoanLimitException: { type: "boolean" },
+          hasSchoolProvidedCoaAndOfa: { type: "boolean" },
+          studentDisclosureAcknowledged: { type: "boolean" },
+        },
+      },
+      LoanLimitExceptionResponse: {
+        type: "object",
+        required: [
+          "status",
+          "audience",
+          "isDetermination",
+          "ruleIds",
+          "externalChecks",
+          "aidOfficeQuestion",
+          "disclaimer",
+          "sources",
+          "meta",
+        ],
+        properties: {
+          status: {
+            type: "string",
+            enum: [
+              "school_confirmation_needed",
+              "likely_not_available_from_answers",
+              "insufficient_information",
+              "school_record_conflict",
+            ],
+          },
+          audience: { type: "string", enum: ["student-loan-limit-exception"] },
+          headline: { type: "string" },
+          isDetermination: { type: "boolean", enum: [false] },
+          ruleIds: { type: "array", items: { type: "string" } },
+          reasons: { type: "array", items: { type: "string" } },
+          gradPlus: {
+            type: "object",
+            additionalProperties: true,
+            properties: {
+              path: {
+                type: "string",
+                enum: ["outside_modeled_path", "school_review_estimate", "modeled_estimate"],
+              },
+              explanation: { type: "string" },
+              authoritative: { type: "boolean", enum: [false] },
+            },
+          },
+          professionalLimitEstimate: { type: "string", enum: ["available", "blocked"] },
+          missingFacts: { type: "array", items: { type: "string" } },
+          nextQuestion: { type: ["object", "null"], additionalProperties: true },
+          externalChecks: { type: "array", items: { type: "string" } },
+          aidOfficeQuestion: { type: "string" },
+          delayGuidance: { type: "string" },
+          disclosureAcknowledged: { type: "boolean" },
+          disclaimer: { type: "string" },
+          sources: { type: "array", items: { type: "string" } },
           meta: { type: "object", additionalProperties: true },
         },
       },

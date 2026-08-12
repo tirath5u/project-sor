@@ -1,5 +1,12 @@
 import { z } from "zod";
 import { CalculateInputSchema, type CalculateInput } from "./sor.schema";
+import {
+  LoanLimitExceptionEvidenceSchema,
+  ProfessionalClassificationSchema,
+  ProgramContinuitySchema,
+  triageLoanLimitException,
+  type LleTriageResult,
+} from "./student-lle";
 
 export const ParentPlusEligibilityBasisSchema = z.enum([
   "none",
@@ -40,6 +47,13 @@ export const V2StructuredFieldsSchema = z
     remainingAggregateUnsub: NullableMoneySchema,
     remainingAggregateCombined: NullableMoneySchema,
     coaScope: z.enum(["academicYear", "singleTerm"]).optional(),
+    // Student-facing exception triage inputs. These are self-reported review
+    // signals. They never become the authoritative `loanLimitException` engine
+    // input on their own.
+    loanLimitExceptionEvidence: LoanLimitExceptionEvidenceSchema.optional(),
+    programContinuity: ProgramContinuitySchema.optional(),
+    professionalClassification: ProfessionalClassificationSchema.optional(),
+    studentDisclosureAcknowledged: z.boolean().optional(),
   })
   .strict();
 
@@ -61,6 +75,11 @@ export interface V2Normalization {
   externalChecks: string[];
   warnings: string[];
   blocked: boolean;
+  /**
+   * Present only when the caller supplied student triage inputs. Consumers must
+   * render this instead of inferring eligibility from the numeric result.
+   */
+  loanLimitExceptionTriage?: LleTriageResult;
 }
 
 function addExternal(checks: string[], check: string) {
@@ -88,6 +107,10 @@ export function normalizeV2Input(input: CalculateV2Input): V2Normalization {
     remainingAggregateUnsub,
     remainingAggregateCombined,
     coaScope,
+    loanLimitExceptionEvidence,
+    programContinuity,
+    professionalClassification,
+    studentDisclosureAcknowledged,
     ...legacyFields
   } = input;
 
@@ -107,6 +130,10 @@ export function normalizeV2Input(input: CalculateV2Input): V2Normalization {
     remainingAggregateUnsub,
     remainingAggregateCombined,
     coaScope,
+    loanLimitExceptionEvidence,
+    programContinuity,
+    professionalClassification,
+    studentDisclosureAcknowledged,
   };
   const externalChecks: string[] = [];
   const warnings: string[] = [];
@@ -189,10 +216,69 @@ export function normalizeV2Input(input: CalculateV2Input): V2Normalization {
     );
   }
 
+  // Student Loan Limit Exception triage.
+  //
+  // Self-reported facts are triage signals only. The authoritative engine input
+  // stays whatever the caller supplied as `loanLimitException`, which is the
+  // same school-confirmed field the staff calculator uses. The one direction we
+  // do act on is protective: a reported conflict suppresses a modeled Grad PLUS
+  // result rather than letting a disputed status drive a dollar figure.
+  const hasStudentTriageInput =
+    loanLimitExceptionEvidence !== undefined ||
+    programContinuity !== undefined ||
+    professionalClassification !== undefined;
+
+  let loanLimitExceptionTriage: LleTriageResult | undefined;
+  if (hasStudentTriageInput) {
+    if (loanLimitExceptionEvidence === "school_record_conflict" && engineInput.loanLimitException) {
+      engineInput.loanLimitException = false;
+      // Deliberately avoids the word the `blocked` heuristic below matches on.
+      // Suppressing Grad PLUS must not also suppress the valid Sub and Unsub
+      // estimate, which does not depend on the exception status.
+      warnings.push(
+        "A Loan Limit Exception record disagreement was reported, so no Grad PLUS amount is modeled until the school and COD resolve the status.",
+      );
+    }
+
+    loanLimitExceptionTriage = triageLoanLimitException({
+      programContinuity,
+      loanLimitExceptionEvidence,
+      professionalClassification,
+      schoolConfirmedLoanLimitException: engineInput.loanLimitException === true,
+      hasSchoolProvidedCoaAndOfa:
+        typeof input.coa === "number" && input.coa > 0 && typeof input.otherAid === "number",
+    });
+
+    for (const check of loanLimitExceptionTriage.externalChecks) addExternal(externalChecks, check);
+    addExternal(
+      externalChecks,
+      "Loan Limit Exception triage is based on self-reported facts and is never an eligibility determination.",
+    );
+
+    if (loanLimitExceptionEvidence === "student_reported_y" && !engineInput.loanLimitException) {
+      addExternal(
+        externalChecks,
+        "A student-reported exception flag of Y is not used as a calculation input. Grad PLUS is modeled only from a school-confirmed exception status.",
+      );
+    }
+    if (studentDisclosureAcknowledged !== true) {
+      warnings.push(
+        "Student disclosure has not been acknowledged. The advanced student result must not be presented until it is.",
+      );
+    }
+  }
+
   const blocked = warnings.some(
     (message) => message.includes("conflict") || message.includes("Resolve the scope"),
   );
-  return { engineInput, structured, externalChecks, warnings, blocked };
+  return {
+    engineInput,
+    structured,
+    externalChecks,
+    warnings,
+    blocked,
+    loanLimitExceptionTriage,
+  };
 }
 
 export interface V2Warning {
