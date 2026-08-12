@@ -65,6 +65,7 @@ export default defineTool({
             question: missing.question,
           },
         ],
+        nextQuestion: missing,
         remainingFacts: partial.missingFacts,
         disclaimer: partial.disclaimer,
         sources: partial.sources,

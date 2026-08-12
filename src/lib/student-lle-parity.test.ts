@@ -99,6 +99,10 @@ describe("MCP elicits one question at a time", () => {
     const missing = (mcp.structuredContent.missingInputs as Array<Record<string, unknown>>)[0];
     expect(missing.field).toBe("programContinuity.enrolledOnJune30");
     expect(missing.question).toBe(STUDENT_PROMPTS.enrolledOnJune30);
+    expect(mcp.structuredContent.nextQuestion).toEqual({
+      field: "programContinuity.enrolledOnJune30",
+      question: STUDENT_PROMPTS.enrolledOnJune30,
+    });
   });
 
   it("returns no next question once every fact is answered", () => {
@@ -110,6 +114,10 @@ describe("MCP elicits one question at a time", () => {
     expect(mcp.structuredContent.status).toBe("needs_input");
     const missing = (mcp.structuredContent.missingInputs as Array<Record<string, unknown>>)[0];
     expect(missing.field).toBe("programContinuity.seekingGradProfBorrowing");
+    expect(mcp.structuredContent.nextQuestion).toEqual({
+      field: "programContinuity.seekingGradProfBorrowing",
+      question: STUDENT_PROMPTS.seekingGradProfBorrowing,
+    });
   });
 
   it("rejects undocumented fields rather than accepting free text", async () => {
