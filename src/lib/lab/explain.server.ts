@@ -47,6 +47,7 @@ function buildPrompt(
     gate.allowProposedCorrection
       ? "A proposed correction is permitted, phrased as a suggestion for a human to confirm."
       : "A proposed correction is FORBIDDEN for this case. Set proposedCorrection to null and requiresHumanReview to true.",
+    "Be brief: at most 3 short observations, and one or two sentences per field.",
     "Reply with a single JSON object and nothing else. Shape:",
     '{"summary":string,"observations":string[],"citedSourceIds":string[],"proposedNextStep":string,"proposedCorrection":string|null,"uncertainty":string,"requiresHumanReview":boolean}',
   ].join("\n");
@@ -135,6 +136,7 @@ export async function requestLabExplanation(
       body: JSON.stringify({
         model: LAB_MODEL_ID,
         max_tokens: LAB_MAX_OUTPUT_TOKENS,
+        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },

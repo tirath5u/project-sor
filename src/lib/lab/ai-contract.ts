@@ -9,11 +9,11 @@
 
 import { z } from "zod";
 
-export const LAB_PROMPT_VERSION = "lab-prompt-1.0.0" as const;
+export const LAB_PROMPT_VERSION = "lab-prompt-1.1.0" as const;
 export const LAB_MODEL_ID = "google/gemini-3.8-flash" as const;
 
 /** Hard caps that keep public consumption bounded. */
-export const LAB_MAX_OUTPUT_TOKENS = 700;
+export const LAB_MAX_OUTPUT_TOKENS = 1200;
 export const LAB_REQUEST_TIMEOUT_MS = 25_000;
 
 export const LabExplainRequestSchema = z
