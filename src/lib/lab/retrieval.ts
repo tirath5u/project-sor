@@ -85,9 +85,12 @@ export function retrieveProcedures(
   comparison: LabComparison,
 ): LabRetrieval {
   const kinds = findingKinds(comparison);
-  const queryTags = kinds.flatMap((kind) =>
-    kind === "amount_and_status_mismatch" ? ["amount_mismatch", "status_mismatch"] : [kind],
-  );
+  const queryTags = [
+    ...kinds.flatMap((kind) =>
+      kind === "amount_and_status_mismatch" ? ["amount_mismatch", "status_mismatch"] : [kind],
+    ),
+    ...(scenario.extraQueryTags ?? []),
+  ];
   const queryKeywords = keywordsFrom(`${scenario.question} ${scenario.notes}`);
 
   const forced = LAB_NO_PROCEDURE_SCENARIOS.has(scenario.id);

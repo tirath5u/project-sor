@@ -32,6 +32,11 @@ export interface LabScenario {
   /** Free-text context passed to the model as scenario notes. */
   notes: string;
   /**
+   * Extra retrieval tags for a scenario whose question is not fully described
+   * by the finding kinds alone (the conflict demonstration, for example).
+   */
+  extraQueryTags?: string[];
+  /**
    * Expected outcome, written independently of the comparison engine and of
    * the model output. Used by the eval tests as the answer key.
    */
@@ -90,14 +95,14 @@ export const LAB_PROCEDURES: LabProcedure[] = [
   {
     id: "FP-201",
     title: "Fictional Procedure 201 (conflicting): reversed lines are excluded",
-    tags: ["reversed", "status_mismatch", "conflict_demo"],
+    tags: ["conflict_demo", "reversed"],
     text: "A line whose status is reversed in either system is excluded from the reconciliation total and requires no variance note.",
     conflictsWith: ["FP-202"],
   },
   {
     id: "FP-202",
     title: "Fictional Procedure 202 (conflicting): reversed lines are included",
-    tags: ["reversed", "status_mismatch", "conflict_demo"],
+    tags: ["conflict_demo", "reversed"],
     text: "A line whose status is reversed in either system stays inside the reconciliation total and always requires a variance note before the review closes.",
     conflictsWith: ["FP-201"],
   },
@@ -189,6 +194,7 @@ export const LAB_SCENARIOS: LabScenario[] = [
     systemB: [{ id: "R-5001", label: "Reversal line", amountCents: 90000, status: "posted" }],
     notes:
       "The corpus deliberately contains two contradictory passages about reversed lines, so no single rule can be applied.",
+    extraQueryTags: ["conflict_demo"],
     expected: {
       kinds: ["status_mismatch"],
       hasInputError: false,
