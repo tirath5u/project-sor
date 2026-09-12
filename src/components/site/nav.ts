@@ -63,6 +63,11 @@ export const NAV_GROUPS: NavGroup[] = [
     caption: "Higher-ed product management, built in public and source-backed",
     items: [
       { to: "/work", label: "Product work", blurb: "Case studies and shipped products" },
+      {
+        to: "/reconciliation",
+        label: "Reconciliation learning lab",
+        blurb: "From mismatch to next step, on fictional records",
+      },
       { to: "/methodology", label: "Methodology", blurb: "Sources, rounding, and caveats" },
       { to: "/releases", label: "Releases", blurb: "Version history and changelog" },
       { to: "/about", label: "About Tirath", blurb: "Who built this and how I work" },
