@@ -24,6 +24,9 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
         path === "/student/advanced" ||
         path === "/about" ||
         path === "/methodology" ||
+        // The synthetic reconciliation lab is public on its own. It shares no
+        // engine, data or unlock state with the gated calculator routes.
+        path === "/reconciliation" ||
         path === "/work" ||
         path.startsWith("/work/"),
     );
