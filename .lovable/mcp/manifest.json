@@ -1054,6 +1054,67 @@
                     "academicYear",
                     "singleTerm"
                   ]
+                },
+                "loanLimitExceptionEvidence": {
+                  "type": "string",
+                  "enum": [
+                    "student_reported_y",
+                    "student_reported_n",
+                    "unknown",
+                    "school_record_conflict"
+                  ]
+                },
+                "programContinuity": {
+                  "type": "object",
+                  "properties": {
+                    "seekingGradProfBorrowing": {
+                      "type": "string",
+                      "enum": [
+                        "yes",
+                        "no",
+                        "unknown"
+                      ]
+                    },
+                    "enrolledOnJune30": {
+                      "$ref": "#/properties/left/properties/programContinuity/properties/seekingGradProfBorrowing"
+                    },
+                    "priorDirectLoanBeforeJuly1": {
+                      "$ref": "#/properties/left/properties/programContinuity/properties/seekingGradProfBorrowing"
+                    },
+                    "statusSinceJune30": {
+                      "type": "string",
+                      "enum": [
+                        "still_enrolled",
+                        "withdrew",
+                        "changed_school",
+                        "changed_degree_or_credential",
+                        "approved_leave_of_absence",
+                        "unsure_how_school_reported",
+                        "unknown"
+                      ]
+                    },
+                    "schoolChangedProgramOrEndDate": {
+                      "type": "string",
+                      "enum": [
+                        "no",
+                        "yes_program_or_credential",
+                        "yes_end_date_only",
+                        "unknown"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "professionalClassification": {
+                  "type": "string",
+                  "enum": [
+                    "school_confirmed",
+                    "not_confirmed",
+                    "unknown"
+                  ]
+                },
+                "studentDisclosureAcknowledged": {
+                  "type": "boolean"
                 }
               },
               "required": [
@@ -1563,6 +1624,67 @@
                     "academicYear",
                     "singleTerm"
                   ]
+                },
+                "loanLimitExceptionEvidence": {
+                  "type": "string",
+                  "enum": [
+                    "student_reported_y",
+                    "student_reported_n",
+                    "unknown",
+                    "school_record_conflict"
+                  ]
+                },
+                "programContinuity": {
+                  "type": "object",
+                  "properties": {
+                    "seekingGradProfBorrowing": {
+                      "type": "string",
+                      "enum": [
+                        "yes",
+                        "no",
+                        "unknown"
+                      ]
+                    },
+                    "enrolledOnJune30": {
+                      "$ref": "#/properties/input/properties/programContinuity/properties/seekingGradProfBorrowing"
+                    },
+                    "priorDirectLoanBeforeJuly1": {
+                      "$ref": "#/properties/input/properties/programContinuity/properties/seekingGradProfBorrowing"
+                    },
+                    "statusSinceJune30": {
+                      "type": "string",
+                      "enum": [
+                        "still_enrolled",
+                        "withdrew",
+                        "changed_school",
+                        "changed_degree_or_credential",
+                        "approved_leave_of_absence",
+                        "unsure_how_school_reported",
+                        "unknown"
+                      ]
+                    },
+                    "schoolChangedProgramOrEndDate": {
+                      "type": "string",
+                      "enum": [
+                        "no",
+                        "yes_program_or_credential",
+                        "yes_end_date_only",
+                        "unknown"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "professionalClassification": {
+                  "type": "string",
+                  "enum": [
+                    "school_confirmed",
+                    "not_confirmed",
+                    "unknown"
+                  ]
+                },
+                "studentDisclosureAcknowledged": {
+                  "type": "boolean"
                 }
               },
               "required": [
@@ -1632,20 +1754,10 @@
                   ]
                 },
                 "enrolledOnJune30": {
-                  "type": "string",
-                  "enum": [
-                    "yes",
-                    "no",
-                    "unknown"
-                  ]
+                  "$ref": "#/properties/programContinuity/properties/seekingGradProfBorrowing"
                 },
                 "priorDirectLoanBeforeJuly1": {
-                  "type": "string",
-                  "enum": [
-                    "yes",
-                    "no",
-                    "unknown"
-                  ]
+                  "$ref": "#/properties/programContinuity/properties/seekingGradProfBorrowing"
                 },
                 "statusSinceJune30": {
                   "type": "string",

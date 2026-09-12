@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StudentRouteImport } from './routes/student'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReleasesRouteImport } from './routes/releases'
+import { Route as ReconciliationRouteImport } from './routes/reconciliation'
 import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as McpGuideRouteImport } from './routes/mcp-guide'
@@ -41,6 +42,7 @@ import { Route as ApiPublicV1ScenariosRouteImport } from './routes/api/public/v1
 import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
 import { Route as ApiPublicV1HealthRouteImport } from './routes/api/public/v1/health'
 import { Route as ApiPublicV1CalculateRouteImport } from './routes/api/public/v1/calculate'
+import { Route as ApiPublicLabExplainRouteImport } from './routes/api/public/lab/explain'
 
 const StudentRoute = StudentRouteImport.update({
   id: '/student',
@@ -55,6 +57,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ReleasesRoute = ReleasesRouteImport.update({
   id: '/releases',
   path: '/releases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReconciliationRoute = ReconciliationRouteImport.update({
+  id: '/reconciliation',
+  path: '/reconciliation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MigrationRoute = MigrationRouteImport.update({
@@ -212,6 +219,11 @@ const ApiPublicV1CalculateRoute = ApiPublicV1CalculateRouteImport.update({
   path: '/api/public/v1/calculate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicLabExplainRoute = ApiPublicLabExplainRouteImport.update({
+  id: '/api/public/lab/explain',
+  path: '/api/public/lab/explain',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -223,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/mcp-guide': typeof McpGuideRoute
   '/methodology': typeof MethodologyRoute
   '/migration': typeof MigrationRoute
+  '/reconciliation': typeof ReconciliationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/student': typeof StudentRouteWithChildren
@@ -233,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/work/$slug': typeof WorkSlugRoute
   '/work/': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/lab/explain': typeof ApiPublicLabExplainRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
@@ -257,6 +271,7 @@ export interface FileRoutesByTo {
   '/mcp-guide': typeof McpGuideRoute
   '/methodology': typeof MethodologyRoute
   '/migration': typeof MigrationRoute
+  '/reconciliation': typeof ReconciliationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/student': typeof StudentRouteWithChildren
@@ -267,6 +282,7 @@ export interface FileRoutesByTo {
   '/work/$slug': typeof WorkSlugRoute
   '/work': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/lab/explain': typeof ApiPublicLabExplainRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
@@ -292,6 +308,7 @@ export interface FileRoutesById {
   '/mcp-guide': typeof McpGuideRoute
   '/methodology': typeof MethodologyRoute
   '/migration': typeof MigrationRoute
+  '/reconciliation': typeof ReconciliationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/student': typeof StudentRouteWithChildren
@@ -302,6 +319,7 @@ export interface FileRoutesById {
   '/work/$slug': typeof WorkSlugRoute
   '/work/': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/api/public/lab/explain': typeof ApiPublicLabExplainRoute
   '/api/public/v1/calculate': typeof ApiPublicV1CalculateRoute
   '/api/public/v1/health': typeof ApiPublicV1HealthRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
@@ -328,6 +346,7 @@ export interface FileRouteTypes {
     | '/mcp-guide'
     | '/methodology'
     | '/migration'
+    | '/reconciliation'
     | '/releases'
     | '/sitemap.xml'
     | '/student'
@@ -338,6 +357,7 @@ export interface FileRouteTypes {
     | '/work/$slug'
     | '/work/'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/lab/explain'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
     | '/api/public/v1/openapi.json'
@@ -362,6 +382,7 @@ export interface FileRouteTypes {
     | '/mcp-guide'
     | '/methodology'
     | '/migration'
+    | '/reconciliation'
     | '/releases'
     | '/sitemap.xml'
     | '/student'
@@ -372,6 +393,7 @@ export interface FileRouteTypes {
     | '/work/$slug'
     | '/work'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/lab/explain'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
     | '/api/public/v1/openapi.json'
@@ -396,6 +418,7 @@ export interface FileRouteTypes {
     | '/mcp-guide'
     | '/methodology'
     | '/migration'
+    | '/reconciliation'
     | '/releases'
     | '/sitemap.xml'
     | '/student'
@@ -406,6 +429,7 @@ export interface FileRouteTypes {
     | '/work/$slug'
     | '/work/'
     | '/.mcp/invoke-tool/$tool'
+    | '/api/public/lab/explain'
     | '/api/public/v1/calculate'
     | '/api/public/v1/health'
     | '/api/public/v1/openapi.json'
@@ -431,6 +455,7 @@ export interface RootRouteChildren {
   McpGuideRoute: typeof McpGuideRoute
   MethodologyRoute: typeof MethodologyRoute
   MigrationRoute: typeof MigrationRoute
+  ReconciliationRoute: typeof ReconciliationRoute
   ReleasesRoute: typeof ReleasesRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StudentRoute: typeof StudentRouteWithChildren
@@ -439,6 +464,7 @@ export interface RootRouteChildren {
   WorkSlugRoute: typeof WorkSlugRoute
   WorkIndexRoute: typeof WorkIndexRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicLabExplainRoute: typeof ApiPublicLabExplainRoute
   ApiPublicV1CalculateRoute: typeof ApiPublicV1CalculateRoute
   ApiPublicV1HealthRoute: typeof ApiPublicV1HealthRoute
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
@@ -475,6 +501,13 @@ declare module '@tanstack/react-router' {
       path: '/releases'
       fullPath: '/releases'
       preLoaderRoute: typeof ReleasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reconciliation': {
+      id: '/reconciliation'
+      path: '/reconciliation'
+      fullPath: '/reconciliation'
+      preLoaderRoute: typeof ReconciliationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/migration': {
@@ -680,6 +713,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1CalculateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/lab/explain': {
+      id: '/api/public/lab/explain'
+      path: '/api/public/lab/explain'
+      fullPath: '/api/public/lab/explain'
+      preLoaderRoute: typeof ApiPublicLabExplainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -706,6 +746,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpGuideRoute: McpGuideRoute,
   MethodologyRoute: MethodologyRoute,
   MigrationRoute: MigrationRoute,
+  ReconciliationRoute: ReconciliationRoute,
   ReleasesRoute: ReleasesRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StudentRoute: StudentRouteWithChildren,
@@ -715,6 +756,7 @@ const rootRouteChildren: RootRouteChildren = {
   WorkSlugRoute: WorkSlugRoute,
   WorkIndexRoute: WorkIndexRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicLabExplainRoute: ApiPublicLabExplainRoute,
   ApiPublicV1CalculateRoute: ApiPublicV1CalculateRoute,
   ApiPublicV1HealthRoute: ApiPublicV1HealthRoute,
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
