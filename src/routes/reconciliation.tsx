@@ -379,9 +379,10 @@ function ReconciliationLab() {
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Stated uncertainty
+                      {result.resultKind === "rule_based" ? "Evidence gap" : "Model-reported uncertainty"}
                     </p>
                     <p className="mt-1 text-muted-foreground">{result.explanation.uncertainty}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">The snapshots do not establish which source is correct. Verify source history before resolving a discrepancy, even if the model reports no uncertainty.</p>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Cited fictional sources:{" "}
@@ -436,7 +437,7 @@ function ReconciliationLab() {
             ) : null}
           </Panel>
 
-          <Disclosure label="Evidence: exactly what the server used">
+          <Disclosure label="Evidence: prepared inputs and execution details">
             <dl className="grid gap-2 text-xs sm:grid-cols-2">
               <div>
                 <dt className="font-medium text-foreground">Retrieval method</dt>
