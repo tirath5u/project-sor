@@ -14,7 +14,7 @@ import {
   getLabScenario,
 } from "@/lib/lab/fixtures";
 import { decideReviewGate, retrieveProcedures } from "@/lib/lab/retrieval";
-import { reserveLabCall, LAB_LIMITS } from "@/lib/lab/throttle";
+import { LAB_LIMITS } from "@/lib/lab/throttle";
 import { requestLabExplanation } from "@/lib/lab/explain.server";
 import { CORS_HEADERS, resolveRequestId } from "@/lib/api-errors";
 
@@ -115,14 +115,17 @@ export const Route = createFileRoute("/api/public/lab/explain")({
             },
           }, 200);
         }
-        const reservation = await reserveLabCall();
+        const { reserveDurableLabCall } = await import("@/lib/lab/quota.server");
+        const reservation = await reserveDurableLabCall(request);
         if (!reservation.allowed) {
           return json({
             status: "unavailable", reason: reservation.reason,
-            message: "AI explanations are paused because shared usage-limit storage is unavailable. Comparison and retrieved procedures remain available.",
-            retryAfterSeconds: null,
+            message: reservation.reason === "quota_storage_unavailable"
+              ? "AI explanations are paused because shared usage-limit storage or trusted visitor identification is unavailable. Comparison and retrieved procedures remain available."
+              : "The lab usage limit has been reached. Comparison and retrieved procedures remain available.",
+            retryAfterSeconds: reservation.retryAfterSeconds,
             meta: { ...baseMeta, throttleScope: "unavailable" },
-          }, 503);
+          }, reservation.reason === "quota_storage_unavailable" ? 503 : 429);
         }
         const outcome = await requestLabExplanation(scenario, comparison, retrieval, gate);
 
@@ -138,8 +141,8 @@ export const Route = createFileRoute("/api/public/lab/explain")({
           tokenUsage: outcome.tokenUsage,
           maxOutputTokens: LAB_MAX_OUTPUT_TOKENS,
           requestId,
-          throttleScope: "unavailable" as const,
-          dailyCallsUsed: 0,
+          throttleScope: "shared durable database" as const,
+          dailyCallsUsed: reservation.dailyCallsUsed,
           dailyCallLimit: LAB_LIMITS.globalDailyLimit,
         };
 

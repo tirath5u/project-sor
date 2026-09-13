@@ -1,11 +1,11 @@
-/** No durable backend is provisioned. Never fall back to instance memory. */
+/** Public limit constants. The server reservation lives in quota.server.ts. */
 export const LAB_LIMITS = {
   perCallerIntervalMs: 20_000,
   perCallerHourlyLimit: 10,
   globalDailyLimit: 200,
 } as const;
 
-/** Closed until a shared, atomic storage implementation is provisioned and verified. */
+/** No-context calls are always denied. A trusted request is required by quota.server.ts. */
 export async function reserveLabCall() {
   return {
     allowed: false as const,

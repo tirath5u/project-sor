@@ -371,7 +371,7 @@ function ReconciliationLab() {
                   </div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Proposed next step
+                      Source-supported investigation step
                     </p>
                     <p className="mt-1 text-muted-foreground">
                       {result.explanation.proposedNextStep}

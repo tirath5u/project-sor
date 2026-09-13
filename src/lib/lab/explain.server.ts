@@ -249,6 +249,8 @@ export async function requestLabExplanation(
     ...parsed.data,
     requiresHumanReview: gate.requireHumanReview || parsed.data.requiresHumanReview,
     proposedCorrection: null,
+    // The action is source text, not a model-invented correction.
+    proposedNextStep: retrieval.passages.filter(p => parsed.data.citedSourceIds.includes(p.id)).map(p => `[${p.id}] ${p.text}`).join("\n\n"),
   };
 
   return { ok: true, explanation, latencyMs, tokenUsage };
