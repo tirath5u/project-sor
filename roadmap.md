@@ -6,3 +6,6 @@
 - [x] Limitations documented in docs/reconciliation-safety.md. Not published.
 - [ ] Shared atomic daily reservation and visitor limits: BLOCKED. This project has no provisioned storage; needs owner-approved durable storage before implementation and multi-instance/rollover tests.
 - [ ] Real successful normal-case AI verification: BLOCKED behind the same dependency.
+- [ ] Fix 390x844 overflow and verify rendering.
+- [ ] Enforce procedure predicates, separate unmatched amounts, remove correction suggestions.
+- [ ] Prepare exact atomic quota migration and identify provisioning permission.
