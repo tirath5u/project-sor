@@ -45,6 +45,7 @@ export interface LabComparison {
     missingInB: number;
     missingInA: number;
     absoluteDeltaCents: number;
+    unmatchedAmountCents: number;
   };
   compareVersion: typeof LAB_COMPARE_VERSION;
 }
@@ -156,6 +157,7 @@ export function compareLabRecords(systemA: LabRecord[], systemB: LabRecord[]): L
     ).length,
     missingInB: findings.filter((f) => f.kind === "missing_in_b").length,
     missingInA: findings.filter((f) => f.kind === "missing_in_a").length,
+    unmatchedAmountCents: findings.reduce((sum, f) => sum + (f.deltaCents === null ? Math.abs(f.amountACents ?? f.amountBCents ?? 0) : 0), 0),
     absoluteDeltaCents: findings.reduce((sum, f) => sum + Math.abs(f.deltaCents ?? 0), 0),
   };
 

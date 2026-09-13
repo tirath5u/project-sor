@@ -123,7 +123,7 @@ export const LAB_SCENARIOS: LabScenario[] = [
       kinds: ["amount_mismatch"],
       hasInputError: false,
       requireHumanReview: false,
-      allowProposedCorrection: true,
+      allowProposedCorrection: false,
     },
   },
   {
@@ -142,7 +142,7 @@ export const LAB_SCENARIOS: LabScenario[] = [
       kinds: ["match", "missing_in_b"],
       hasInputError: false,
       requireHumanReview: false,
-      allowProposedCorrection: true,
+      allowProposedCorrection: false,
     },
   },
   {
@@ -158,7 +158,7 @@ export const LAB_SCENARIOS: LabScenario[] = [
       kinds: ["status_mismatch"],
       hasInputError: false,
       requireHumanReview: false,
-      allowProposedCorrection: true,
+      allowProposedCorrection: false,
     },
   },
   {
@@ -180,7 +180,7 @@ export const LAB_SCENARIOS: LabScenario[] = [
       kinds: ["match"],
       hasInputError: false,
       requireHumanReview: false,
-      allowProposedCorrection: true,
+      allowProposedCorrection: false,
     },
   },
   {

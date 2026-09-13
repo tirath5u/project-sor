@@ -55,7 +55,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5">
+    <section className="min-w-0 rounded-lg border border-border bg-card p-5">
       <h2 className="font-display text-base font-semibold text-foreground">{title}</h2>
       {caption ? <p className="mt-1 text-xs text-muted-foreground">{caption}</p> : null}
       <div className="mt-4">{children}</div>
@@ -72,7 +72,7 @@ function Disclosure({
 }) {
   const [open, setOpen] = React.useState(false);
   return (
-    <div className="rounded-xl border border-border bg-card">
+    <div className="min-w-0 rounded-lg border border-border bg-card">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -81,7 +81,7 @@ function Disclosure({
       >
         <span className="font-display text-sm font-semibold text-foreground">{label}</span>
         <ChevronDown
-          className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")}
+          className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
         />
       </button>
       {open ? <div className="border-t border-border px-5 py-4">{children}</div> : null}
@@ -97,7 +97,7 @@ function VarianceTable({
   comparison: LabComparison;
 }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="min-w-0 max-w-full overflow-x-auto">
       <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -142,7 +142,8 @@ function VarianceTable({
       </table>
       <p className="mt-3 text-xs text-muted-foreground">
         Compared {comparison.summary.compared} record(s). Matched {comparison.summary.matched}.
-        Absolute difference {formatCents(comparison.summary.absoluteDeltaCents)}. Every figure on
+        Paired-record absolute difference {formatCents(comparison.summary.absoluteDeltaCents)}.
+        Unmatched amount (unconfirmed, not a paired difference): {formatCents(comparison.summary.unmatchedAmountCents)}. Every figure on
         this table is computed in code from integer cents, with no model involved.
       </p>
       {comparison.inputErrors.length ? (
@@ -208,7 +209,7 @@ function ReconciliationLab() {
   }
 
   return (
-    <main className="mx-auto max-w-[1100px] px-4 pb-16 sm:px-6">
+    <main className="mx-auto w-full min-w-0 max-w-[1100px] [overflow-wrap:anywhere] px-4 pb-16 sm:px-6">
       <PageHeader
         eyebrow="Learning lab"
         title="From mismatch to next step"
@@ -216,8 +217,8 @@ function ReconciliationLab() {
         crumbs={[{ label: "Product work", to: "/work" }, { label: "Reconciliation lab" }]}
       />
 
-      <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <div className="space-y-4">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
+        <div className="min-w-0 space-y-4">
           <Panel title="Pick a scenario" caption="Six built-in fictional cases.">
             <ul className="space-y-1.5">
               {LAB_SCENARIOS.map((s) => (
@@ -252,7 +253,7 @@ function ReconciliationLab() {
           </Panel>
         </div>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <Panel
             title={scenario.title}
             caption={scenario.question}
@@ -307,16 +308,14 @@ function ReconciliationLab() {
               )}
               <span className="text-muted-foreground">
                 Escalation decided by code before any model call: {gate.reason}
-                {gate.allowProposedCorrection
-                  ? " A suggested correction may be shown for a human to confirm."
-                  : " No suggested correction may be shown."}
+                {" Only source-supported investigation steps are shown. Record corrections are excluded."}
               </span>
             </div>
           </Panel>
 
           <Panel
             title="Step 3. Explanation or rule-based escalation"
-            caption="Conflicting or missing evidence produces a rule-based result without calling AI. Normal-case AI explanations are paused until shared usage-limit storage is available."
+            caption="Conflicting or missing evidence produces a rule-based result without calling AI. Normal-case AI explanations require a shared usage reservation before calling the model."
           >
             <button
               type="button"
@@ -332,7 +331,7 @@ function ReconciliationLab() {
               {loading ? "Checking result" : "Explain this result"}
             </button>
             <p className="mt-2 text-xs text-muted-foreground">
-              AI is currently paused. Required limits before enabling: at most one call per click, one call per visitor every{" "}
+              Shared usage limits: at most one call per click, one call per visitor every{" "}
               {Math.round(LAB_LIMITS.perCallerIntervalMs / 1000)} seconds, and a conservative global
               cap of {LAB_LIMITS.globalDailyLimit} model calls per day for the whole lab.
             </p>
@@ -376,15 +375,6 @@ function ReconciliationLab() {
                     </p>
                     <p className="mt-1 text-muted-foreground">
                       {result.explanation.proposedNextStep}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Suggested correction
-                    </p>
-                    <p className="mt-1 text-muted-foreground">
-                      {result.explanation.proposedCorrection ??
-                        "None. Code blocked a suggested correction for this case, and no record is ever changed by this lab."}
                     </p>
                   </div>
                   <div>
@@ -509,12 +499,12 @@ function ReconciliationLab() {
             {retrieval.passages.length ? (
               <div className="mt-3 space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Exact retrieved passages (not sent while AI is paused)
+                  Exact retrieved passages
                 </p>
                 {retrieval.passages.map((p) => (
                   <pre
                     key={p.id}
-                    className="overflow-x-auto whitespace-pre-wrap rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground"
+                    className="min-w-0 max-w-full whitespace-pre-wrap [overflow-wrap:anywhere] rounded-md border border-border bg-muted/40 p-3 text-xs text-muted-foreground"
                   >
                     {`[${p.id}] ${p.title}\n${p.text}`}
                   </pre>
@@ -534,7 +524,7 @@ function ReconciliationLab() {
               <p>
                 <span className="font-medium text-foreground">Retrieval.</span> Choosing which
                 written procedure applies is a lookup. For a corpus of six labelled passages,
-                metadata tags and literal keyword overlap are both sufficient and inspectable, which
+                applicability predicates run before metadata tags and literal keyword overlap, which
                 is why this lab uses them and says so instead of implying a vector database.
               </p>
               <p>

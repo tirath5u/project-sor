@@ -9,7 +9,7 @@
 
 import { z } from "zod";
 
-export const LAB_PROMPT_VERSION = "lab-prompt-1.1.0" as const;
+export const LAB_PROMPT_VERSION = "lab-prompt-1.2.0" as const;
 export const LAB_MODEL_ID = "google/gemini-3.8-flash" as const;
 
 /** Hard caps that keep public consumption bounded. */
@@ -28,7 +28,7 @@ export const LabExplanationSchema = z
     observations: z.array(z.string().min(1).max(400)).min(1).max(6),
     citedSourceIds: z.array(z.string().min(1).max(32)).max(6),
     proposedNextStep: z.string().min(1).max(600),
-    proposedCorrection: z.string().max(600).nullable(),
+    proposedCorrection: z.null(),
     uncertainty: z.string().min(1).max(600),
     requiresHumanReview: z.boolean(),
   })
@@ -61,7 +61,7 @@ export interface LabExplainMeta {
   tokenUsage: { prompt: number | null; completion: number | null; total: number | null } | null;
   maxOutputTokens: number;
   requestId: string;
-  throttleScope: "unavailable" | "not applicable: no model call";
+  throttleScope: "shared durable database" | "unavailable" | "not applicable: no model call";
   dailyCallsUsed: number;
   dailyCallLimit: number;
 }
