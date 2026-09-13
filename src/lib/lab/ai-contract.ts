@@ -39,6 +39,7 @@ export type LabExplanation = z.infer<typeof LabExplanationSchema>;
 export type LabExplainFailureReason =
   | "invalid_input"
   | "unknown_scenario"
+  | "quota_storage_unavailable"
   | "model_not_configured"
   | "rate_limited"
   | "daily_limit_reached"
@@ -60,17 +61,14 @@ export interface LabExplainMeta {
   tokenUsage: { prompt: number | null; completion: number | null; total: number | null } | null;
   maxOutputTokens: number;
   requestId: string;
-  /**
-   * Honest statement about the throttle: counters live in the running server
-   * instance's memory, so they reset when the instance recycles.
-   */
-  throttleScope: "in-memory per server instance";
+  throttleScope: "unavailable" | "not applicable: no model call";
   dailyCallsUsed: number;
   dailyCallLimit: number;
 }
 
 export interface LabExplainSuccess {
   status: "ok";
+  resultKind: "ai" | "rule_based";
   explanation: LabExplanation;
   gate: { requireHumanReview: boolean; allowProposedCorrection: boolean; reason: string };
   meta: LabExplainMeta;
@@ -94,5 +92,5 @@ export function validateCitations(
 ): { ok: true } | { ok: false; unknown: string[] } {
   const allowed = new Set(retrievedIds);
   const unknown = cited.filter((id) => !allowed.has(id));
-  return unknown.length === 0 ? { ok: true } : { ok: false, unknown };
+  return unknown.length === 0 && (retrievedIds.length === 0 || cited.length > 0) ? { ok: true } : { ok: false, unknown };
 }

@@ -11,7 +11,6 @@
 import {
   LAB_MAX_OUTPUT_TOKENS,
   LAB_MODEL_ID,
-  LAB_PROMPT_VERSION,
   LAB_REQUEST_TIMEOUT_MS,
   LabExplanationSchema,
   validateCitations,
@@ -42,6 +41,7 @@ function buildPrompt(
   const system = [
     "You explain a reconciliation result inside a teaching lab that uses entirely fictional records and fictional procedures.",
     "You must not perform arithmetic. Every number is already computed by deterministic code and given to you; restate the given figures only.",
+    "When retrieved passages exist, cite at least one of their ids.",
     "You may cite only the passage ids listed under RETRIEVED PASSAGES. Never cite a real regulation, a real statute, or any source not listed.",
     "You never modify records and never instruct anyone to modify a record automatically.",
     gate.allowProposedCorrection
@@ -124,6 +124,7 @@ export async function requestLabExplanation(
   const timer = setTimeout(() => controller.abort(), LAB_REQUEST_TIMEOUT_MS);
 
   let response: Response;
+  let responseText: string;
   try {
     response = await fetch(GATEWAY_URL, {
       method: "POST",
@@ -143,6 +144,8 @@ export async function requestLabExplanation(
         ],
       }),
     });
+    // Keep the deadline active until the entire body has been consumed.
+    responseText = await response.text();
   } catch (error) {
     clearTimeout(timer);
     const aborted = error instanceof Error && error.name === "AbortError";
@@ -168,22 +171,15 @@ export async function requestLabExplanation(
         : status === 429
           ? "rate_limited"
           : "model_unavailable";
-    let detail = "";
-    try {
-      const body = (await response.json()) as { error?: { message?: string }; message?: string };
-      detail = body?.error?.message || body?.message || "";
-    } catch {
-      detail = "";
-    }
     return {
       ok: false,
       reason,
       message:
         reason === "model_quota_exceeded"
-          ? `The AI credit allowance for this lab is exhausted or blocked, so no explanation was generated. ${detail}`.trim()
+          ? "AI explanations are unavailable because the allowance is exhausted or access is blocked. The site owner must review the AI allowance and access settings."
           : reason === "rate_limited"
             ? "The model is rate limiting requests right now. Nothing was retried automatically."
-            : `The model returned an error (HTTP ${status}) and no explanation was generated. ${detail}`.trim(),
+            : "The explanation service could not complete this request. No automatic retry was made.",
       latencyMs,
       tokenUsage: null,
     };
@@ -194,7 +190,7 @@ export async function requestLabExplanation(
     usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
   };
   try {
-    payload = await response.json();
+    payload = JSON.parse(responseText);
   } catch {
     return {
       ok: false,

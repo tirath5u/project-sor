@@ -14,7 +14,7 @@ import {
   getLabScenario,
 } from "@/lib/lab/fixtures";
 import { decideReviewGate, retrieveProcedures } from "@/lib/lab/retrieval";
-import { callerKey, checkLabThrottle, recordLabCall } from "@/lib/lab/throttle";
+import { reserveLabCall, LAB_LIMITS } from "@/lib/lab/throttle";
 import { requestLabExplanation } from "@/lib/lab/explain.server";
 import { CORS_HEADERS, resolveRequestId } from "@/lib/api-errors";
 
@@ -81,34 +81,49 @@ export const Route = createFileRoute("/api/public/lab/explain")({
           );
         }
 
-        const key = await callerKey(request);
-        const throttle = checkLabThrottle(key);
-        if (!throttle.allowed) {
-          return json(
-            {
-              status: "unavailable",
-              reason: throttle.reason,
-              message:
-                throttle.reason === "daily_limit_reached"
-                  ? "This lab has a conservative global daily cap on model calls, and today's cap is reached. The deterministic comparison and the retrieved passages still work."
-                  : "You have requested explanations faster than this lab allows. Nothing was retried automatically.",
-              retryAfterSeconds: throttle.retryAfterSeconds,
-              meta: {
-                requestId,
-                dailyCallsUsed: throttle.dailyCallsUsed,
-                dailyCallLimit: throttle.dailyCallLimit,
-                throttleScope: "in-memory per server instance",
-              },
-            },
-            429,
-          );
-        }
-
         const comparison = compareLabRecords(scenario.systemA, scenario.systemB);
         const retrieval = retrieveProcedures(scenario, comparison);
         const gate = decideReviewGate(comparison, retrieval);
 
-        const dailyCallsUsed = recordLabCall(key);
+        const baseMeta = {
+          fixtureVersion: LAB_FIXTURE_VERSION,
+          corpusVersion: LAB_PROCEDURE_CORPUS_VERSION,
+          compareVersion: comparison.compareVersion,
+          retrievalVersion: retrieval.retrievalVersion,
+          retrievalMethod: retrieval.method,
+          requestId,
+        };
+        if (retrieval.noApplicableSource || retrieval.conflictingSources || comparison.inputErrors.length) {
+          return json({
+            status: "ok",
+            resultKind: "rule_based",
+            explanation: {
+              summary: "Rule-based result: human review required. No model was called.",
+              observations: [gate.reason],
+              citedSourceIds: retrieval.passages.map((p) => p.id),
+              proposedNextStep: "Ask a human reviewer to resolve the missing or conflicting evidence before considering a correction.",
+              proposedCorrection: null,
+              uncertainty: "The available evidence does not support an AI correction.",
+              requiresHumanReview: true,
+            },
+            gate,
+            meta: {
+              ...baseMeta, model: "not called", promptVersion: "not used",
+              latencyMs: null, tokenUsage: null, maxOutputTokens: 0,
+              throttleScope: "not applicable: no model call", dailyCallsUsed: 0,
+              dailyCallLimit: LAB_LIMITS.globalDailyLimit,
+            },
+          }, 200);
+        }
+        const reservation = await reserveLabCall();
+        if (!reservation.allowed) {
+          return json({
+            status: "unavailable", reason: reservation.reason,
+            message: "AI explanations are paused because shared usage-limit storage is unavailable. Comparison and retrieved procedures remain available.",
+            retryAfterSeconds: null,
+            meta: { ...baseMeta, throttleScope: "unavailable" },
+          }, 503);
+        }
         const outcome = await requestLabExplanation(scenario, comparison, retrieval, gate);
 
         const meta = {
@@ -123,9 +138,9 @@ export const Route = createFileRoute("/api/public/lab/explain")({
           tokenUsage: outcome.tokenUsage,
           maxOutputTokens: LAB_MAX_OUTPUT_TOKENS,
           requestId,
-          throttleScope: "in-memory per server instance" as const,
-          dailyCallsUsed,
-          dailyCallLimit: throttle.dailyCallLimit,
+          throttleScope: "unavailable" as const,
+          dailyCallsUsed: 0,
+          dailyCallLimit: LAB_LIMITS.globalDailyLimit,
         };
 
         if (!outcome.ok || !outcome.explanation) {
@@ -141,7 +156,7 @@ export const Route = createFileRoute("/api/public/lab/explain")({
           );
         }
 
-        return json({ status: "ok", explanation: outcome.explanation, gate, meta }, 200);
+        return json({ status: "ok", resultKind: "ai", explanation: outcome.explanation, gate, meta }, 200);
       },
     },
   },

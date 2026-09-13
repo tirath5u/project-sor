@@ -164,7 +164,7 @@ function ReconciliationLab() {
   const [loading, setLoading] = React.useState(false);
   const [feedback, setFeedback] = React.useState<"clearer" | "not-clearer" | null>(null);
 
-  const scenario = LAB_SCENARIOS.find((s) => s.id === scenarioId)!;
+  const scenario = LAB_SCENARIOS.find((s) => s.id === scenarioId) ?? LAB_SCENARIOS[0];
 
   const { comparison, retrieval, gate } = React.useMemo(() => {
     const c = compareLabRecords(scenario.systemA, scenario.systemB);
@@ -315,8 +315,8 @@ function ReconciliationLab() {
           </Panel>
 
           <Panel
-            title="Step 3. AI explanation (server side, inspectable)"
-            caption="Your browser sends only the scenario id. The server loads the fixture, the comparison result and the retrieved passages, then makes one model call with no automatic retries."
+            title="Step 3. Explanation or rule-based escalation"
+            caption="Conflicting or missing evidence produces a rule-based result without calling AI. Normal-case AI explanations are paused until shared usage-limit storage is available."
           >
             <button
               type="button"
@@ -329,10 +329,10 @@ function ReconciliationLab() {
               ) : (
                 <Sparkles className="h-4 w-4" />
               )}
-              {loading ? "Asking the model" : "Explain this result"}
+              {loading ? "Checking result" : "Explain this result"}
             </button>
             <p className="mt-2 text-xs text-muted-foreground">
-              Bounded run: one call per click, one call per visitor every{" "}
+              AI is currently paused. Required limits before enabling: at most one call per click, one call per visitor every{" "}
               {Math.round(LAB_LIMITS.perCallerIntervalMs / 1000)} seconds, and a conservative global
               cap of {LAB_LIMITS.globalDailyLimit} model calls per day for the whole lab.
             </p>
@@ -358,6 +358,7 @@ function ReconciliationLab() {
 
               {result?.status === "ok" ? (
                 <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4 text-sm">
+                  <p className="font-semibold">{result.resultKind === "rule_based" ? "Rule-based result (no AI call)" : "AI explanation"}</p>
                   <p className="text-foreground">{result.explanation.summary}</p>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -508,7 +509,7 @@ function ReconciliationLab() {
             {retrieval.passages.length ? (
               <div className="mt-3 space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Exact passages sent to the model
+                  Exact retrieved passages (not sent while AI is paused)
                 </p>
                 {retrieval.passages.map((p) => (
                   <pre
@@ -541,7 +542,7 @@ function ReconciliationLab() {
                 explains: it restates given figures, cites retrieved passage ids, proposes a next
                 step and states its uncertainty. Escalation is decided by code before the call, and
                 citations are validated after it. Missing or conflicting sources force human review
-                and forbid any suggested correction.
+                and produce a rule-based result without a model call.
               </p>
               <p>
                 <span className="font-medium text-foreground">Evaluation.</span> The repository holds

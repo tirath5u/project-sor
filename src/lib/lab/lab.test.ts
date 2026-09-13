@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it } from "vitest";
 import { compareLabRecords, findingKinds, formatCents } from "./compare";
 import { LAB_SCENARIOS, getLabScenario, type LabRecord } from "./fixtures";
 import { decideReviewGate, retrieveProcedures, LAB_RETRIEVAL_METHOD } from "./retrieval";
@@ -7,7 +7,7 @@ import {
   LabExplanationSchema,
   validateCitations,
 } from "./ai-contract";
-import { __resetLabThrottleForTests, checkLabThrottle, recordLabCall } from "./throttle";
+import { reserveLabCall } from "./throttle";
 
 const rec = (over: Partial<LabRecord> = {}): LabRecord => ({
   id: "R-1",
@@ -184,24 +184,16 @@ describe("AI contract validation", () => {
   });
 });
 
-describe("cost guardrails", () => {
-  beforeEach(() => __resetLabThrottleForTests());
-
-  it("allows the first call and throttles an immediate second call", () => {
-    expect(checkLabThrottle("caller-1").allowed).toBe(true);
-    recordLabCall("caller-1");
-    const second = checkLabThrottle("caller-1");
-    expect(second.allowed).toBe(false);
-    if (!second.allowed) {
-      expect(second.reason).toBe("rate_limited");
-      expect(second.retryAfterSeconds).toBeGreaterThan(0);
-    }
+describe("fail-closed cost boundary", () => {
+  it("denies reservations when durable storage is unavailable", async () => {
+    expect(await reserveLabCall()).toMatchObject({ allowed: false, reason: "quota_storage_unavailable" });
   });
-
-  it("stops all callers once the conservative global daily cap is reached", () => {
-    for (let i = 0; i < 200; i += 1) recordLabCall(`caller-${i}`);
-    const decision = checkLabThrottle("fresh-caller");
-    expect(decision.allowed).toBe(false);
-    if (!decision.allowed) expect(decision.reason).toBe("daily_limit_reached");
+  it("denies every concurrent reservation without a backend", async () => {
+    const results = await Promise.all(Array.from({ length: 250 }, () => reserveLabCall()));
+    expect(results.every((r) => !r.allowed)).toBe(true);
+  });
+  it("rejects empty citations when passages exist", () => {
+    expect(validateCitations([], ["FP-101"]).ok).toBe(false);
+    expect(validateCitations([], []).ok).toBe(true);
   });
 });
