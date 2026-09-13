@@ -14,13 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      lab_call_reservations: {
+        Row: {
+          id: number
+          reserved_at: string
+          visitor_hash: string
+        }
+        Insert: {
+          id?: never
+          reserved_at?: string
+          visitor_hash: string
+        }
+        Update: {
+          id?: never
+          reserved_at?: string
+          visitor_hash?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      reserve_lab_call: { Args: { p_visitor_hash: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
