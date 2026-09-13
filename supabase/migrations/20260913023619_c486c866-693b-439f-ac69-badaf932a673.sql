@@ -1,0 +1,1 @@
+CREATE POLICY lab_reservations_server_only ON public.lab_call_reservations FOR ALL TO service_role USING (true) WITH CHECK (true);

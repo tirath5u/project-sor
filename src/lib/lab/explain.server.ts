@@ -44,9 +44,7 @@ function buildPrompt(
     "When retrieved passages exist, cite at least one of their ids.",
     "You may cite only the passage ids listed under RETRIEVED PASSAGES. Never cite a real regulation, a real statute, or any source not listed.",
     "You never modify records and never instruct anyone to modify a record automatically.",
-    gate.allowProposedCorrection
-      ? "A proposed correction is permitted, phrased as a suggestion for a human to confirm."
-      : "A proposed correction is FORBIDDEN for this case. Set proposedCorrection to null and requiresHumanReview to true.",
+    "Record corrections are forbidden in every case. Set proposedCorrection to null. Suggest only investigation steps explicitly supported by cited retrieved passages. Do not invent record edits, approval steps, or policy.",
     "Be brief: at most 3 short observations, and one or two sentences per field.",
     "Reply with a single JSON object and nothing else. Shape:",
     '{"summary":string,"observations":string[],"citedSourceIds":string[],"proposedNextStep":string,"proposedCorrection":string|null,"uncertainty":string,"requiresHumanReview":boolean}',
@@ -250,7 +248,9 @@ export async function requestLabExplanation(
   const explanation: LabExplanation = {
     ...parsed.data,
     requiresHumanReview: gate.requireHumanReview || parsed.data.requiresHumanReview,
-    proposedCorrection: gate.allowProposedCorrection ? parsed.data.proposedCorrection : null,
+    proposedCorrection: null,
+    // The action is source text, not a model-invented correction.
+    proposedNextStep: retrieval.passages.filter(p => parsed.data.citedSourceIds.includes(p.id)).map(p => `[${p.id}] ${p.text}`).join("\n\n"),
   };
 
   return { ok: true, explanation, latencyMs, tokenUsage };

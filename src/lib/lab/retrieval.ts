@@ -18,8 +18,8 @@ import {
 import { findingKinds, type LabComparison } from "./compare";
 
 export const LAB_RETRIEVAL_METHOD =
-  "metadata tag match plus literal keyword overlap over 6 fictional passages (no embeddings, no vector index, no reranking)" as const;
-export const LAB_RETRIEVAL_VERSION = "lab-retrieval-1.0.0" as const;
+  "applicability predicates, then metadata tag match plus literal keyword overlap over 6 fictional passages (no embeddings, no vector index, no reranking)" as const;
+export const LAB_RETRIEVAL_VERSION = "lab-retrieval-1.1.0" as const;
 
 export interface LabRetrievedPassage {
   id: string;
@@ -80,6 +80,20 @@ function scorePassage(
   };
 }
 
+/** Eligibility is evaluated before relevance scoring. Unknown procedures fail closed. */
+export function isProcedureApplicable(p: LabProcedure, c: LabComparison): boolean {
+  if (c.inputErrors.length || !c.findings.length) return false;
+  switch (p.id) {
+    case "FP-101": return c.findings.some(f => f.deltaCents !== null && Math.abs(f.deltaCents) > 0 && Math.abs(f.deltaCents) < 100000);
+    case "FP-102": return c.findings.some(f => f.kind === "missing_in_a" || f.kind === "missing_in_b");
+    case "FP-103": return c.findings.some(f => f.kind === "status_mismatch");
+    case "FP-104": return c.findings.every(f => f.kind === "match");
+    case "FP-201":
+    case "FP-202": return c.findings.some(f => f.statusA === "reversed" || f.statusB === "reversed");
+    default: return false;
+  }
+}
+
 export function retrieveProcedures(
   scenario: LabScenario,
   comparison: LabComparison,
@@ -96,7 +110,7 @@ export function retrieveProcedures(
   const forced = LAB_NO_PROCEDURE_SCENARIOS.has(scenario.id);
   const scored = forced
     ? []
-    : LAB_PROCEDURES.map((p) => scorePassage(p, queryTags, queryKeywords))
+    : LAB_PROCEDURES.filter((p) => isProcedureApplicable(p, comparison)).map((p) => scorePassage(p, queryTags, queryKeywords))
         .filter((p) => p.matchedTags.length > 0)
         .sort((x, y) => y.score - x.score || x.id.localeCompare(y.id))
         .slice(0, 4);
@@ -156,7 +170,7 @@ export function decideReviewGate(
   }
   return {
     requireHumanReview: false,
-    allowProposedCorrection: true,
+    allowProposedCorrection: false,
     reason: "One consistent set of fictional procedures applies to the deterministic findings.",
   };
 }
