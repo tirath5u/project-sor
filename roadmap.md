@@ -1,11 +1,8 @@
-# Reconciliation usage boundary
-- [x] Fail closed without durable storage; comparison and retrieval stay available.
-- [x] Timeout covers reading the full response; provider error text withheld.
-- [x] Citation required when passages exist; conflict/no-source cases rule-based with no AI call.
-- [x] Tests (154 passing) and live preview checks.
-- [x] Limitations documented in docs/reconciliation-safety.md. Not published.
-- [ ] Shared atomic daily reservation and visitor limits: BLOCKED. This project has no provisioned storage; needs owner-approved durable storage before implementation and multi-instance/rollover tests.
-- [ ] Real successful normal-case AI verification: BLOCKED behind the same dependency.
-- [ ] Fix 390x844 overflow and verify rendering.
-- [ ] Enforce procedure predicates, separate unmatched amounts, remove correction suggestions.
-- [ ] Prepare exact atomic quota migration and identify provisioning permission.
+# Reconciliation review
+- [x] Fix and verify 390x844 layout and expanded passage wrapping.
+- [x] Filter procedure eligibility, distinguish unmatched amount, exclude corrections.
+- [x] Provision Cloud and apply private atomic shared reservation migrations.
+- [x] Verify concurrent independent clients, storage failure, real model success, 160 tests and preview build.
+- [x] Document exact files, observed model limitation and deployment caveats. Do not publish.
+- [ ] Full live midnight reservation rollover and global-cap exhaustion load verification remain unrun; use an isolated test database before destructive quota testing.
+- [ ] Verify trusted visitor header overwrite on the published edge after owner authorizes publication.
