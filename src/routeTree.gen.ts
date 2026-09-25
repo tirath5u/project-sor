@@ -23,6 +23,7 @@ import { Route as ApiDocsRouteImport } from './routes/api-docs'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkIndexRouteImport } from './routes/work.index'
+import { Route as StudentIndexRouteImport } from './routes/student/index'
 import { Route as WorkSlugRouteImport } from './routes/work.$slug'
 import { Route as StudentLoanLimitExceptionRouteImport } from './routes/student/loan-limit-exception'
 import { Route as StudentAdvancedRouteImport } from './routes/student/advanced'
@@ -113,6 +114,11 @@ const WorkIndexRoute = WorkIndexRouteImport.update({
   id: '/work/',
   path: '/work/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const StudentIndexRoute = StudentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentRoute,
 } as any)
 const WorkSlugRoute = WorkSlugRouteImport.update({
   id: '/work/$slug',
@@ -244,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/student/advanced': typeof StudentAdvancedRoute
   '/student/loan-limit-exception': typeof StudentLoanLimitExceptionRoute
   '/work/$slug': typeof WorkSlugRoute
+  '/student/': typeof StudentIndexRoute
   '/work/': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lab/explain': typeof ApiPublicLabExplainRoute
@@ -274,12 +281,12 @@ export interface FileRoutesByTo {
   '/reconciliation': typeof ReconciliationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/student': typeof StudentRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
   '/student/loan-limit-exception': typeof StudentLoanLimitExceptionRoute
   '/work/$slug': typeof WorkSlugRoute
+  '/student': typeof StudentIndexRoute
   '/work': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lab/explain': typeof ApiPublicLabExplainRoute
@@ -317,6 +324,7 @@ export interface FileRoutesById {
   '/student/advanced': typeof StudentAdvancedRoute
   '/student/loan-limit-exception': typeof StudentLoanLimitExceptionRoute
   '/work/$slug': typeof WorkSlugRoute
+  '/student/': typeof StudentIndexRoute
   '/work/': typeof WorkIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/api/public/lab/explain': typeof ApiPublicLabExplainRoute
@@ -355,6 +363,7 @@ export interface FileRouteTypes {
     | '/student/advanced'
     | '/student/loan-limit-exception'
     | '/work/$slug'
+    | '/student/'
     | '/work/'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lab/explain'
@@ -385,12 +394,12 @@ export interface FileRouteTypes {
     | '/reconciliation'
     | '/releases'
     | '/sitemap.xml'
-    | '/student'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
     | '/student/loan-limit-exception'
     | '/work/$slug'
+    | '/student'
     | '/work'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lab/explain'
@@ -427,6 +436,7 @@ export interface FileRouteTypes {
     | '/student/advanced'
     | '/student/loan-limit-exception'
     | '/work/$slug'
+    | '/student/'
     | '/work/'
     | '/.mcp/invoke-tool/$tool'
     | '/api/public/lab/explain'
@@ -580,6 +590,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/': {
+      id: '/student/'
+      path: '/'
+      fullPath: '/student/'
+      preLoaderRoute: typeof StudentIndexRouteImport
+      parentRoute: typeof StudentRoute
+    }
     '/work/$slug': {
       id: '/work/$slug'
       path: '/work/$slug'
@@ -726,11 +743,13 @@ declare module '@tanstack/react-router' {
 interface StudentRouteChildren {
   StudentAdvancedRoute: typeof StudentAdvancedRoute
   StudentLoanLimitExceptionRoute: typeof StudentLoanLimitExceptionRoute
+  StudentIndexRoute: typeof StudentIndexRoute
 }
 
 const StudentRouteChildren: StudentRouteChildren = {
   StudentAdvancedRoute: StudentAdvancedRoute,
   StudentLoanLimitExceptionRoute: StudentLoanLimitExceptionRoute,
+  StudentIndexRoute: StudentIndexRoute,
 }
 
 const StudentRouteWithChildren =
