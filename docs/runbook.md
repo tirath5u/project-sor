@@ -110,3 +110,10 @@ suspected vulnerabilities.
 Maintainer: **Tirath Chhatriwala** - see the contact line in
 [`README.md`](../README.md). This is a personal open-source project; there
 is no on-call rotation. Best-effort response, no SLA.
+
+## Turning the password back on
+
+The staff calculator password is controlled by the `SITE_GATE_ENABLED` secret.
+- `false` (current): no password screen; everyone goes straight to the calculator.
+- `true`: the password screen returns and the saved `SITE_PASSWORD` works again.
+Change the value, then publish.
