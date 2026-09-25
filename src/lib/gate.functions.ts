@@ -33,10 +33,17 @@ function passwordMatches(input: string, expected: string): boolean {
   return timingSafeEqual(a, b);
 }
 
+/**
+ * On/off switch. The gate is active only when SITE_GATE_ENABLED === "true"
+ * AND SITE_PASSWORD is set. Set SITE_GATE_ENABLED to "true" to re-enable;
+ * SITE_PASSWORD is kept so the old password works again immediately.
+ */
+function gateActive(): boolean {
+  return process.env["SITE_GATE_ENABLED"] === "true" && !!process.env["SITE_PASSWORD"];
+}
+
 export const getGateStatus = createServerFn({ method: "GET" }).handler(async () => {
-  const expected = process.env["SITE_PASSWORD"];
-  // No password configured: the gate is disabled entirely.
-  if (!expected) return { unlocked: true as const, gateEnabled: false as const };
+  if (!gateActive()) return { unlocked: true as const, gateEnabled: false as const };
   const session = await useSession<GateSession>(sessionConfig());
   return { unlocked: session.data.unlocked === true, gateEnabled: true as const };
 });
@@ -50,7 +57,7 @@ export const unlockSite = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const expected = process.env["SITE_PASSWORD"];
-    if (!expected) return { ok: true as const };
+    if (!gateActive() || !expected) return { ok: true as const };
     if (!passwordMatches(data.password.trim(), expected)) {
       return { ok: false as const };
     }
