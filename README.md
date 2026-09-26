@@ -25,6 +25,29 @@ Built and maintained by **Tirath Chhatriwala**, Product Manager with over 14 yea
 
 ---
 
+## The problem
+
+The 2025 federal budget law (OBBBA) reduces Direct Loan limits for students enrolled less than full time, starting with the 2026-27 award year. Financial aid offices had to apply a new Schedule of Reductions to every part-time borrower, term by term, as the new rules took effect. Doing it by hand in spreadsheets invites errors that turn into over- or under-awarded loans, and students had no way to estimate what they would get.
+
+## The solution
+
+One tested calculation engine that follows the Department of Education's five-step process, exposed three ways: a staff calculator, a plain-English student estimate, and a free public API with an MCP server so AI agents query the real engine instead of guessing. It is used by financial aid offices at 80+ institutions.
+
+## Tradeoffs and decisions
+
+- **Deterministic engine, not AI inference.** Loan limits must be exact and auditable. AI agents get the engine as a tool through MCP; they never compute the numbers themselves.
+- **One engine, many views.** Staff, student, API and agent views all call the same code, so the numbers cannot drift apart between surfaces.
+- **Cite or don't claim.** Every published scenario carries its regulatory source, and unsettled guidance is labeled rather than assumed.
+- **Stateless and public.** No student data is stored, which keeps the API anonymous and free to use.
+- **Versioned, with parity checks.** Engine changes ship with release notes and a version comparison against approved fixtures, so a school can see exactly what changed.
+
+## What I learned
+
+- An AI assistant asked about loan proration will confidently produce a wrong number. Giving it the engine as a tool was a better fix than a better prompt.
+- Schools trust a number they can check. Publishing every scenario with its source, plus a way to challenge it, mattered as much as the math.
+
+---
+
 ## Try it in 30 seconds
 
 ```bash
@@ -174,7 +197,7 @@ bun install
 bun test
 ```
 
-The current suite includes 87 passing tests across the shared engine, parity fixtures, schema validation, numeric coercion edges, child/module allocation, single-term Grad PLUS sizing, traditional-proration suppression, and Phase B comparison safety. CI runs the same suite on every push and pull request.
+The current suite includes 160 passing tests (12 test files, verified 2026-09-27) across the shared engine, parity fixtures, schema validation, numeric coercion edges, child/module allocation, single-term Grad PLUS sizing, traditional-proration suppression, and Phase B comparison safety. CI runs the same suite on every push and pull request.
 
 A second verification path is executable contract testing: CI pulls the documented request example from `/api/public/v1/openapi.json`, posts it to `/api/public/v1/calculate`, and checks the documented stable fields. The exported Postman collection in `postman/` runs nightly through Newman against the live API.
 

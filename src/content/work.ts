@@ -26,7 +26,7 @@ export const CASE_STUDIES: CaseStudy[] = [
     period: "2026",
     metrics: [
       { label: "Audiences served", value: "4" },
-      { label: "Regression tests", value: "89 passing" },
+      { label: "Regression tests", value: "160 passing" },
       { label: "Public endpoints", value: "V1 + V2" },
       { label: "Source-labelled fixtures", value: "psr-001…008" },
     ],
