@@ -199,6 +199,8 @@ bun test
 
 The current suite includes 160 passing tests (12 test files, verified 2026-09-27) across the shared engine, parity fixtures, schema validation, numeric coercion edges, child/module allocation, single-term Grad PLUS sizing, traditional-proration suppression, and Phase B comparison safety. CI runs the same suite on every push and pull request.
 
+Suite-by-suite results, including what they do and do not prove, are in [docs/evaluation-results.md](docs/evaluation-results.md).
+
 A second verification path is executable contract testing: CI pulls the documented request example from `/api/public/v1/openapi.json`, posts it to `/api/public/v1/calculate`, and checks the documented stable fields. The exported Postman collection in `postman/` runs nightly through Newman against the live API.
 
 ---
