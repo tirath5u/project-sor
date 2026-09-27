@@ -14,6 +14,7 @@ import {
   getLabScenario,
 } from "@/lib/lab/fixtures";
 import { decideReviewGate, retrieveProcedures } from "@/lib/lab/retrieval";
+import { getLabStudyCase } from "@/lib/lab/study/cases";
 import { LAB_LIMITS } from "@/lib/lab/throttle";
 import { requestLabExplanation } from "@/lib/lab/explain.server";
 import { CORS_HEADERS, resolveRequestId } from "@/lib/api-errors";
@@ -67,7 +68,10 @@ export const Route = createFileRoute("/api/public/lab/explain")({
           );
         }
 
-        const scenario = getLabScenario(parsed.data.scenarioId);
+        // Built-in scenarios plus the comparison-study cases. The study cases
+        // carry no expected answer; the held-out set is never reachable here.
+        const scenario =
+          getLabScenario(parsed.data.scenarioId) ?? getLabStudyCase(parsed.data.scenarioId);
         if (!scenario) {
           return json(
             {
