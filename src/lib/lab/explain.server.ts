@@ -18,7 +18,7 @@ import {
   type LabExplainFailureReason,
 } from "./ai-contract";
 import { formatCents, type LabComparison } from "./compare";
-import type { LabScenario } from "./fixtures";
+import type { LabScenarioInput } from "./fixtures";
 import type { LabRetrieval, LabReviewGate } from "./retrieval";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -33,7 +33,7 @@ export interface LabModelOutcome {
 }
 
 function buildPrompt(
-  scenario: LabScenario,
+  scenario: LabScenarioInput,
   comparison: LabComparison,
   retrieval: LabRetrieval,
   gate: LabReviewGate,
@@ -98,7 +98,7 @@ function stripFences(text: string): string {
 }
 
 export async function requestLabExplanation(
-  scenario: LabScenario,
+  scenario: LabScenarioInput,
   comparison: LabComparison,
   retrieval: LabRetrieval,
   gate: LabReviewGate,
