@@ -13,7 +13,7 @@ import {
   LAB_PROCEDURES,
   LAB_PROCEDURE_CORPUS_VERSION,
   type LabProcedure,
-  type LabScenario,
+  type LabScenarioInput,
 } from "./fixtures";
 import { findingKinds, type LabComparison } from "./compare";
 
@@ -95,7 +95,7 @@ export function isProcedureApplicable(p: LabProcedure, c: LabComparison): boolea
 }
 
 export function retrieveProcedures(
-  scenario: LabScenario,
+  scenario: LabScenarioInput,
   comparison: LabComparison,
 ): LabRetrieval {
   const kinds = findingKinds(comparison);
