@@ -70,6 +70,13 @@ export const Route = createFileRoute("/api/public/v2/compare")({
         try {
           const left = runCanonicalV2(parsed.data.left);
           const right = runCanonicalV2(parsed.data.right);
+          const missingInputs = [
+            ...left.normalized.missingRequiredInputs.map((item) => ({ ...item, field: `left.${item.field}` })),
+            ...right.normalized.missingRequiredInputs.map((item) => ({ ...item, field: `right.${item.field}` })),
+          ];
+          if (missingInputs.length > 0) {
+            return jsonResponse({ status: "needs_input", canCalculate: false, missingInputs, nextQuestions: missingInputs.map((item) => item.question) }, { status: 422, headers: { "X-Request-Id": requestId } });
+          }
           return jsonResponse(
             {
               status: "compared",

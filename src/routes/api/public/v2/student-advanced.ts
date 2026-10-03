@@ -69,6 +69,9 @@ export const Route = createFileRoute("/api/public/v2/student-advanced")({
 
         try {
           const run = runCanonicalV2(parsed.data.input);
+          if (run.normalized.missingRequiredInputs.length > 0) {
+            return jsonResponse({ status: "needs_input", canCalculate: false, missingInputs: run.normalized.missingRequiredInputs, nextQuestions: run.normalized.missingRequiredInputs.map((item) => item.question) }, { status: 422, headers: { "X-Request-Id": requestId } });
+          }
           const result = run.data;
           return jsonResponse(
             {

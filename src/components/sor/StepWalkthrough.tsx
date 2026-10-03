@@ -30,8 +30,11 @@ function Eq({ children }: { children: React.ReactNode }) {
 export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; results: SORResults }) {
   const eligible = results.termResults.filter((t) => t.eligible);
   const enabled = results.termResults.filter((t) => t.enabled);
-  const enrolledExpr = eligible.map((t) => t.effectiveCredits).join(" + ") || "0";
-  const ftExpr = inputs.ayFtCredits > 0 ? String(inputs.ayFtCredits) : "-";
+  const enrolledExpr = String(results.enrolledSumAll);
+  const ftExpr = String(results.ftSumAll);
+  const appliedStage = results.calculationStages?.find((stage) => stage.id === "ordinary-pre-sor-maximum")?.output;
+  const appliedSub = typeof appliedStage?.appliedSubBaseline === "number" ? appliedStage.appliedSubBaseline : results.subBaseline;
+  const appliedUnsub = typeof appliedStage?.appliedUnsubBaseline === "number" ? appliedStage.appliedUnsubBaseline : results.unsubBaseline;
   const ayPctRoundedPct = Math.round(results.sorPctRounded * 100);
 
   // Step 3 formula proof - for "equal" model, payout = pool ÷ N eligible terms.
@@ -110,8 +113,8 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
       <section className="border-b border-border py-4">
         <StepHeader
           n={2}
-          title="SOR % (Academic Year reduction factor) → Annual Loan Limit"
-          tip="SOR % = Σ AY enrolled credits ÷ AY FT credits, rounded. This is the calculation input that reduces the annual baselines. Distinct from per-term Enrollment Intensity (EI), which is the value reported to COD."
+          title={results.loanPeriodScope === "singleTerm" ? "Selected-Term SOR % and Reduced Limit" : "SOR % (Academic Year reduction factor) and Annual Loan Limit"}
+          tip={results.loanPeriodScope === "singleTerm" ? "Use the selected payment period's enrolled and full-time credits with its one-term eligibility base." : "SOR % = counted AY enrolled credits divided by AY full-time credits, rounded. This reduces the annual baselines and is distinct from COD enrollment intensity."}
         />
         <Eq>
           SOR % = ({enrolledExpr}) ÷ {ftExpr}
@@ -123,13 +126,13 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
         </Eq>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <Eq>
-            <div className="text-muted-foreground">Annual Sub limit:</div>
-            {fmtCurrency(results.subBaseline)} × {ayPctRoundedPct}% ={" "}
+            <div className="text-muted-foreground">{results.loanPeriodScope === "singleTerm" ? "Single-term Sub limit:" : "Annual Sub limit:"}</div>
+            {fmtCurrency(appliedSub)} × {ayPctRoundedPct}% ={" "}
             <span className="font-semibold text-primary">{fmtCurrency(results.reducedSub)}</span>
           </Eq>
           <Eq>
-            <div className="text-muted-foreground">Annual Unsub limit:</div>
-            {fmtCurrency(results.unsubBaseline)} × {ayPctRoundedPct}%
+            <div className="text-muted-foreground">{results.loanPeriodScope === "singleTerm" ? "Single-term Unsub limit:" : "Annual Unsub limit:"}</div>
+            {fmtCurrency(appliedUnsub)} × {ayPctRoundedPct}%
             {results.shiftedToUnsub > 0 ? ` + ${fmtCurrency(results.shiftedToUnsub)} shift` : ""} ={" "}
             <span className="font-semibold text-primary">{fmtCurrency(results.reducedUnsub)}</span>
           </Eq>
@@ -149,13 +152,13 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
           tip="Equal = annual ÷ N eligible terms. Proportional = weighted by each term's effective enrolled credits (not FT credits). Equal is the regulatory default."
         />
         <p className="mb-2 text-xs text-muted-foreground">
-          {inputs.distributionModel === "equal"
-            ? `Equal model: pool ÷ N eligible terms. Whole dollars; the last term absorbs any remainder.`
+          {results.effectiveDistributionModel === "equal"
+            ? `Equal model: pool ÷ N eligible terms. Whole-dollar residual follows the displayed term allocation.`
             : `Proportional model: each term's share = pool × (term effective enrolled credits ÷ Σ remaining eligible enrolled credits). The Department workbook labels say "FT credits" but the formulas weight by enrolled credits; this engine follows the formulas.`}
         </p>
         {N > 0 ? (
           <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {inputs.distributionModel === "equal" ? (
+            {results.effectiveDistributionModel === "equal" ? (
               <>
                 <Eq>
                   <div className="text-muted-foreground">Sub payout per term:</div>
@@ -164,7 +167,7 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
                   {results.reducedSub % N !== 0 ? (
                     <span className="text-muted-foreground">
                       {" "}
-                      (last term absorbs +{fmtCurrency(results.reducedSub - equalSubPer * N)})
+                      ({results.noReduction ? "first" : "last"} eligible term absorbs +{fmtCurrency(results.reducedSub - equalSubPer * N)})
                     </span>
                   ) : null}
                 </Eq>
@@ -175,7 +178,7 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
                   {results.reducedUnsub % N !== 0 ? (
                     <span className="text-muted-foreground">
                       {" "}
-                      (last term absorbs +{fmtCurrency(results.reducedUnsub - equalUnsubPer * N)})
+                      ({results.noReduction ? "first" : "last"} eligible term absorbs +{fmtCurrency(results.reducedUnsub - equalUnsubPer * N)})
                     </span>
                   ) : null}
                 </Eq>

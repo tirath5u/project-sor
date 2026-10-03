@@ -21,6 +21,7 @@ import {
   RELEASE_ID,
   SOURCE_COMMIT,
   SOURCE_COMMIT_STATUS,
+  SOURCE_FINGERPRINT,
   DEPLOYMENT_MARKER,
 } from "@/lib/sor.version";
 
@@ -34,7 +35,7 @@ const TermPatchSchema = z
     ftCredits: z.number().min(0).max(60).optional(),
     enrolledCredits: z.number().min(0).max(60).optional(),
     disbursed: z.boolean().optional(),
-    actualCredits: z.number().min(0).max(60).optional(),
+    actualCredits: z.number().min(0).max(60).nullable().optional(),
     paidSub: z.number().nullable().optional(),
     paidUnsub: z.number().nullable().optional(),
     refundSub: z.number().nullable().optional(),
@@ -81,11 +82,13 @@ const InputSchema = {
   awardYear: z.enum(["2025-26", "2026-27"]).optional(),
   loanLimitException: z.boolean().optional(),
   programLevel: z.enum(["undergraduate", "graduate"]).optional(),
-  gradeLevel: z.string().optional(),
+  gradeLevel: z.enum(["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10", "g11", "g12", "g13"]).optional(),
   dependency: z.enum(["dependent", "independent"]).optional(),
   parentPlusDenied: z.boolean().optional(),
+  singleTermPaymentPeriod: TermKeyEnum.optional(),
   ayType: z.enum(["SAY", "BBAY1", "BBAY2"]).optional(),
   calType: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
+  calendarCategory: z.enum(["standardTerm", "nonstandardEqualNineWeeks", "nonstandardNeedsReview", "nontermCreditHour", "clockHour", "subscription"]).optional(),
   summerPosition: z.enum(["none", "trailer", "header"]).optional(),
   loanPeriodScope: z.enum(["annualMultiTerm", "singleTerm"]).optional(),
   numStandardTerms: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
@@ -143,6 +146,7 @@ const InputSchema = {
   remainingAggregateUnsub: z.number().min(0).nullable().optional(),
   remainingAggregateCombined: z.number().min(0).nullable().optional(),
   coaScope: z.enum(["academicYear", "singleTerm"]).optional(),
+  detailLevel: z.enum(["compact", "detailed"]).optional(),
 };
 
 const RequiredField = z.object(InputSchema).passthrough();
@@ -230,6 +234,24 @@ function isPresent(input: Record<string, unknown>, field: string) {
 
 function getMissingInputs(input: Record<string, unknown>) {
   const missing = requiredFields.filter((item) => !isPresent(input, item.field));
+  if (input.loanPeriodScope === "singleTerm" && !isPresent(input, "singleTermPaymentPeriod")) {
+    missing.push({ field: "singleTermPaymentPeriod", label: "Single-term payment period", reason: "A true one-term loan needs its payment period identified separately from the academic-year structure.", question: "Which term is covered by this single-term loan?" });
+  }
+  if (input.loanPeriodScope === "singleTerm" && typeof input.singleTermPaymentPeriod === "string") {
+    const terms = input.terms as Record<string, Record<string, unknown>> | undefined;
+    const selectedTerm = terms?.[input.singleTermPaymentPeriod];
+    if (!selectedTerm) {
+      missing.push({ field: `terms.${input.singleTermPaymentPeriod}`, label: "Selected payment-period enrollment", reason: "The selected period needs its own full-time and enrolled credits.", question: `What are the full-time and enrolled credits for ${input.singleTermPaymentPeriod}?` });
+    } else {
+      if (!isPresent(selectedTerm, "ftCredits"))
+        missing.push({ field: `terms.${input.singleTermPaymentPeriod}.ftCredits`, label: "Selected full-time credits", reason: "The selected period needs its full-time threshold.", question: `What is the full-time credit value for ${input.singleTermPaymentPeriod}?` });
+      if (!isPresent(selectedTerm, "enrolledCredits"))
+        missing.push({ field: `terms.${input.singleTermPaymentPeriod}.enrolledCredits`, label: "Selected enrolled credits", reason: "The selected period needs its enrolled credits.", question: `How many credits is the borrower enrolled in for ${input.singleTermPaymentPeriod}?` });
+    }
+  }
+  if (input.parentPlusEligibilityBasis === "adverseCreditDenied" && input.dependency === "dependent" && input.awardYear === "2026-27" && input.loanLimitException !== true && !isPresent(input, "parentPlusAggregateUsed")) {
+    missing.push({ field: "parentPlusAggregateUsed", label: "Parent PLUS aggregate used", reason: "Additional dependent Unsub eligibility ends when the Parent PLUS aggregate is exhausted.", question: "How much has the parent already borrowed against the $65,000 Parent PLUS aggregate?" });
+  }
   const terms = input.terms as Record<string, Record<string, unknown>> | undefined;
   const count = typeof input.numStandardTerms === "number" ? input.numStandardTerms : 0;
   if (terms && count > 0) {
@@ -257,6 +279,8 @@ function getMissingInputs(input: Record<string, unknown>) {
             reason: "The SOR numerator and term eligibility need enrolled credits.",
             question: `How many credits is the borrower enrolled in for ${key}?`,
           });
+        if (input.viewMode === "disbursement" && term.disbursed === true && !isPresent(term, "actualCredits"))
+          missing.push({ field: `terms.${key}.actualCredits`, label: `${key} actual credits`, reason: "The already-paid term still contributes its actual credits to the annual SOR percentage.", question: `How many Title IV-countable credits did the student actually attend in ${key}?` });
       }
     }
   }
@@ -266,7 +290,7 @@ function getMissingInputs(input: Record<string, unknown>) {
 function explanation(data: Record<string, unknown>) {
   return {
     summary:
-      "This result was calculated by the shared Project SOR engine. Gross amounts are authoritative for eligibility; net amounts are display values after fees. Parent PLUS remaining eligibility and aggregate usage are not calculated by this service and must be verified separately.",
+      "This result was calculated by the shared Project SOR engine. Gross amounts determine eligibility; net amounts display estimated proceeds after fees. Verify remaining aggregate eligibility and institution-specific packaging checks separately.",
     calculationStages: data.calculationStages ?? [],
     warnings: data.warnings ?? [],
     appliedRuleIds: [
@@ -280,11 +304,12 @@ function explanation(data: Record<string, unknown>) {
     notModeledChecks: Array.from(
       new Set([
         ...(Array.isArray(data.notModeledChecks) ? data.notModeledChecks : []),
-        "Parent PLUS remaining eligibility and aggregate usage",
+        "Institution-verified remaining eligibility and loan history",
       ]),
     ),
     citations: [
       "https://fsapartners.ed.gov/more-info/important-dates/2026/06/10/live-webinar-schedule-reductions/loan-limits",
+      "https://fsapartners.ed.gov/sites/default/files/2026-08/FAQReducingAnnualLoanLimitsLessthanFullTimeEnrollment.pdf",
     ],
   };
 }
@@ -293,9 +318,9 @@ export default defineTool({
   name: "calculate_sor",
   title: "Calculate Schedule of Reductions",
   description:
-    "Run the source-backed V56 Schedule of Reductions engine. The tool does not use demo defaults for required borrower, enrollment, loan-period, financial, or paid-history facts. If the request is incomplete, it returns exact follow-up questions. When complete, it returns gross and net results, calculation stages, warnings, modeled checks, and public citations. Parent PLUS aggregate usage and remaining eligibility are not modeled, so the tool will identify that external check rather than inventing an answer.",
+    "Calculate Direct Loan Schedule of Reductions using source-backed rules. Missing facts produce specific follow-up questions, not demo defaults. Returns gross eligibility, term payouts, warnings, and public source links. Use detailLevel=detailed for full calculation stages.",
   inputSchema: InputSchema,
-  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   handler: async (rawInput) => {
     const input = rawInput as Record<string, unknown>;
     const parse = RequiredField.safeParse(input);
@@ -349,9 +374,10 @@ export default defineTool({
     }
 
     const base = defaultInputs();
+    const { detailLevel, ...calculationInput } = input;
     const merged: SORInputs = {
       ...base,
-      ...(input as Partial<SORInputs>),
+      ...(calculationInput as Partial<SORInputs>),
       terms: { ...base.terms },
     };
     if (input.terms) {
@@ -387,6 +413,10 @@ export default defineTool({
 
     try {
       const normalized = normalizeV2Input(parsed.data);
+      if (normalized.missingRequiredInputs.length > 0) {
+        const result = { status: "needs_input", canCalculate: false, missingInputs: normalized.missingRequiredInputs, nextQuestions: normalized.missingRequiredInputs.map((item) => item.question), meta: { engineVersion: ENGINE_VERSION, mcpVersion: MCP_VERSION, releaseId: RELEASE_ID } };
+        return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result as Record<string, unknown> };
+      }
       const data = calculateSORWithChildTerms(
         normalized.engineInput as unknown as SORInputs,
       ) as unknown as Record<string, unknown>;
@@ -397,14 +427,14 @@ export default defineTool({
         policySnapshotDate: POLICY_SNAPSHOT_DATE,
         sourceCommit: SOURCE_COMMIT,
         sourceCommitStatus: SOURCE_COMMIT_STATUS,
+        sourceFingerprint: SOURCE_FINGERPRINT,
         deploymentMarker: DEPLOYMENT_MARKER,
         releaseId: RELEASE_ID,
         sourceSet: [
-          "direct-loan-sor-v1",
-          "project-sor-v56-rule-corrections",
-          "department-vfg-july-23-2026",
+          "psr-001",
+          "psr-009",
+          "psr-011",
         ],
-        computedAt: new Date().toISOString(),
       };
       const authoritative = normalized.externalChecks.length === 0 && !normalized.blocked;
       const result = {
@@ -414,7 +444,13 @@ export default defineTool({
             ? "calculated_with_external_checks"
             : "calculated",
         canCalculate: true,
-        data,
+        data: detailLevel === "detailed" ? data : {
+          sorPctRounded: data.sorPctRounded,
+          reducedSub: data.reducedSub,
+          reducedUnsub: data.reducedUnsub,
+          reducedGradPlus: data.reducedGradPlus,
+          termResults: data.termResults,
+        },
         meta,
         contract: {
           calculationStatus: normalized.blocked
@@ -424,8 +460,7 @@ export default defineTool({
               : "calculated",
           authoritative,
           policyDecision: v2PolicyDecision(data, authoritative),
-          eligibilityStages: data.calculationStages ?? [],
-          modeledInputs: data.modeledInputs ?? [],
+          ...(detailLevel === "detailed" ? { eligibilityStages: data.calculationStages ?? [], modeledInputs: data.modeledInputs ?? [] } : {}),
           externalChecks: normalized.externalChecks,
           warnings: toV2Warnings(
             [
@@ -435,10 +470,13 @@ export default defineTool({
             normalized.externalChecks,
           ),
         },
-        explanation: explanation(data),
+        explanation: detailLevel === "detailed" ? explanation(data) : {
+          summary: explanation(data).summary,
+          citations: explanation(data).citations,
+        },
       };
       return {
-        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(result) }],
         structuredContent: result as Record<string, unknown>,
       };
     } catch (error) {

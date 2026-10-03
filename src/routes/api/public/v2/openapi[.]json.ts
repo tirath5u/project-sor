@@ -16,7 +16,7 @@ const termProperties = {
   ftCredits: { type: "number", minimum: 0, maximum: 60 },
   enrolledCredits: { type: "number", minimum: 0, maximum: 60 },
   disbursed: { type: "boolean" },
-  actualCredits: { type: "number", minimum: 0, maximum: 60 },
+  actualCredits: { type: ["number", "null"], minimum: 0, maximum: 60, description: "Required for paid-term recalculation; null means missing, not zero credits." },
   paidSub: { type: ["number", "null"], minimum: 0 },
   paidUnsub: { type: ["number", "null"], minimum: 0 },
   refundSub: { type: ["number", "null"], minimum: 0 },
@@ -71,7 +71,7 @@ const spec = {
   paths: {
     "/api/public/v2/health": {
       get: {
-        summary: "V56 health and release metadata",
+        summary: "Service health and release metadata",
         responses: {
           "200": {
             description: "Healthy",
@@ -97,7 +97,7 @@ const spec = {
     },
     "/api/public/v2/calculate": {
       post: {
-        summary: "Run the V56 SOR engine",
+        summary: "Run the current SOR engine",
         requestBody: {
           required: true,
           content: {
@@ -113,7 +113,7 @@ const spec = {
           },
           "400": { description: "Malformed request" },
           "415": { description: "Content-Type must be application/json" },
-          "422": { description: "Schema validation failed" },
+          "422": { description: "Schema validation failed or required facts are missing; response includes follow-up questions." },
           "429": { description: "Rate limited" },
         },
       },
@@ -256,6 +256,7 @@ const spec = {
           "deploymentMarker",
           "sourceCommit",
           "sourceCommitStatus",
+          "sourceFingerprint",
           "supportedAwardYears",
         ],
         properties: {
@@ -269,6 +270,7 @@ const spec = {
           deploymentMarker: { type: "string", example: RELEASE_ID },
           sourceCommit: { type: ["string", "null"], example: null },
           sourceCommitStatus: { type: "string", example: "not_available_in_lovable_build" },
+          sourceFingerprint: { type: "string", pattern: "^[a-f0-9]{64}$", description: "SHA-256 of the normalized reviewed application source at build time." },
           supportedAwardYears: { type: "object", additionalProperties: { type: "string" } },
         },
       },
@@ -292,7 +294,7 @@ const spec = {
         properties: {
           awardYear: { type: "string", enum: AWARD_YEARS },
           programLevel: { type: "string", enum: ["undergraduate", "graduate"] },
-          gradeLevel: { type: "string" },
+          gradeLevel: { type: "string", enum: ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10", "g11", "g12", "g13"] },
           dependency: { type: "string", enum: ["dependent", "independent"] },
           parentPlusDenied: {
             type: "boolean",
@@ -315,6 +317,9 @@ const spec = {
           },
           loanLimitException: { type: "boolean" },
           loanPeriodScope: { type: "string", enum: ["annualMultiTerm", "singleTerm"] },
+          singleTermPaymentPeriod: { type: "string", enum: ["term1", "term2", "term3", "term4", "summer1", "summer2", "winter1", "winter2"], description: "Required for a single-term loan; the academic-year term count remains unchanged." },
+          calType: { type: "integer", enum: [1, 2, 3, 4] },
+          calendarCategory: { type: "string", enum: ["standardTerm", "nonstandardEqualNineWeeks", "nonstandardNeedsReview", "nontermCreditHour", "clockHour", "subscription"], description: "Required to disambiguate legacy calendar codes 3 and 4. Review categories are not authoritative for awarding." },
           coaScope: { type: "string", enum: ["academicYear", "singleTerm"] },
           ayType: { type: "string", enum: ["SAY", "BBAY1", "BBAY2"] },
           numStandardTerms: { type: "integer", minimum: 1, maximum: 4 },

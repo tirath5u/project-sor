@@ -16,6 +16,7 @@ here** - no internal documents, spreadsheet paths, or private URLs.
 | `psr-008` | **ED Proportional Distribution Workbook** - Department rounding examples for enrolled-credit-weighted term shares (25/36, 14/14/6, 3/15, prior-term drop). Labels and formulas conflict; evidence is caveated. | pending-federal-guidance |
 | `psr-009` | **FSA OBBBA SOR and Loan Limits webinar, June 10, 2026** - Modules inside standard terms remain under the parent term or academic-year framework; child/module distribution remains institution-policy dependent when it does not create a second SOR calculation. | operational-clarification |
 | `psr-010` | **FSA FY27 sequester-required changes, GENERAL-26-28** - Direct Subsidized/Unsubsidized fee 1.057% and Direct PLUS fee 4.228%, with fee calculations truncated to cents. | stable |
+| `psr-011` | **FSA Frequently Asked Questions, Reducing Annual Loan Limits for Less-than-Full-Time Enrollment, as of July 2026** - Questions 6, 9, 17, and 19 cover calendar applicability, pre-SOR limits, subsequent disbursements, and one-term loans. [Official PDF](https://fsapartners.ed.gov/sites/default/files/2026-08/FAQReducingAnnualLoanLimitsLessthanFullTimeEnrollment.pdf). | operational-clarification |
 
 ## How to add a new entry
 

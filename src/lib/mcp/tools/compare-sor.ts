@@ -15,9 +15,9 @@ export default defineTool({
   name: "compare_sor",
   title: "Compare two SOR scenarios",
   description:
-    "Run two complete scenarios independently through the shared V56 engine and return numeric deltas, warning changes, authoritative status, and calculation results. This tool is stateless and does not save student or scenario payloads.",
+    "Run two complete scenarios independently through the shared SOR engine and compare numeric results, term payouts, warnings, and authority status. Do not include student identifiers.",
   inputSchema: { left: CalculateV2InputSchema, right: CalculateV2InputSchema },
-  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   handler: async (rawInput) => {
     const parsed = InputSchema.safeParse(rawInput);
     if (!parsed.success) {
@@ -42,6 +42,14 @@ export default defineTool({
 
     const left = runCanonicalV2(parsed.data.left);
     const right = runCanonicalV2(parsed.data.right);
+    const missingInputs = [
+      ...left.normalized.missingRequiredInputs.map((item) => ({ ...item, field: `left.${item.field}` })),
+      ...right.normalized.missingRequiredInputs.map((item) => ({ ...item, field: `right.${item.field}` })),
+    ];
+    if (missingInputs.length > 0) {
+      const result = { status: "needs_input", canCalculate: false, missingInputs, nextQuestions: missingInputs.map((item) => item.question) };
+      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result as Record<string, unknown> };
+    }
     const result = {
       status: "compared",
       left: {

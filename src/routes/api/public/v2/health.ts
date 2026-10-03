@@ -15,6 +15,7 @@ import {
   DEPLOYMENT_MARKER,
   SOURCE_COMMIT,
   SOURCE_COMMIT_STATUS,
+  SOURCE_FINGERPRINT,
   SUPPORTED_AWARD_YEARS,
 } from "@/lib/sor.version";
 
@@ -36,6 +37,7 @@ export const Route = createFileRoute("/api/public/v2/health")({
             deploymentMarker: DEPLOYMENT_MARKER,
             sourceCommit: SOURCE_COMMIT,
             sourceCommitStatus: SOURCE_COMMIT_STATUS,
+            sourceFingerprint: SOURCE_FINGERPRINT,
             supportedAwardYears: SUPPORTED_AWARD_YEARS,
             requestId,
           },

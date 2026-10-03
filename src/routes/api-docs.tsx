@@ -43,7 +43,7 @@ const endpoints = [
     method: "GET",
     path: "/api/public/v2/health",
     purpose:
-      "Check liveness, V56 engine and MCP versions, release, policy snapshot, and source commit.",
+      "Check liveness, current engine and MCP versions, release, policy snapshot, and source marker.",
   },
   {
     method: "GET",
@@ -54,7 +54,7 @@ const endpoints = [
   {
     method: "POST",
     path: "/api/public/v2/calculate",
-    purpose: "Run the V56 SOR engine with calculation stages, warnings, and release metadata.",
+    purpose: "Run the current SOR engine with calculation stages, warnings, and release metadata.",
   },
   {
     method: "POST",
@@ -66,7 +66,7 @@ const endpoints = [
     method: "POST",
     path: "/api/public/v2/compare",
     purpose:
-      "Compare two complete scenarios through independent shared-engine runs without storing payloads.",
+      "Compare two complete scenarios through independent shared-engine runs.",
   },
   {
     method: "POST",
@@ -88,7 +88,7 @@ const endpoints = [
     method: "POST",
     path: "/mcp",
     purpose:
-      "Use the read-only remote MCP server to discover scenarios and run the same V56 engine with follow-up questions and explanations.",
+      "Use the read-only remote MCP server to discover scenarios and run the current engine with follow-up questions and explanations.",
   },
 ];
 
@@ -99,7 +99,7 @@ const responseCodes = [
   ["406", "Client requested a non JSON response."],
   ["413", "Request body exceeds the documented size cap."],
   ["415", "Content-Type is not application/json."],
-  ["422", "Well formed JSON failed the published input schema."],
+  ["422", "Well formed JSON failed validation or requires specific scenario facts."],
   ["429", "Best effort per isolate rate limit exceeded."],
   ["500", "Unexpected calculation engine failure."],
 ];
@@ -310,13 +310,13 @@ function ApiDocsPage() {
               </code>
               . It exposes <code>list_scenarios</code>, <code>calculate_sor</code>,{" "}
               <code>compare_sor</code>, <code>advanced_student_estimate</code>, and{" "}
-              <code>compare_sor_versions</code>, including the optional V56 child/module allocation
-              layer. MCP clients must support remote MCP and may require workspace or administrator
+              <code>check_loan_limit_exception</code>, including the optional child/module allocation
+              layer in calculation requests. MCP clients must support remote MCP and may require workspace or administrator
               approval. Streamable HTTP clients should send{" "}
               <code>Accept: application/json, text/event-stream</code> and retain the MCP session
-              identifier returned during initialization. Parent PLUS aggregate usage and remaining
-              eligibility are external checks and are identified in the calculation response rather
-              than inferred by this service.
+              identifier when returned during initialization. Parent PLUS aggregate usage must be
+              supplied by the caller for the adverse-credit path; remaining aggregate eligibility
+              still needs school verification.
             </div>
           </div>
         </section>

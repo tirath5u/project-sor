@@ -132,7 +132,7 @@ export function exportSORCaseFile({
     ["Parent PLUS denied", inputs.parentPlusDenied ? "Yes" : "No"],
     ["Override statutory limits", inputs.overrideLimits ? "Yes" : "No"],
     ["View mode", inputs.viewMode],
-    ["Distribution model", inputs.distributionModel],
+    ["Distribution model", results.effectiveDistributionModel],
   ]);
 
   // ---------- 2. COMPUTED BASELINES ----------
@@ -192,8 +192,8 @@ export function exportSORCaseFile({
       fmtCurrency(t.paidUnsub),
       `${fmtCurrency(t.refundSub)} / ${fmtCurrency(t.refundUnsub)}`,
       safe(
-        `${t.coaCapSub ? fmtCurrency(t.coaCapSub) : "—"} / ${
-          t.coaCapUnsub ? fmtCurrency(t.coaCapUnsub) : "—"
+        `${t.coaCapSub ? fmtCurrency(t.coaCapSub) : "-"} / ${
+          t.coaCapUnsub ? fmtCurrency(t.coaCapUnsub) : "-"
         }`,
       ),
     ]),
@@ -259,6 +259,9 @@ export function exportSORCaseFile({
   const eligibleTerms = results.termResults.filter((t) => t.eligible);
   const enabledTerms = results.termResults.filter((t) => t.enabled);
   const ayPctRoundedPct = Math.round(results.sorPctRounded * 100);
+  const appliedStage = results.calculationStages?.find((stage) => stage.id === "ordinary-pre-sor-maximum")?.output;
+  const appliedSub = typeof appliedStage?.appliedSubBaseline === "number" ? appliedStage.appliedSubBaseline : results.subBaseline;
+  const appliedUnsub = typeof appliedStage?.appliedUnsubBaseline === "number" ? appliedStage.appliedUnsubBaseline : results.unsubBaseline;
   const shareSubLine = eligibleTerms.map((t) => `${t.label} ${fmtCurrency(t.shareSub)}`).join(", ");
   const shareUnsubLine = eligibleTerms
     .map((t) => `${t.label} ${fmtCurrency(t.shareUnsub)}`)
@@ -271,14 +274,14 @@ export function exportSORCaseFile({
   const eligibleCreditSum = eligibleTerms.reduce((s, t) => s + t.effectiveCredits, 0);
   let step3Formula = "";
   if (N > 0) {
-    if (inputs.distributionModel === "equal") {
+    if (results.effectiveDistributionModel === "equal") {
       const subRem = results.reducedSub - equalSubPer * N;
       const unsubRem = results.reducedUnsub - equalUnsubPer * N;
       step3Formula =
         ` Equal model: Sub ${fmtCurrency(results.reducedSub)} / ${N} = ${fmtCurrency(equalSubPer)} per term` +
-        (subRem !== 0 ? ` (last term absorbs +${fmtCurrency(subRem)})` : "") +
+        (subRem !== 0 ? ` (${results.noReduction ? "first" : "last"} eligible term absorbs +${fmtCurrency(subRem)})` : "") +
         `; Unsub ${fmtCurrency(results.reducedUnsub)} / ${N} = ${fmtCurrency(equalUnsubPer)} per term` +
-        (unsubRem !== 0 ? ` (last term absorbs +${fmtCurrency(unsubRem)})` : "") +
+        (unsubRem !== 0 ? ` (${results.noReduction ? "first" : "last"} eligible term absorbs +${fmtCurrency(unsubRem)})` : "") +
         ".";
     } else {
       step3Formula =
@@ -301,16 +304,16 @@ export function exportSORCaseFile({
     )}. Unsub = Combined limit ${fmtCurrency(
       results.effectiveCombinedLimit,
     )} - ${fmtCurrency(results.subBaseline)} = ${fmtCurrency(results.unsubBaseline)}.`,
-    `Step 2 - Academic Year enrollment %: ${results.enrolledSumAll} / ${results.ftSumAll} = ${(
+    `Step 2 - ${results.loanPeriodScope === "singleTerm" ? "Selected-term" : "Academic Year"} enrollment %: ${results.enrolledSumAll} / ${results.ftSumAll} = ${(
       results.enrollmentFractionRaw * 100
-    ).toFixed(2)}% -> rounded to ${ayPctRoundedPct}%. Reduced annual Sub ${fmtCurrency(
-      results.subBaseline,
+    ).toFixed(2)}% -> rounded to ${ayPctRoundedPct}%. Reduced ${results.loanPeriodScope === "singleTerm" ? "selected-term" : "annual"} Sub ${fmtCurrency(
+      appliedSub,
     )} x ${ayPctRoundedPct}% = ${fmtCurrency(
       results.reducedSub,
-    )}; Unsub ${fmtCurrency(results.unsubBaseline)} x ${ayPctRoundedPct}% = ${fmtCurrency(
+    )}; Unsub ${fmtCurrency(appliedUnsub)} x ${ayPctRoundedPct}% = ${fmtCurrency(
       results.reducedUnsub,
     )}.`,
-    `Step 3 - Per-term share via "${inputs.distributionModel}" model across ${results.eligibleTermsCount} eligible term(s).${step3Formula} Resulting Sub split: ${shareSubLine || "n/a"}. Unsub split: ${shareUnsubLine || "n/a"}.`,
+    `Step 3 - Per-term share via "${results.effectiveDistributionModel}" model across ${results.eligibleTermsCount} eligible term(s).${step3Formula} Resulting Sub split: ${shareSubLine || "n/a"}. Unsub split: ${shareUnsubLine || "n/a"}.`,
     `Step 4 - Term enrollment % (term enrolled / term FT): ${enabledTerms
       .map(
         (t) =>

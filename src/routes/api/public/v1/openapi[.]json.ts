@@ -340,6 +340,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                   "deploymentMarker",
                   "sourceCommit",
                   "sourceCommitStatus",
+                  "sourceFingerprint",
                   "supportedAwardYears",
                   "requestId",
                 ],
@@ -354,6 +355,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                   deploymentMarker: { type: "string", example: RELEASE_ID },
                   sourceCommit: { type: ["string", "null"], example: null },
                   sourceCommitStatus: { type: "string", example: "not_available_in_lovable_build" },
+                  sourceFingerprint: { type: "string", pattern: "^[a-f0-9]{64}$" },
                   supportedAwardYears: {
                     type: "object",
                     additionalProperties: { type: "string" },
@@ -551,6 +553,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                   "deploymentMarker",
                   "sourceCommit",
                   "sourceCommitStatus",
+                  "sourceFingerprint",
                   "policyStatus",
                   "sourceSet",
                   "citations",
@@ -565,6 +568,7 @@ export const Route = createFileRoute("/api/public/v1/openapi.json")({
                   deploymentMarker: { type: "string", example: RELEASE_ID },
                   sourceCommit: { type: ["string", "null"], example: null },
                   sourceCommitStatus: { type: "string", example: "not_available_in_lovable_build" },
+                  sourceFingerprint: { type: "string", pattern: "^[a-f0-9]{64}$" },
                   policyStatus: {
                     type: "string",
                     enum: ["confirmed", "supported-preliminary"],

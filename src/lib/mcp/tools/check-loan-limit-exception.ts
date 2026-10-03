@@ -25,7 +25,7 @@ export default defineTool({
     hasSchoolProvidedCoaAndOfa: z.boolean().optional(),
     studentDisclosureAcknowledged: z.boolean().optional(),
   },
-  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   handler: async (rawInput) => {
     const parsed = CheckLoanLimitExceptionInputSchema.safeParse(rawInput ?? {});
     if (!parsed.success) {

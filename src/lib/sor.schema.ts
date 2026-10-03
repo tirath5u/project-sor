@@ -99,7 +99,7 @@ const TermInputSchema = z.object({
   ftCredits: strictNumber({ min: 0, max: 60 }),
   enrolledCredits: strictNumber({ min: 0, max: 60 }),
   disbursed: z.boolean(),
-  actualCredits: strictNumber({ min: 0, max: 60 }),
+  actualCredits: z.number().finite().min(0).max(60).nullable(),
   paidSub: nullableMoney,
   paidUnsub: nullableMoney,
   refundSub: nullableMoney,
@@ -126,6 +126,7 @@ export const CalculateInputSchema = z
   .object({
     viewMode: z.enum(["plan", "disbursement"]),
     calType: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+    calendarCategory: z.enum(["standardTerm", "nonstandardEqualNineWeeks", "nonstandardNeedsReview", "nontermCreditHour", "clockHour", "subscription"]).optional(),
     programLevel: z.enum(["undergraduate", "graduate"]),
     summerPosition: z.enum(["none", "trailer", "header"]),
     ayType: z.enum(["SAY", "BBAY1", "BBAY2"]),
@@ -133,6 +134,7 @@ export const CalculateInputSchema = z
       .enum(["annualMultiTerm", "singleTerm"])
       .optional()
       .default("annualMultiTerm"),
+    singleTermPaymentPeriod: TermKeySchema.optional(),
     numStandardTerms: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
     includeSummer1: z.boolean(),
     includeSummer2: z.boolean(),
@@ -157,6 +159,7 @@ export const CalculateInputSchema = z
     ]),
     dependency: z.enum(["dependent", "independent"]),
     parentPlusDenied: z.boolean(),
+    parentPlusAggregateUsed: z.number().finite().min(0).nullable().optional(),
     overrideLimits: z.boolean(),
     annualNeed: strictNumber({ min: 0, max: 1_000_000 }),
     subStatutory: strictNumber({ min: 0, max: 1_000_000 }),

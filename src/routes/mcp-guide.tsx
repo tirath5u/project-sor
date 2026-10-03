@@ -43,7 +43,8 @@ function McpGuidePage() {
             Project SOR is a source-backed Schedule of Reductions calculation engine available
             through Excel, the web, a REST API, and a remote MCP server. The same tested engine
             supports detailed staff workflows, student-friendly estimates, AI-assisted scenario
-            intake, stateless scenario comparison, and approved V55 versus V56 migration review.
+            intake and scenario comparison. Historical V55 versus V56 migration review remains
+            available on the website, not as a public MCP tool.
           </p>
           <div className="flex flex-wrap gap-3">
             <Button asChild>

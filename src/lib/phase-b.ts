@@ -19,8 +19,9 @@ export interface CanonicalV2Run {
 export function runCanonicalV2(input: CalculateV2Input): CanonicalV2Run {
   const normalized = normalizeV2Input(input);
   const data = calculateSORWithChildTerms(normalized.engineInput as unknown as SORInputs);
-  const authoritative = normalized.externalChecks.length === 0 && !normalized.blocked;
-  const status = normalized.blocked
+  const authoritative = normalized.externalChecks.length === 0 && !normalized.blocked
+    && normalized.missingRequiredInputs.length === 0;
+  const status = normalized.blocked || normalized.missingRequiredInputs.length > 0
     ? "blocked"
     : normalized.externalChecks.length > 0
       ? "calculated_with_external_checks"

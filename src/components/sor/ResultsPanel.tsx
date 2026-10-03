@@ -40,11 +40,13 @@ export function ResultsPanel({
   inputs,
   scenarioTitle,
   scenarioId,
+  reviewMessages = [],
 }: {
   results: SORResults;
   inputs?: SORInputs;
   scenarioTitle?: string;
   scenarioId?: string;
+  reviewMessages?: string[];
 }) {
   const visibleTerms = results.termResults.filter((t) => t.enabled);
   return (
@@ -55,11 +57,20 @@ export function ResultsPanel({
       aria-live="polite"
       className="space-y-5 xl:border-l-2 xl:border-primary/30 xl:pl-4"
     >
+      {reviewMessages.length > 0 ? (
+        <div role="alert" className="border border-warning/50 bg-warning/10 px-3 py-2 text-xs text-warning-foreground">
+          <p className="font-semibold">Review required before using or exporting this calculation</p>
+          <ul className="mt-1 list-disc space-y-1 pl-4">
+            {reviewMessages.map((message) => <li key={message}>{message}</li>)}
+          </ul>
+        </div>
+      ) : null}
       {inputs ? (
         <Button
           variant="outline"
           size="sm"
           onClick={() => exportSORCaseFile({ inputs, results, scenarioTitle, scenarioId })}
+          disabled={reviewMessages.length > 0}
           className="w-full justify-center gap-2 rounded-lg"
         >
           <FileDown className="h-4 w-4" /> Export PDF case file

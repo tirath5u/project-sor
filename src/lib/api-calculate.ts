@@ -23,6 +23,7 @@ import {
   RELEASE_ID,
   SOURCE_COMMIT,
   SOURCE_COMMIT_STATUS,
+  SOURCE_FINGERPRINT,
   DEPLOYMENT_MARKER,
 } from "@/lib/sor.version";
 
@@ -135,7 +136,17 @@ export async function handleCalculateRequest(request: Request, contractVersion: 
           externalChecks: [],
           warnings: [],
           blocked: false,
+          missingRequiredInputs: [],
         };
+
+  if (normalized.missingRequiredInputs.length > 0) {
+    return jsonResponse({
+      status: "needs_input",
+      canCalculate: false,
+      missingInputs: normalized.missingRequiredInputs,
+      nextQuestions: normalized.missingRequiredInputs.map((item) => item.question),
+    }, { status: 422, headers: { "X-Request-Id": requestId } });
+  }
 
   let data;
   try {
@@ -161,16 +172,18 @@ export async function handleCalculateRequest(request: Request, contractVersion: 
       policySnapshotDate: POLICY_SNAPSHOT_DATE,
       sourceCommit: SOURCE_COMMIT,
       sourceCommitStatus: SOURCE_COMMIT_STATUS,
+      sourceFingerprint: SOURCE_FINGERPRINT,
       deploymentMarker: DEPLOYMENT_MARKER,
       releaseId: RELEASE_ID,
       policyStatus: awardYear === "2026-27" ? "supported-preliminary" : "confirmed",
       sourceSet: [
-        "direct-loan-sor-v1",
-        "project-sor-v56-rule-corrections",
-        "department-vfg-july-23-2026",
+        "psr-001",
+        "psr-009",
+        "psr-011",
       ],
       citations: [
         "https://fsapartners.ed.gov/more-info/important-dates/2026/06/10/live-webinar-schedule-reductions/loan-limits",
+        "https://fsapartners.ed.gov/sites/default/files/2026-08/FAQReducingAnnualLoanLimitsLessthanFullTimeEnrollment.pdf",
       ],
       computedAt: new Date().toISOString(),
       requestId,

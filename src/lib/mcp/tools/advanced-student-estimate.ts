@@ -20,7 +20,7 @@ export default defineTool({
     input: CalculateV2InputSchema,
     resultDetail: z.enum(["summary", "detailed"]).optional(),
   },
-  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   handler: async (rawInput) => {
     const parsed = InputSchema.safeParse(rawInput);
     if (!parsed.success) {
@@ -46,6 +46,10 @@ export default defineTool({
     }
 
     const run = runCanonicalV2(parsed.data.input);
+    if (run.normalized.missingRequiredInputs.length > 0) {
+      const result = { status: "needs_input", canCalculate: false, missingInputs: run.normalized.missingRequiredInputs, nextQuestions: run.normalized.missingRequiredInputs.map((item) => item.question) };
+      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result as Record<string, unknown> };
+    }
     const result = {
       status: run.status,
       audience: "student-advanced",

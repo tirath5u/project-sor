@@ -75,6 +75,7 @@ export interface V2Normalization {
   externalChecks: string[];
   warnings: string[];
   blocked: boolean;
+  missingRequiredInputs: Array<{ field: string; question: string }>;
   /**
    * Present only when the caller supplied student triage inputs. Consumers must
    * render this instead of inferring eligibility from the numeric result.
@@ -137,6 +138,78 @@ export function normalizeV2Input(input: CalculateV2Input): V2Normalization {
   };
   const externalChecks: string[] = [];
   const warnings: string[] = [];
+  const missingRequiredInputs: Array<{ field: string; question: string }> = [];
+  let blocked = false;
+
+  if ((input.calType === 3 || input.calType === 4)
+    && (!input.calendarCategory || input.calendarCategory === "standardTerm")) {
+    missingRequiredInputs.push({
+      field: "calendarCategory",
+      question: "Is this a substantially equal nonstandard term of at least nine weeks, a nonterm credit-hour program, a clock-hour program, subscription, or another calendar needing school review?",
+    });
+  }
+  if (input.calType <= 2 && input.calendarCategory
+    && input.calendarCategory !== "standardTerm") {
+    missingRequiredInputs.push({
+      field: "calendarCategory",
+      question: "The calendar code is standard term, but the selected category is not. Which program calendar is correct?",
+    });
+  }
+  if (input.calType === 3 && input.calendarCategory
+    && !["nonstandardEqualNineWeeks", "nonstandardNeedsReview"].includes(input.calendarCategory)) {
+    missingRequiredInputs.push({
+      field: "calendarCategory",
+      question: "The calendar code is nonstandard term, but the selected category differs. Which program calendar is correct?",
+    });
+  }
+  if (input.calType === 4 && input.calendarCategory
+    && !["nontermCreditHour", "clockHour", "subscription"].includes(input.calendarCategory)) {
+    missingRequiredInputs.push({
+      field: "calendarCategory",
+      question: "The calendar code is nonterm or subscription, but the selected category differs. Which program calendar is correct?",
+    });
+  }
+  if (input.calendarCategory === "nonstandardNeedsReview" || input.calendarCategory === "subscription") {
+    blocked = true;
+    warnings.push("The selected calendar category requires a school policy review before this result can be used for awarding.");
+  }
+  if (input.calendarCategory === "nontermCreditHour" || input.calendarCategory === "clockHour") {
+    blocked = true;
+    warnings.push("Schedule of Reductions does not apply to this calendar; do not use the numeric result as an award amount.");
+  }
+
+  if (input.loanPeriodScope === "singleTerm" && !input.singleTermPaymentPeriod) {
+    missingRequiredInputs.push({
+      field: "singleTermPaymentPeriod",
+      question: "Which enabled term is this one-term loan for?",
+    });
+  }
+  if (input.loanPeriodScope === "singleTerm" && input.singleTermPaymentPeriod) {
+    const selected = input.singleTermPaymentPeriod;
+    const standardIndex = ["term1", "term2", "term3", "term4"].indexOf(selected);
+    const enabledBySetup = standardIndex >= 0
+      ? standardIndex < input.numStandardTerms
+      : selected === "summer1" ? input.includeSummer1
+      : selected === "summer2" ? input.includeSummer2
+      : selected === "winter1" ? input.includeWinter1 : input.includeWinter2;
+    if (!enabledBySetup || !input.terms[selected]?.enabled) {
+      missingRequiredInputs.push({
+        field: "singleTermPaymentPeriod",
+        question: "Which enabled term is this one-term loan for? The selected term is not active in the academic-year setup.",
+      });
+    }
+  }
+  if (input.viewMode === "disbursement") {
+    for (const [key, term] of Object.entries(input.terms)) {
+      if ((term.disbursed || (term.paidSub ?? 0) > 0 || (term.paidUnsub ?? 0) > 0 || (term.paidGradPlus ?? 0) > 0)
+        && term.actualCredits === null) {
+        missingRequiredInputs.push({
+          field: `terms.${key}.actualCredits`,
+          question: `How many Title IV-countable credits did the student actually take in ${term.label}?`,
+        });
+      }
+    }
+  }
 
   if (traditionalProrationStatus) {
     const applies = traditionalProrationStatus !== "notApplied";
@@ -147,6 +220,7 @@ export function normalizeV2Input(input: CalculateV2Input): V2Normalization {
       warnings.push(
         "Traditional proration fields conflict. Resolve the structured status before relying on the result.",
       );
+      blocked = true;
     }
     engineInput.traditionalProrationApplies = applies;
   }
@@ -171,14 +245,22 @@ export function normalizeV2Input(input: CalculateV2Input): V2Normalization {
     // Other structured bases must remain external until their rule path is
     // implemented, rather than being broadened into the denial uplift.
     engineInput.parentPlusDenied = parentPlusEligibilityBasis === "adverseCreditDenied";
-    addExternal(
-      externalChecks,
-      "Parent PLUS aggregate room and exception treatment must be verified against NSLDS or the institution's authoritative record.",
-    );
+    if (parentPlusEligibilityBasis === "documentedExceptionalCircumstances") {
+      addExternal(externalChecks, "The documented exceptional-circumstances basis needs a school eligibility review; it is not treated as an adverse-credit denial.");
+    }
+  }
+  engineInput.parentPlusAggregateUsed = parentPlusAggregateUsed ?? null;
+  if (engineInput.parentPlusDenied && input.dependency === "dependent"
+    && input.awardYear === "2026-27" && input.loanLimitException !== true) {
     if (parentPlusAggregateUsed === null || parentPlusAggregateUsed === undefined) {
       warnings.push(
-        "Parent PLUS aggregate usage is missing. The result is not authoritative for additional dependent Unsubsidized eligibility.",
+        "Parent PLUS aggregate usage is missing for the adverse-credit additional Unsubsidized calculation.",
       );
+      addExternal(externalChecks, "Provide school-validated Parent PLUS aggregate used before calculating the additional dependent Unsubsidized amount.");
+      missingRequiredInputs.push({
+        field: "parentPlusAggregateUsed",
+        question: "What Parent PLUS aggregate amount has the parent already used? Please use the school's verified record.",
+      });
     }
   }
 
@@ -211,6 +293,7 @@ export function normalizeV2Input(input: CalculateV2Input): V2Normalization {
   }
 
   if (coaScope === "singleTerm" && input.loanPeriodScope !== "singleTerm") {
+    blocked = true;
     warnings.push(
       "COA scope is single-term but loanPeriodScope is not single-term. Resolve the scope before relying on Grad PLUS sizing.",
     );
@@ -232,9 +315,7 @@ export function normalizeV2Input(input: CalculateV2Input): V2Normalization {
   if (hasStudentTriageInput) {
     if (loanLimitExceptionEvidence === "school_record_conflict" && engineInput.loanLimitException) {
       engineInput.loanLimitException = false;
-      // Deliberately avoids the word the `blocked` heuristic below matches on.
-      // Suppressing Grad PLUS must not also suppress the valid Sub and Unsub
-      // estimate, which does not depend on the exception status.
+      // Suppress only the disputed Grad PLUS lane, not the Sub and Unsub estimate.
       warnings.push(
         "A Loan Limit Exception record disagreement was reported, so no Grad PLUS amount is modeled until the school and COD resolve the status.",
       );
@@ -268,15 +349,13 @@ export function normalizeV2Input(input: CalculateV2Input): V2Normalization {
     }
   }
 
-  const blocked = warnings.some(
-    (message) => message.includes("conflict") || message.includes("Resolve the scope"),
-  );
   return {
     engineInput,
     structured,
     externalChecks,
     warnings,
     blocked,
+    missingRequiredInputs,
     loanLimitExceptionTriage,
   };
 }
@@ -289,12 +368,20 @@ export interface V2Warning {
 
 function warningId(message: string): string {
   if (message.includes("Proportional is not used")) return "EFFECTIVE_EQUAL_NO_CURRENT_SOR";
-  if (message.includes("Traditional 685.203")) return "TRADITIONAL_PRORATION_SOR_GUARD";
-  if (message.includes("Parent PLUS aggregate")) return "PARENT_PLUS_AGGREGATE_REQUIRED";
-  if (message.includes("AY denominator")) return "AY_DENOMINATOR_REVIEW";
-  if (message.includes("Less-than-half-time")) return "LTHT_TERM_REVIEW";
-  if (message.includes("Single-term")) return "SINGLE_TERM_SCOPE_REVIEW";
-  return "SOR_REVIEW";
+  const category = message.includes("Traditional 685.203") ? "TRADITIONAL_PRORATION_SOR_GUARD"
+    : message.includes("Parent PLUS aggregate") ? "PARENT_PLUS_AGGREGATE_REQUIRED"
+    : message.includes("AY denominator") ? "AY_DENOMINATOR_REVIEW"
+    : message.includes("Less-than-half-time") ? "LTHT_TERM_REVIEW"
+    : message.includes("Single-term") || message.includes("single-term") ? "SINGLE_TERM_SCOPE_REVIEW"
+    : message.includes("gross Direct Loan") ? "GROSS_NET_DISPLAY_INFO"
+    : message.toLowerCase().includes("fee") ? "LOAN_FEE_INFO"
+    : "SOR_REVIEW";
+  let hash = 2166136261;
+  for (let i = 0; i < message.length; i++) {
+    hash ^= message.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `${category}_${(hash >>> 0).toString(16).padStart(8, "0")}`;
 }
 
 export function toV2Warnings(messages: string[], externalChecks: string[]): V2Warning[] {
@@ -305,7 +392,7 @@ export function toV2Warnings(messages: string[], externalChecks: string[]): V2Wa
         message,
         {
           id: warningId(message),
-          severity: "review" as const,
+          severity: /gross Direct Loan|loan fees|not net of loan fees/i.test(message) ? "info" as const : "review" as const,
           message,
         },
       ]),
@@ -315,10 +402,15 @@ export function toV2Warnings(messages: string[], externalChecks: string[]): V2Wa
 
 export function v2PolicyDecision(data: Record<string, unknown>, authoritative = true) {
   const sorApplicable = data.sorApplicable === true;
+  const distributionStage = Array.isArray(data.calculationStages)
+    ? data.calculationStages.find((stage: unknown) =>
+        typeof stage === "object" && stage !== null && (stage as { id?: string }).id === "parent-distribution") as { output?: Record<string, unknown> } | undefined
+    : undefined;
   return {
     sorApplicable,
     reasonCode: sorApplicable ? "SOR_APPLIES" : "SOR_NOT_APPLIED",
-    selectedDistributionModel: data.effectiveDistributionModel ?? data.distributionModel ?? null,
+    selectedDistributionModel: distributionStage?.output?.selectedDistributionModel ?? null,
+    effectiveDistributionModel: data.effectiveDistributionModel ?? null,
     authoritative,
   };
 }

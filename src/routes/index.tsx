@@ -14,6 +14,7 @@ import {
   defaultInputs,
   fmtCurrency,
   splitNeed,
+  qualifyingParentPlusDenial,
   TERM_LABELS,
   TERM_ORDER,
   type SORInputs,
@@ -78,6 +79,16 @@ type VersionEntry = { version: string; headline: string; changes: string[] };
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
+    version: "v57",
+    headline: "Single-term selection, calendar applicability, and validated history inputs",
+    changes: [
+      "Select a specific payment period for a one-term loan without changing the school's academic-year term count.",
+      "Separate supported nonstandard terms from nonterm and review-only calendars.",
+      "Require actual credits for paid terms and Parent PLUS aggregate usage when those facts change eligibility.",
+      "Correct Parent PLUS aggregate-boundary handling and below-half-time annual payout diagnostics.",
+    ],
+  },
+  {
     version: "v56",
     headline:
       "V56 online parity, applicability guard, structured explanations, and student estimate",
@@ -115,7 +126,7 @@ function OverrideCapsBlock({
   inputs: SORInputs;
   update: (patch: Partial<SORInputs>) => void;
 }) {
-  const lim = lookupLimits(inputs.gradeLevel, inputs.dependency, inputs.parentPlusDenied);
+  const lim = lookupLimits(inputs.gradeLevel, inputs.dependency, qualifyingParentPlusDenial(inputs), inputs.loanLimitException !== false);
   const drift = inputs.subStatutory !== lim.sub || inputs.unsubStatutory !== lim.unsub;
   return (
     <>
@@ -183,7 +194,7 @@ function SORCalculatorPage() {
     // resolves caps internally, but this keeps the displayed Sub/Unsub
     // statutory inputs honest.
     if (!built.overrideLimits) {
-      const lim = lookupLimits(built.gradeLevel, built.dependency, built.parentPlusDenied);
+      const lim = lookupLimits(built.gradeLevel, built.dependency, qualifyingParentPlusDenial(built), built.loanLimitException !== false);
       built.subStatutory = lim.sub;
       built.unsubStatutory = lim.unsub;
     }
@@ -225,12 +236,12 @@ function SORCalculatorPage() {
   // Auto-populate Sub/Unsub statutory caps from grade lookup unless overridden
   React.useEffect(() => {
     if (inputs.overrideLimits) return;
-    const lim = lookupLimits(inputs.gradeLevel, inputs.dependency, inputs.parentPlusDenied);
+    const lim = lookupLimits(inputs.gradeLevel, inputs.dependency, qualifyingParentPlusDenial(inputs), inputs.loanLimitException !== false);
     setInputs((p) => {
       if (p.subStatutory === lim.sub && p.unsubStatutory === lim.unsub) return p;
       return { ...p, subStatutory: lim.sub, unsubStatutory: lim.unsub };
     });
-  }, [inputs.gradeLevel, inputs.dependency, inputs.parentPlusDenied, inputs.overrideLimits]);
+  }, [inputs.gradeLevel, inputs.dependency, inputs.parentPlusDenied, inputs.parentPlusAggregateUsed, inputs.awardYear, inputs.loanLimitException, inputs.overrideLimits]);
 
   // If the user toggles Award Year and the current Grade Level is no longer
   // valid for that AY (e.g. picked Graduate while on 2025-26), snap to the
@@ -250,6 +261,32 @@ function SORCalculatorPage() {
     if (opt && Boolean(inputs[opt.toggle])) return true;
     return false;
   });
+  const reviewMessages: string[] = [];
+  if (inputs.loanPeriodScope === "singleTerm"
+    && (!inputs.singleTermPaymentPeriod || !activeTermKeys.includes(inputs.singleTermPaymentPeriod))) {
+    reviewMessages.push("Select an enabled single-term payment period.");
+  }
+  if (inputs.parentPlusDenied && inputs.dependency === "dependent"
+    && !isGradOrProf(inputs.gradeLevel) && inputs.awardYear === "2026-27"
+    && !inputs.loanLimitException && inputs.parentPlusAggregateUsed == null) {
+    reviewMessages.push("Enter verified Parent PLUS aggregate usage.");
+  }
+  if (inputs.viewMode === "disbursement") {
+    for (const key of activeTermKeys) {
+      const term = inputs.terms[key];
+      if ((term.disbursed || (term.paidSub ?? 0) > 0 || (term.paidUnsub ?? 0) > 0
+        || (term.paidGradPlus ?? 0) > 0) && term.actualCredits == null) {
+        reviewMessages.push(`Enter actual credits for paid ${TERM_LABELS[key]}.`);
+      }
+    }
+  }
+  if (inputs.calType > 2 && (!inputs.calendarCategory || inputs.calendarCategory === "standardTerm"
+    || inputs.calendarCategory === "nonstandardNeedsReview" || inputs.calendarCategory === "subscription")) {
+    reviewMessages.push("Confirm the program calendar category before using this result.");
+  }
+  if (inputs.calendarCategory === "nontermCreditHour" || inputs.calendarCategory === "clockHour") {
+    reviewMessages.push("SOR does not apply to this nonterm or clock-hour calendar. Do not use this result as an award amount.");
+  }
 
   const scenarioGroups = Array.from(new Set(SCENARIOS.map((s) => s.group)));
   const currentScenario = SCENARIOS.find((s) => s.id === activeScenario);
@@ -458,6 +495,35 @@ function SORCalculatorPage() {
               </Select>
             </div>
 
+            {inputs.loanPeriodScope === "singleTerm" ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Label className="text-xs font-medium">Single-term payment period *</Label>
+                  <InfoTip>
+                    Select the one term covered by this loan. Keep the academic-year term count above
+                    at the school's actual academic-year structure.
+                  </InfoTip>
+                </div>
+                <Select
+                  value={inputs.singleTermPaymentPeriod ?? "notSelected"}
+                  onValueChange={(v) => update({ singleTermPaymentPeriod: v === "notSelected" ? undefined : v as TermKey })}
+                >
+                  <SelectTrigger className="h-9 rounded-lg border-primary/50 bg-primary/5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="notSelected">Select payment period</SelectItem>
+                    {activeTermKeys.map((key) => (
+                      <SelectItem key={key} value={key}>{TERM_LABELS[key]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!inputs.singleTermPaymentPeriod ? (
+                  <p className="text-xs text-warning-foreground">Choose the payment period before using the result.</p>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5">
                 <Label className="text-xs font-medium">Loan Limit Exception</Label>
@@ -633,23 +699,29 @@ function SORCalculatorPage() {
               <div className="flex items-center gap-1.5">
                 <Label className="text-xs font-medium">Calendar</Label>
                 <InfoTip>
-                  AC1 = Standard term, Scheduled AY · AC2 = Standard term, Borrower-Based AY · AC3 =
-                  Non-standard, term-based · AC4 = Non-standard, non-term (clock-hour or credit-hour
-                  without terms).
+                  Select the actual program calendar. Substantially equal nonstandard terms need
+                  at least nine weeks for this SOR lane. Nonterm and clock-hour programs do not
+                  use this SOR calculation. Unresolved or subscription calendars require review.
                 </InfoTip>
               </div>
               <Select
-                value={String(inputs.calType)}
-                onValueChange={(v) => update({ calType: Number(v) as CalType })}
+                value={inputs.calType <= 2 ? (inputs.calType === 1 ? "standardTermSay" : "standardTermBbay") : inputs.calendarCategory ?? "nonstandardNeedsReview"}
+                onValueChange={(v) => update({
+                  calendarCategory: (v.startsWith("standardTerm") ? "standardTerm" : v) as SORInputs["calendarCategory"],
+                  calType: (v === "standardTermSay" ? 1 : v === "standardTermBbay" ? 2 : v.startsWith("nonstandard") ? 3 : 4) as CalType,
+                })}
               >
                 <SelectTrigger className="h-9 rounded-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">AC1 - Standard term, SAY</SelectItem>
-                  <SelectItem value="2">AC2 - Standard term, BBAY</SelectItem>
-                  <SelectItem value="3">AC3 - Non-standard, terms</SelectItem>
-                  <SelectItem value="4">AC4 - Non-standard, non-terms</SelectItem>
+                  <SelectItem value="standardTermSay">Standard term, SAY</SelectItem>
+                  <SelectItem value="standardTermBbay">Standard term, BBAY</SelectItem>
+                  <SelectItem value="nonstandardEqualNineWeeks">Nonstandard term, equal and at least nine weeks</SelectItem>
+                  <SelectItem value="nonstandardNeedsReview">Other nonstandard term, review required</SelectItem>
+                  <SelectItem value="nontermCreditHour">Nonterm credit-hour</SelectItem>
+                  <SelectItem value="clockHour">Clock-hour</SelectItem>
+                  <SelectItem value="subscription">Subscription, review required</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -732,6 +804,24 @@ function SORCalculatorPage() {
                 was denied a PLUS loan.
               </InfoTip>
             </Label>
+            {inputs.parentPlusDenied && inputs.dependency === "dependent" && !gradLocked
+              && inputs.awardYear === "2026-27" && !inputs.loanLimitException ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Label className="text-xs font-medium">Parent PLUS aggregate already used *</Label>
+                  <InfoTip>
+                    Enter the amount already borrowed against the parent's $65,000 aggregate limit.
+                    Additional dependent Unsub eligibility is unavailable once that limit is reached.
+                  </InfoTip>
+                </div>
+                <CompactNumNullable
+                  value={inputs.parentPlusAggregateUsed ?? null}
+                  onChange={(v) => update({ parentPlusAggregateUsed: v })}
+                  wide
+                  pendingHint="Enter the parent's aggregate usage before using the result"
+                />
+              </div>
+            ) : null}
             <Label className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs">
               <Switch
                 checked={inputs.overrideLimits}
@@ -915,10 +1005,10 @@ function SORCalculatorPage() {
                               />
                             </td>
                             <td className="px-2 py-1.5">
-                              <CompactNum
+                              <CompactNumNullable
                                 value={t.actualCredits}
-                                step={0.5}
                                 onChange={(v) => updateTerm(key, { actualCredits: v })}
+                                pendingHint="Enter actual credits after the prior disbursement; blank credits need review"
                               />
                             </td>
                           </>
@@ -1057,9 +1147,9 @@ function SORCalculatorPage() {
                 />
                 <span>Count LTHT in AY%</span>
                 <InfoTip>
-                  Less-Than-Half-Time credits: include them in the Academic Year % numerator. Lapsed
-                  credits then carry forward to boost the next eligible term's intensity (e.g.
-                  125%).
+                  Include below-half-time credits in the academic-year numerator when applicable.
+                  A below-half-time term receives no disbursement, but its credits can affect the
+                  annual limit available in a later eligible term.
                 </InfoTip>
               </Label>
             </div>
@@ -1121,6 +1211,7 @@ function SORCalculatorPage() {
             <ResultsPanel
               results={results}
               inputs={inputs}
+              reviewMessages={reviewMessages}
               scenarioTitle={currentScenario?.title}
               scenarioId={currentScenario?.id}
             />
@@ -1223,10 +1314,12 @@ function CompactNumNullable({
   value,
   onChange,
   wide,
+  pendingHint,
 }: {
   value: number | null;
   onChange: (v: number | null) => void;
   wide?: boolean;
+  pendingHint?: string;
 }) {
   const display = value === null ? "" : String(value);
   const isPending = value === null;
@@ -1249,7 +1342,7 @@ function CompactNumNullable({
       className={`h-8 rounded-md border bg-background px-1.5 text-right text-[11px] tabular-nums focus:outline-none focus:ring-2 focus:ring-ring ${
         isPending ? "border-dashed border-border/60 text-muted-foreground/70" : "border-border"
       } ${wide ? "w-20" : "w-14"}`}
-      title={isPending ? "Not entered - bucket is not anchored" : undefined}
+      title={isPending ? pendingHint ?? "Not entered - bucket is not anchored" : undefined}
     />
   );
 }
@@ -1344,7 +1437,7 @@ function ProductVoiceStrip() {
     <section aria-label="About this product" className="border-b border-border/60 bg-muted/30">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
         <p className="text-sm leading-6 text-muted-foreground">
-          <span className="font-semibold text-foreground">myproduct.life</span> — product management
+          <span className="font-semibold text-foreground">myproduct.life</span> - product management
           in higher-education technology: shipping federal student aid tooling from policy text to
           tested engine.{" "}
           <Link to="/about" className="font-medium text-primary underline-offset-2 hover:underline">
@@ -1390,13 +1483,13 @@ function StartHereStripInner() {
       <div className="mx-auto flex max-w-[1400px] flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-            Start here — financial aid staff
+            Start here - financial aid staff
           </p>
           <p className="mt-1.5 text-sm leading-6 text-foreground/80">
             Compute the OBBBA less-than-full-time Schedule of Reductions: the SOR percentage,
             reduced Sub / Unsub / Grad PLUS annual pools, and per-term disbursements. Engine v
             {ENGINE_VERSION}, policy year {POLICY_YEAR}, sources reviewed {POLICY_SNAPSHOT_DATE}.
-            Estimates only — never an award.
+            Estimates only - never an award.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs font-medium">

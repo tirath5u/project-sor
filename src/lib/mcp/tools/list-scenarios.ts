@@ -7,7 +7,7 @@ export default defineTool({
   name: "list_scenarios",
   title: "List canonical SOR scenarios",
   description:
-    "Return the full public parity-fixture set: canonical borrower scenarios, proportional-distribution edge cases, and the V56 child/module allocation fixture, with inputs, expected outputs, and public-source-register citations. Use this to discover valid input shapes for `calculate_sor` or to verify engine parity.",
+    "Return public source-backed SOR fixtures with inputs, expected outputs, and citations. Use this to discover valid input shapes and verify calculation behavior.",
   inputSchema: {
     id: z
       .string()
@@ -18,6 +18,7 @@ export default defineTool({
   },
   annotations: {
     readOnlyHint: true,
+    destructiveHint: false,
     idempotentHint: true,
     openWorldHint: false,
   },

@@ -62,7 +62,7 @@ export function TermsCards({ results }: { results: SORResults }) {
               <dt className="flex items-center gap-1 text-muted-foreground">
                 Enrollment Intensity (EI) %
                 <InfoTip>
-                  EI = (Enrolled + lapsed credits from prior below-half-time terms) ÷ FT. May exceed
+                  EI = this term's enrolled credits divided by its full-time threshold. May exceed
                   100% (balloon). Distinct from Term enrollment %, which counts only this term's
                   enrolled credits.
                 </InfoTip>

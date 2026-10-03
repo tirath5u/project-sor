@@ -36,6 +36,62 @@ describe("SOR engine - scenario regression", () => {
 });
 
 describe("SOR engine - invariants", () => {
+  it("uses a selected spring single-term loan inside a two-term academic year", () => {
+    const inp = defaultInputs();
+    inp.numStandardTerms = 2;
+    inp.loanPeriodScope = "singleTerm";
+    inp.singleTermPaymentPeriod = "term2";
+    inp.gradeLevel = "g1";
+    inp.terms.term3.enabled = false;
+    inp.terms.term2.enrolledCredits = 9;
+    const result = calculateSOR(inp);
+    expect(result.singleTermScopeValid).toBe(true);
+    expect(result.sorPctRounded).toBe(0.75);
+    expect(result.reducedSub).toBe(1313);
+    expect(result.termResults).toHaveLength(1);
+    expect(result.termResults[0].key).toBe("term2");
+    expect(result.termResults[0].finalSub).toBe(1313);
+  });
+
+  it("counts a below-half-time fall in annual SOR but pays only spring", () => {
+    const inp = defaultInputs();
+    inp.numStandardTerms = 2;
+    inp.ayFtCredits = 24;
+    inp.terms.term3.enabled = false;
+    inp.terms.term1.enrolledCredits = 4;
+    inp.terms.term2.enrolledCredits = 11;
+    const result = calculateSOR(inp);
+    expect(result.enrolledSumAll).toBe(15);
+    expect(result.sorPctRounded).toBe(0.63);
+    expect(result.reducedSub).toBe(2205);
+    expect(result.termResults[0].finalSub).toBe(0);
+    expect(result.termResults[1].finalSub).toBe(2205);
+  });
+
+  it("honors the Parent PLUS exhaustion boundary without shrinking a denial uplift to one dollar", () => {
+    const inp = defaultInputs();
+    inp.parentPlusDenied = true;
+    inp.parentPlusAggregateUsed = 64999;
+    expect(calculateSOR(inp).additionalUnsubBase).toBe(4000);
+    inp.parentPlusAggregateUsed = 65000;
+    expect(calculateSOR(inp).additionalUnsubBase).toBe(0);
+  });
+
+  it("does not silently count blank actual credits as zero for an already-paid fall", () => {
+    const inp = defaultInputs();
+    inp.numStandardTerms = 2;
+    inp.terms.term3.enabled = false;
+    inp.ayFtCredits = 24;
+    inp.viewMode = "disbursement";
+    inp.terms.term1.disbursed = true;
+    inp.terms.term1.actualCredits = null;
+    inp.terms.term1.enrolledCredits = 6;
+    inp.terms.term2.enrolledCredits = 12;
+    const result = calculateSOR(inp);
+    expect(result.enrolledSumAll).toBe(18);
+    expect(result.warnings.some((warning) => warning.includes("Actual credits are required"))).toBe(true);
+  });
+
   it("applies COA and other aid caps before SOR for graduate unsub", () => {
     const inp = defaultInputs();
     inp.gradeLevel = "g11";
@@ -860,7 +916,7 @@ describe("SOR engine - LTHT warnings", () => {
 describe("deployment markers", () => {
   it("uses releaseId as the authoritative deployment marker", () => {
     expect(DEPLOYMENT_MARKER).toBe(RELEASE_ID);
-    expect(RELEASE_ID).toBe("sor-v56-1.3.1-2026-08-03");
+    expect(RELEASE_ID).toBe("sor-v57-1.4.0-2026-10-02");
   });
 
   it("reports sourceCommit as null with an explanatory status, never local-dev", () => {

@@ -49,8 +49,8 @@ const ROWS: RowDef[] = [
   },
   {
     label: "Enrollment Intensity (EI) %",
-    hint: "Per-term EI: (enrolled + carried below-half-time credits) ÷ FT",
-    tip: "Per-term Enrollment Intensity = (Enrolled + lapsed below-half-time credits) ÷ FT. May exceed 100% (balloon). REPORTED TO COD on disbursement records. Not used in the SOR reduction itself - that uses the annual SOR % shown in the Results panel.",
+    hint: "Term credits ÷ term FT; annual SOR uses all counted AY credits",
+    tip: "Term enrollment intensity is this term's credits divided by its full-time threshold. Below-half-time credits can still count in the academic-year SOR percentage; they are not added to another term's intensity.",
     format: "pct",
     get: (t) => t.intensityPct,
     total: () => null,
@@ -112,7 +112,6 @@ const ROWS: RowDef[] = [
     get: (t) => t.finalSub,
     total: (rs) => rs.reduce((s, t) => s + t.finalSub, 0),
     emphasize: true,
-    redIf: (t) => t.exceedsPerTermCapSub,
   },
   {
     label: "Final Unsub",
@@ -121,23 +120,22 @@ const ROWS: RowDef[] = [
     get: (t) => t.finalUnsub,
     total: (rs) => rs.reduce((s, t) => s + t.finalUnsub, 0),
     emphasize: true,
-    redIf: (t) => t.exceedsPerTermCapUnsub,
   },
 ];
 
 const PER_TERM_CAP_ROWS: RowDef[] = [
   {
-    label: "Per-term Cap (Sub)",
-    hint: "Reduced Annual Sub ÷ eligible terms (static)",
-    tip: "Reduced Annual Sub divided by the number of eligible terms. Informational only - proportional front-loading is permitted under 34 CFR 685.301(b)(8). Final Sub turns red above when it exceeds this cap so you can flag it for audit review.",
+    label: "Equal-share reference (Sub)",
+    hint: "Reduced annual Sub ÷ eligible terms; not a binding cap",
+    tip: "Informational equal-share reference only. A sole eligible term can receive more than this amount, subject to the reduced annual limit and ordinary eligibility rules.",
     format: "money",
     get: () => null,
     staticValue: (r) => r.perTermCapSub,
     total: (_rs) => null,
   },
   {
-    label: "Per-term Cap (Unsub)",
-    tip: "Reduced Annual Unsub divided by the number of eligible terms. Informational only - proportional front-loading is permitted under 34 CFR 685.301(b)(8).",
+    label: "Equal-share reference (Unsub)",
+    tip: "Informational equal-share reference only, not a binding term ceiling.",
     format: "money",
     get: () => null,
     staticValue: (r) => r.perTermCapUnsub,
@@ -167,11 +165,10 @@ const GRAD_PLUS_ROWS: RowDef[] = [
     get: (t) => t.finalGradPlus,
     total: (rs) => rs.reduce((s, t) => s + t.finalGradPlus, 0),
     emphasize: true,
-    redIf: (t) => t.exceedsPerTermCapGradPlus,
   },
   {
-    label: "Per-term Cap (Grad PLUS)",
-    tip: "Reduced Annual Grad PLUS divided by the number of eligible terms. Informational only.",
+    label: "Equal-share reference (Grad PLUS)",
+    tip: "Informational equal-share reference only, not a binding term ceiling.",
     format: "money",
     get: () => null,
     staticValue: (r) => r.perTermCapGradPlus,

@@ -16,6 +16,17 @@ export const Route = createFileRoute("/releases")({
 
 const releases = [
   {
+    version: "V57",
+    date: "2026-10-02",
+    title: "Single-term payment period and eligibility review controls",
+    items: [
+      "Added a specific payment-period selector for a one-term loan without changing the academic-year term count.",
+      "Separated supported term calendars from excluded nonterm and review-only program types.",
+      "Corrected Parent PLUS aggregate-boundary treatment and required verified paid-term credits for recalculation.",
+      "Aligned REST and MCP follow-up questions, calculation explanations, and source-backed release metadata.",
+    ],
+  },
+  {
     version: "V56.2",
     date: "2026-08-03",
     title: "Contract safety correction",

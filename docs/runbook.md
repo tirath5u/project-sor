@@ -1,6 +1,6 @@
 # Incident Runbook
 
-_Last updated: 2026-04-25._
+_Last updated: 2026-10-03._
 
 This runbook covers the **most likely** failure modes for `sor.myproduct.life`
 and its public API. The system is intentionally simple - a stateless
@@ -21,19 +21,24 @@ A healthy response returns `200` with:
 ```json
 {
   "status": "ok",
-  "engineVersion": "1.3.1",
+  "engineVersion": "1.4.0",
   "policyYear": "2026-27",
   "policySnapshotDate": "...",
-  "releaseId": "sor-v56-1.3.1-2026-08-03",
-  "deploymentMarker": "sor-v56-1.3.1-2026-08-03",
+  "releaseId": "sor-v57-1.4.0-2026-10-02",
+  "deploymentMarker": "sor-v57-1.4.0-2026-10-02",
   "sourceCommit": null,
   "sourceCommitStatus": "not_available_in_lovable_build",
+  "sourceFingerprint": "<build-time SHA-256 digest>",
   "supportedAwardYears": { "2025-26": "supported", "2026-27": "supported-preliminary" }
 }
 ```
 
-If `engineVersion` or `policyYear` is missing, or the response is not `200`,
+If `engineVersion`, `policyYear`, or `sourceFingerprint` is missing, or the response is not `200`,
 the deployment is broken - go to **Section 2**.
+
+Before declaring a release live, run `bun scripts/verify-v57-deployment.ts https://sor.myproduct.life`
+from the exact reviewed checkout. It checks both health endpoints, critical V57 REST
+calculations, and the remote MCP tool contract against that checkout's source fingerprint.
 
 ## 2. Triage matrix
 
@@ -63,7 +68,7 @@ curl -fsS https://sor.myproduct.life/api/public/v1/scenarios \
 Expected for `fixture-v19-001`:
 
 ```json
-{ "engineVersion": "1.3.1", "totalFinalSub": 2205, "totalFinalUnsub": 1260 }
+{ "engineVersion": "1.4.0", "totalFinalSub": 2205, "totalFinalUnsub": 1260 }
 ```
 
 Any drift in those two dollar figures is a P0 - the engine is the product.
@@ -93,9 +98,10 @@ These are documented gaps, not bugs. Do **not** page anyone for them.
 - **No alerting.** There is no Sentry, no PagerDuty, no email-on-error. The
   earliest signal of a problem is a user message or a failing CI smoke run.
   Acceptable for a free public reference API; revisit before commercial use.
-- **`sourceCommit` is always `null`** (`sourceCommitStatus:
-  not_available_in_lovable_build`). Use `deploymentMarker` / `releaseId` as
-  the public identifier of "what is live"; bump `RELEASE_ID` with each release.
+- **`sourceCommit` is `null` in Lovable builds** (`sourceCommitStatus:
+  not_available_in_lovable_build`). Use `releaseId` plus `sourceFingerprint`
+  to identify the reviewed source build. Bump `RELEASE_ID` with each release,
+  and check the fingerprint against the reviewed checkout before claiming parity.
 - **Worker logs are short-lived.** Cloudflare retains roughly the last hour
   of Worker invocation logs. Do post-mortems quickly or capture
   reproductions yourself.

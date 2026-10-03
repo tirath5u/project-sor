@@ -19,7 +19,7 @@ Built and maintained by **Tirath Chhatriwala**, Product Manager with over 14 yea
 >
 > **Student estimate:** [sor.myproduct.life/student](https://sor.myproduct.life/student) provides a narrow standard Fall and Spring estimate with clear school-review boundaries.
 >
-> **Phase B tools:** [Compare scenarios](https://sor.myproduct.life/compare) and [Advanced student estimate](https://sor.myproduct.life/student/advanced) run independent scenarios through the same shared engine. They are stateless and do not store student payloads.
+> **Additional tools:** [Compare scenarios](https://sor.myproduct.life/compare) and [Advanced student estimate](https://sor.myproduct.life/student/advanced) run independent scenarios through the same shared engine. Do not submit student identifiers.
 >
 > **Migration review:** [V55 versus V56](https://sor.myproduct.life/migration) is limited to approved historical fixtures and does not execute arbitrary historical inputs.
 
@@ -31,14 +31,14 @@ The 2025 federal budget law (OBBBA) reduces Direct Loan limits for students enro
 
 ## The solution
 
-One tested calculation engine that follows the Department of Education's five-step process, exposed three ways: a staff calculator, a plain-English student estimate, and a free public API with an MCP server so AI agents query the real engine instead of guessing. It is used by financial aid offices at 80+ institutions.
+One tested calculation engine that follows the Department of Education's five-step process, exposed through a staff calculator, student estimates, a public API, and an MCP server so AI agents can query the engine instead of guessing.
 
 ## Tradeoffs and decisions
 
 - **Deterministic engine, not AI inference.** Loan limits must be exact and auditable. AI agents get the engine as a tool through MCP; they never compute the numbers themselves.
 - **One engine, many views.** Staff, student, API and agent views all call the same code, so the numbers cannot drift apart between surfaces.
 - **Cite or don't claim.** Every published scenario carries its regulatory source, and unsettled guidance is labeled rather than assumed.
-- **Stateless and public.** No student data is stored, which keeps the API anonymous and free to use.
+- **Minimal input.** Calculation requests should omit names, student IDs, and other personal identifiers. Hosting and request-log retention must be described in the published privacy policy before making broader data-retention claims.
 - **Versioned, with parity checks.** Engine changes ship with release notes and a version comparison against approved fixtures, so a school can see exactly what changed.
 
 ## What I learned
@@ -109,8 +109,8 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 | `/api/public/v1/scenarios`    | GET    | Fixture catalog with regulatory citations and source-status labels |
 | `/api/public/v1/calculate`    | POST   | Run the engine on supplied inputs                                  |
 | `/api/public/v1/openapi.json` | GET    | OpenAPI 3.1 specification                                          |
-| `/api/public/v2/health`       | GET    | V56 health, engine, MCP, release, and source metadata              |
-| `/api/public/v2/calculate`    | POST   | V56 calculation contract with stages and release metadata          |
+| `/api/public/v2/health`       | GET    | Current health, engine, MCP, release, and source metadata          |
+| `/api/public/v2/calculate`    | POST   | Current calculation contract with stages and release metadata      |
 | `/api/public/v2/student-estimate` | POST | Standard Fall and Spring student estimate                     |
 | `/api/public/v2/compare` | POST | Compare two complete V2 scenarios without storing payloads |
 | `/api/public/v2/student-advanced` | POST | Institution-specific advanced student projection |
@@ -141,7 +141,7 @@ The optional `childTerms` object is an allocation layer under the parent SOR res
 
 Supported methods are `byChildCredits` and `equalAcrossActiveChildTerms`. The parent term is calculated first. Child terms do not create separate SOR terms, change the academic-year SOR percentage, or level funds across different parent terms. The response includes `data.childAllocations` when `childTerms.count` is greater than zero.
 
-The remote MCP exposes the same `calculate_sor` engine and `childTerms` input. Phase B adds `compare_sor` for two independent complete scenarios and `advanced_student_estimate` for institution-specific student projections. `compare_sor_versions` is limited to approved V55 baseline fixtures and does not execute arbitrary historical inputs. It is read-only and stateless. Streamable HTTP clients should send `Accept: application/json, text/event-stream` and retain the MCP session identifier returned during initialization. Consumers must verify the published `engineVersion`, `releaseId`, and `deploymentMarker` before relying on a result. When required facts are missing, the MCP returns `status: "needs_input"` with exact missing fields and follow-up questions rather than calculating from demo defaults. Parent PLUS aggregate usage and remaining eligibility are external checks and are called out in the result rather than inferred by the service.
+The remote MCP exposes `list_scenarios`, `calculate_sor`, `compare_sor`, `advanced_student_estimate`, and `check_loan_limit_exception`. The historical V55/V56 migration comparison remains a website and REST feature, not a public MCP tool. Streamable HTTP clients should send `Accept: application/json, text/event-stream`. Consumers should check `engineVersion`, `releaseId`, and `deploymentMarker` before relying on a result. Missing payment-period, paid-credit, calendar, or Parent PLUS aggregate facts return `status: "needs_input"` with specific follow-up questions. The Parent PLUS aggregate value is supplied by the caller and is not derived from NSLDS; remaining aggregate eligibility still requires institutional verification.
 
 V2 also accepts structured review context for Parent PLUS basis and aggregate usage, traditional proration status, AY denominator overrides, optional pre-SOR caps, borrower-requested Sub/Unsub amounts, remaining annual or aggregate limits, and COA scope. These fields preserve blank, null, zero, and positive-value meaning. The response returns a `contract` block with `calculationStatus`, `authoritative`, `policyDecision`, `eligibilityStages`, stable warning objects, modeled inputs, and explicit `externalChecks`. A field that the current shared engine cannot apply is disclosed there and is never silently treated as zero.
 
@@ -155,14 +155,15 @@ The student route is intentionally narrower than the staff calculator. It covers
 reproduce a calculation against a specific snapshot of the rules. Top-level
 keys: `data` and `meta`. The `meta` object includes:
 
-- `engineVersion` - semantic version of the calculation engine (e.g. `1.3.1`)
+- `engineVersion` - semantic version of the calculation engine (e.g. `1.4.0`)
 - `policyYear` - award year the engine was evaluated against (e.g. `2026-27`)
 - `policySnapshotDate` - ISO date of the policy snapshot used
 - `policyStatus` - `confirmed` or `supported-preliminary`
-- `deploymentMarker` - authoritative public deployment identifier; equals `releaseId` (e.g. `sor-v56-1.3.1-2026-08-03`)
+- `deploymentMarker` - public deployment identifier; equals `releaseId` (e.g. `sor-v57-1.4.0-2026-10-02`)
 - `sourceCommit` - `null`; the exact Git SHA is not available to the runtime
 - `sourceCommitStatus` - `not_available_in_lovable_build` (see note below)
-- `sourceSet` - identifiers of the rule packs used (e.g. `["direct-loan-sor-v1"]`)
+- `sourceFingerprint` - build-time SHA-256 digest of the normalized application source; compare it with `node scripts/source-fingerprint.mjs` on the reviewed checkout
+- `sourceSet` - identifiers in the public source register (e.g. `["psr-001", "psr-009", "psr-011"]`)
 - `citations` - regulatory citations applicable to the result (may be empty)
 - `computedAt` - ISO timestamp the response was produced
 - `requestId` - correlation ID; also returned in the `X-Request-Id` response header
@@ -173,7 +174,8 @@ keys: `data` and `meta`. The `meta` object includes:
 > build path does not expose the Git SHA to the runtime and we deliberately do
 > not fetch GitHub per request or trust client-supplied headers. Exact SHA
 > tracking can be added later via a CI-managed deploy or a supported runtime
-> binding.
+> binding. The separate `sourceFingerprint` is generated during the Lovable
+> build and can be checked against a reviewed checkout without a build secret.
 
 **Error contract:** uniform `{ error: { code, message, details? } }` envelope. Status codes are RFC-correct: 400 for malformed JSON, 415 for wrong content type, 422 for valid JSON that fails schema, 429 for rate limit, 405 for wrong method, 413 for oversized body.
 
@@ -280,7 +282,7 @@ Accepted challenges become fixtures first, code changes second. Issues are triag
 
 ## MCP and agent use
 
-The project exposes a read-only remote MCP server at `/mcp` when the deployment has MCP routes enabled. MCP clients can discover `list_scenarios`, call `calculate_sor`, compare two scenarios with `compare_sor`, run an institution-specific projection with `advanced_student_estimate`, and compare an approved V55 baseline with V56 using `compare_sor_versions` when the client supports remote MCP and the user's workspace allows custom MCP apps. ChatGPT custom MCP apps require workspace support and administrator approval; this is not automatically available to every ChatGPT user or plan. Claude and other MCP clients have their own connection and approval requirements.
+The project exposes a read-only remote MCP server at `/mcp` when the deployment has MCP routes enabled. Public tools are `list_scenarios`, `calculate_sor`, `compare_sor`, `advanced_student_estimate`, and `check_loan_limit_exception`. ChatGPT custom MCP apps require workspace support and administrator approval; this is not automatically available to every ChatGPT user or plan. Claude and other MCP clients have their own connection and approval requirements.
 
 MCP responses include engine and policy metadata so an agent can report which calculator snapshot produced the result. Agents should not present results as Department-approved and should distinguish gross eligibility from net posting amounts and from external COD, NSLDS, aggregate, lifetime, proration, and packaging checks.
 

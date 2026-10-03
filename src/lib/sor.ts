@@ -86,7 +86,7 @@ export interface TermInput {
   disbursed: boolean;
   /** Disbursement mode: actual credits enrolled at the time of this disbursement.
    * Replaces enrolledCredits in AY-pct math for past terms. */
-  actualCredits: number;
+  actualCredits: number | null;
   /** Net-paid Sub. `null` = user has not entered a value yet (do NOT anchor).
    *  `0` = explicit zero (anchor at $0). Any positive number anchors that amount. */
   paidSub: number | null;
@@ -107,10 +107,12 @@ export interface TermInput {
 export interface SORInputs {
   viewMode: ViewMode;
   calType: CalType;
+  calendarCategory?: "standardTerm" | "nonstandardEqualNineWeeks" | "nonstandardNeedsReview" | "nontermCreditHour" | "clockHour" | "subscription";
   programLevel: ProgramLevel;
   summerPosition: SummerPosition;
   ayType: AYType;
   loanPeriodScope: LoanPeriodScope;
+  singleTermPaymentPeriod?: TermKey;
   numStandardTerms: 1 | 2 | 3 | 4;
   includeSummer1: boolean;
   includeSummer2: boolean;
@@ -123,6 +125,8 @@ export interface SORInputs {
   dependency: Dependency;
   /** Dependent undergrad whose parents were denied PLUS - unlocks Independent Unsub cap. */
   parentPlusDenied: boolean;
+  /** School-validated Parent PLUS aggregate used. Null means not yet verified. */
+  parentPlusAggregateUsed?: number | null;
   /** Override the lookup with manual statutory caps. */
   overrideLimits: boolean;
   /** Single-input v18 model: total annual financial need; engine splits Sub/Unsub. */
@@ -172,7 +176,7 @@ export interface TermResult {
   effectiveCredits: number; // actual if disbursed-mode locked, else planned
   termPct: number; // Step 4 (raw, can exceed 1)
   termPctCapped: number; // min(termPct, 1)
-  intensityPct: number; // display intensity incl. carried LTHT credits
+  intensityPct: number; // this term's enrolled credits divided by its FT credits
   shareSub: number; // Step 3 share
   shareUnsub: number;
   eligible: boolean;
@@ -274,6 +278,7 @@ export interface SORResults {
   warnings: string[];
   recalcHistory: RecalcEvent[];
   loanPeriodScope: LoanPeriodScope;
+  singleTermPaymentPeriod?: TermKey;
   singleTermScopeValid: boolean;
   grossAmountBasis: boolean;
   /** v19 - Award Year & SOR applicability. */
@@ -342,7 +347,7 @@ export function defaultTerm(key: TermKey): TermInput {
     ftCredits: 12,
     enrolledCredits: 0,
     disbursed: false,
-    actualCredits: 0,
+    actualCredits: null,
     paidSub: null,
     paidUnsub: null,
     refundSub: null,
@@ -373,10 +378,12 @@ export function defaultInputs(): SORInputs {
   return {
     viewMode: "plan",
     calType: 1,
+    calendarCategory: "standardTerm",
     programLevel: "undergraduate",
     summerPosition: "none",
     ayType: "SAY",
     loanPeriodScope: "annualMultiTerm",
+    singleTermPaymentPeriod: undefined,
     numStandardTerms: 3,
     includeSummer1: false,
     includeSummer2: false,
@@ -386,6 +393,7 @@ export function defaultInputs(): SORInputs {
     gradeLevel: "g1",
     dependency: "dependent",
     parentPlusDenied: false,
+    parentPlusAggregateUsed: null,
     overrideLimits: false,
     annualNeed: 10000,
     subStatutory: lim.sub,
@@ -435,7 +443,7 @@ function hasHistoricalActivity(term: TermInput) {
 }
 
 function historicalCredits(term: TermInput) {
-  return term.disbursed ? term.actualCredits : term.enrolledCredits;
+  return hasHistoricalActivity(term) ? (term.actualCredits ?? term.enrolledCredits) : term.enrolledCredits;
 }
 
 function activeKeys(inp: SORInputs): TermKey[] {
@@ -568,24 +576,18 @@ function distributeRemainingPool(
 }
 
 function computeIntensityPct(termsInOrder: TermInput[], effectiveCredits: number[]): number[] {
-  let carriedLthtCredits = 0;
-
   return termsInOrder.map((t, i) => {
     if (!t.enabled || t.ftCredits <= 0) return 0;
-
-    const eff = Math.max(0, effectiveCredits[i] || 0);
-    const half = t.ftCredits / 2;
-    const intensity = (eff + carriedLthtCredits) / t.ftCredits;
-
-    if (eff >= half && carriedLthtCredits > 0) {
-      carriedLthtCredits = 0;
-    }
-    if (eff > 0 && eff < half) {
-      carriedLthtCredits += eff;
-    }
-
-    return intensity;
+    return Math.max(0, effectiveCredits[i] || 0) / t.ftCredits;
   });
+}
+
+export function qualifyingParentPlusDenial(inp: SORInputs): boolean {
+  if (!inp.parentPlusDenied || inp.dependency !== "dependent" || isGradOrProf(inp.gradeLevel)) {
+    return false;
+  }
+  if (inp.awardYear === "2025-26" || inp.loanLimitException === true) return true;
+  return typeof inp.parentPlusAggregateUsed === "number" && inp.parentPlusAggregateUsed < 65000;
 }
 
 function computeDisplayRows(args: {
@@ -750,7 +752,7 @@ export function resolveCaps(inp: SORInputs): {
   // v19 - Loan Limit Exception (grandfathered) flag selects which table to use.
   // LLE = true → Legacy table; LLE = false → OBBB table (currently a Legacy mirror).
   const useLegacy = inp.loanLimitException !== false; // default true (legacy) when undefined
-  const lim = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied, useLegacy);
+  const lim = lookupLimits(inp.gradeLevel, inp.dependency, qualifyingParentPlusDenial(inp), useLegacy);
   return { sub: lim.sub, unsub: lim.unsub, combined: lim.sub + lim.unsub };
 }
 
@@ -758,11 +760,15 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const warnings: string[] = [];
   const awardYear: "2025-26" | "2026-27" = inp.awardYear ?? "2026-27";
   const traditionalProrationApplies = inp.traditionalProrationApplies === true;
-  const sorApplicable = awardYear === "2026-27" && !traditionalProrationApplies;
-  if (inp.calType === 3 || inp.calType === 4) {
+  const excludedCalendar = inp.calendarCategory === "nontermCreditHour" || inp.calendarCategory === "clockHour";
+  const sorApplicable = awardYear === "2026-27" && !traditionalProrationApplies && !excludedCalendar;
+  if ((inp.calType === 3 || inp.calType === 4) && !inp.calendarCategory) {
     warnings.push(
-      `Academic Calendar ${inp.calType} (non-standard) - confirm SOR applicability with the FSA Handbook.`,
+      `Academic Calendar ${inp.calType} needs a specific calendar category before SOR applicability can be confirmed.`,
     );
+  }
+  if (inp.calendarCategory === "nonstandardNeedsReview" || inp.calendarCategory === "subscription") {
+    warnings.push("This calendar category needs school review before the SOR result can be used for awarding.");
   }
   if (isGradOrProf(inp.gradeLevel) && inp.programLevel === "undergraduate") {
     warnings.push(
@@ -770,14 +776,31 @@ export function calculateSOR(inp: SORInputs): SORResults {
     );
   }
 
-  const keys = activeKeys(inp);
-  const ordered = keys.map((k) => inp.terms[k]);
+  const allKeys = activeKeys(inp);
   const loanPeriodScope = inp.loanPeriodScope ?? "annualMultiTerm";
+  const selectedSingleTerm = inp.singleTermPaymentPeriod ??
+    (allKeys.length === 1 ? allKeys[0] : undefined);
+  const keys = loanPeriodScope === "singleTerm"
+    ? selectedSingleTerm && allKeys.includes(selectedSingleTerm) ? [selectedSingleTerm] : []
+    : allKeys;
+  const ordered = keys.map((k) => inp.terms[k]);
   const singleTermScopeValid = loanPeriodScope !== "singleTerm" || ordered.length === 1;
-  if (loanPeriodScope === "singleTerm" && ordered.length !== 1) {
+  if (loanPeriodScope === "singleTerm" && !singleTermScopeValid) {
     warnings.push(
-      "Single-term scope should have exactly one active loan-period term. Set standard terms and optional modules so only one term is active.",
+      "Select an enabled single-term loan payment period without changing the academic-year term count.",
     );
+  }
+  if (inp.viewMode === "disbursement") {
+    for (const term of ordered) {
+      if (hasHistoricalActivity(term) && term.actualCredits === null) {
+        warnings.push(`Actual credits are required for paid ${term.label} before recalculating a later disbursement.`);
+      }
+    }
+  }
+  if (inp.parentPlusDenied && inp.dependency === "dependent" && !isGradOrProf(inp.gradeLevel)
+    && awardYear === "2026-27" && inp.loanLimitException !== true
+    && inp.parentPlusAggregateUsed == null) {
+    warnings.push("Parent PLUS aggregate used is required to determine additional dependent Unsubsidized eligibility.");
   }
 
   // STEP 1 - derive Sub / Unsub baselines per FSA spec §1 (Combined Limit / Shifting Rule).
@@ -805,9 +828,9 @@ export function calculateSOR(inp: SORInputs): SORResults {
     Math.min(combinedLimit - subBaseline, availableCoa - subBaseline),
   );
   const useLegacy = inp.loanLimitException !== false;
-  const lookup = lookupLimits(inp.gradeLevel, inp.dependency, inp.parentPlusDenied, useLegacy);
+  const lookup = lookupLimits(inp.gradeLevel, inp.dependency, qualifyingParentPlusDenial(inp), useLegacy);
   const additionalUnsubBase =
-    !inp.overrideLimits && inp.parentPlusDenied && inp.dependency === "dependent"
+    !inp.overrideLimits && qualifyingParentPlusDenial(inp)
       ? lookup.additionalUnsub
       : 0;
   const unsubBaselineEff = unsubBaseline;
@@ -829,7 +852,9 @@ export function calculateSOR(inp: SORInputs): SORResults {
   );
 
   const sumOfTermFT = ordered.reduce((s, t) => s + t.ftCredits, 0);
-  const ayFtUsed = inp.ayFtCredits > 0 ? inp.ayFtCredits : sumOfTermFT;
+  const ayFtUsed = loanPeriodScope === "singleTerm"
+    ? sumOfTermFT
+    : inp.ayFtCredits > 0 ? inp.ayFtCredits : sumOfTermFT;
 
   const isDisbursementMode = inp.viewMode === "disbursement";
   const recalcHistory: RecalcEvent[] = [];
@@ -1166,7 +1191,8 @@ function assemble(args: {
   // the SOR% effectively reverts to 100% so reduced limits = initial max.
   const awardYear: "2025-26" | "2026-27" = inp.awardYear ?? "2026-27";
   const traditionalProrationApplies = inp.traditionalProrationApplies === true;
-  const sorApplicable = awardYear === "2026-27" && !traditionalProrationApplies;
+  const sorApplicable = awardYear === "2026-27" && !traditionalProrationApplies
+    && inp.calendarCategory !== "nontermCreditHour" && inp.calendarCategory !== "clockHour";
   if (traditionalProrationApplies) {
     if (inp.programLevel === "undergraduate") {
       warnings.push(
@@ -1265,7 +1291,9 @@ function assemble(args: {
   const reducedGradPlus = round(gradPlusReductionBase * pct);
 
   const enrolledSum = ordered.reduce((s, t, i) => {
-    return s + (finalSnap.eligible[i] ? effectiveCreditsBy(t) : 0);
+    const credits = effectiveCreditsBy(t);
+    return s + (finalSnap.eligible[i] || (inp.countLthtInAyPct && t.enabled && credits > 0)
+      ? credits : 0);
   }, 0);
 
   const effectiveCredits = ordered.map((t) => effectiveCreditsBy(t));
@@ -1426,7 +1454,7 @@ function assemble(args: {
   if (loanPeriodScope === "singleTerm") {
     if (!singleTermScopeValid) {
       warnings.push(
-        "Review: Single-term mode should have exactly one active loan-period term. Set standard terms and optional modules accordingly.",
+        "Review: select one enabled payment period for this loan. Keep the academic-year term setup unchanged.",
       );
     } else if (!singleTermEligible) {
       warnings.push("Single-term mode is below half-time. Final Direct Loan payout is $0.");
@@ -1485,6 +1513,7 @@ function assemble(args: {
     recalcHistory,
     loanPeriodScope,
     singleTermScopeValid,
+    singleTermPaymentPeriod: loanPeriodScope === "singleTerm" ? ordered[0]?.key : undefined,
     grossAmountBasis: true,
     awardYear,
     sorApplicable,
@@ -1510,13 +1539,16 @@ function assemble(args: {
       {
         id: "applicability",
         label: "Applicability",
-        input: { awardYear, traditionalProrationApplies, loanPeriodScope },
+        input: { awardYear, traditionalProrationApplies, loanPeriodScope,
+          singleTermPaymentPeriod: loanPeriodScope === "singleTerm" ? ordered[0]?.key : undefined },
         output: { sorApplicable, singleTermScopeValid },
       },
       {
         id: "ordinary-pre-sor-maximum",
         label: "Ordinary pre-SOR maximum",
-        output: { subBaseline, unsubBaseline, coa, otherAid },
+        output: { annualSubBaseline: subBaseline, annualUnsubBaseline: unsubBaseline,
+          appliedSubBaseline: reductionSubBase, appliedUnsubBaseline: reductionUnsubBase,
+          coa, otherAid },
       },
       {
         id: "sor-adjusted-maximum",
