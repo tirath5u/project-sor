@@ -41,9 +41,7 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
   const N = results.eligibleTermsCount;
   const equalSubPer = N > 0 ? Math.floor(results.reducedSub / N) : 0;
   const equalUnsubPer = N > 0 ? Math.floor(results.reducedUnsub / N) : 0;
-  // Proportional model - sum of FT credits across eligible terms is the
-  // weighting denominator.
-  // Proportional model uses effective enrolled credits as weights.
+  // Proportional distribution uses effective enrolled credits as weights.
   const eligibleEnrolledSum = eligible.reduce((s, t) => s + t.effectiveCredits, 0);
 
   return (
@@ -139,7 +137,9 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
         </div>
         {results.noReduction ? (
           <p className="mt-2 rounded-md bg-success/10 px-3 py-2 text-xs text-success">
-            ✓ Student is full-time for the AY: no SOR reduction is required.
+            {results.loanPeriodScope === "singleTerm"
+              ? "The selected payment period is full-time, so no SOR percentage reduction is required."
+              : "Student is full-time for the AY: no SOR reduction is required."}
           </p>
         ) : null}
       </section>
@@ -148,15 +148,17 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
       <section className="border-b border-border py-4">
         <StepHeader
           n={3}
-          title="Per-term Share of the Annual Limit"
-          tip="Equal = annual ÷ N eligible terms. Proportional = weighted by each term's effective enrolled credits (not FT credits). Equal is the regulatory default."
+          title={results.loanPeriodScope === "singleTerm" ? "Selected Payment-Period Payout" : "Per-term Share of the Annual Limit"}
+          tip={results.loanPeriodScope === "singleTerm" ? "The selected term receives its already-reduced one-term amount. Equal and Proportional allocation do not apply." : "Equal = annual ÷ N eligible terms. Proportional = weighted by each term's effective enrolled credits (not FT credits). Equal is the regulatory default."}
         />
         <p className="mb-2 text-xs text-muted-foreground">
-          {results.effectiveDistributionModel === "equal"
+          {results.loanPeriodScope === "singleTerm"
+            ? "The selected payment period receives the reduced amount from Step 2. No second SOR percentage or distribution model is applied."
+            : results.effectiveDistributionModel === "equal"
             ? `Equal model: pool ÷ N eligible terms. Whole-dollar residual follows the displayed term allocation.`
             : `Proportional model: each term's share = pool × (term effective enrolled credits ÷ Σ remaining eligible enrolled credits). The Department workbook labels say "FT credits" but the formulas weight by enrolled credits; this engine follows the formulas.`}
         </p>
-        {N > 0 ? (
+        {N > 0 && results.loanPeriodScope !== "singleTerm" ? (
           <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {results.effectiveDistributionModel === "equal" ? (
               <>
@@ -236,13 +238,13 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
       <section className="pt-4">
         <StepHeader
           n={4}
-          title="Per-term Enrollment % × Share = Disbursement"
-          tip="Step 5 caps each share by min(term %, 100%). Excess + lapsed credits forward (balance-forward) to remaining eligible terms with headroom."
+          title={results.loanPeriodScope === "singleTerm" ? "Final Selected-Term Disbursement" : "Per-term Enrollment % × Share = Disbursement"}
+          tip={results.loanPeriodScope === "singleTerm" ? "The selected term's enrollment percentage was applied once in Step 2. This step shows the final payout after any applicable term cap." : "Step 5 caps each share by min(term %, 100%). Excess + lapsed credits forward (balance-forward) to remaining eligible terms with headroom."}
         />
         <p className="mb-2 text-xs text-muted-foreground">
-          Term enrollment % = enrolled ÷ term full-time credits (can exceed 100%). Disbursement =
-          share × min(term %, 100%); any overflow or lapsed share carries forward to remaining
-          eligible terms with headroom.
+          {results.loanPeriodScope === "singleTerm"
+            ? "The selected term's enrolled credits determine the SOR percentage in Step 2. The resulting reduced amount is not multiplied by that percentage again."
+            : "Term enrollment % = enrolled ÷ term full-time credits (can exceed 100%). Disbursement = share × min(term %, 100%); any overflow or lapsed share carries forward to remaining eligible terms with headroom."}
         </p>
         {enabled.length > 0 ? (
           <ul className="mb-3 space-y-1 rounded-lg bg-muted/40 px-3 py-2 text-[11px] leading-snug text-foreground">
@@ -251,13 +253,25 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
                 return (
                   <li key={t.key} className="text-muted-foreground">
                     <span className="font-semibold text-foreground">{t.label}:</span> Below
-                    half-time ({t.effectiveCredits}/{t.ftCredits}). Ineligible - share forwards to
-                    next eligible term.
+                    half-time ({t.effectiveCredits}/{t.ftCredits}). {results.loanPeriodScope === "singleTerm"
+                      ? "No Direct Loan disbursement for the selected period."
+                      : "Ineligible - share forwards to the next eligible term."}
                   </li>
                 );
               }
               const pctRaw = Math.round(t.termPct * 100);
               const pctCapped = Math.min(100, pctRaw);
+              if (results.loanPeriodScope === "singleTerm") {
+                return (
+                  <li key={t.key}>
+                    <span className="font-semibold text-foreground">{t.label}:</span>{" "}
+                    {t.effectiveCredits} ÷ {t.ftCredits} = {pctRaw}% (applied once in Step 2).
+                    Final: <span className="font-semibold text-primary">
+                      {fmtCurrency(t.finalSub)} Sub / {fmtCurrency(t.finalUnsub)} Unsub
+                    </span>.
+                  </li>
+                );
+              }
               return (
                 <li key={t.key}>
                   <span className="font-semibold text-foreground">{t.label}:</span>{" "}

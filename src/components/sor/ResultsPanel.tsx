@@ -101,17 +101,16 @@ export function ResultsPanel({
             <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-80">
               SOR %
               <InfoTip>
-                Schedule of Reductions percentage. = Σ AY enrolled credits ÷ AY full-time credits,
-                rounded. This is the calculation input that reduces the annual Sub/Unsub (and Grad
-                PLUS) baselines. Distinct from Enrollment Intensity (EI), which is the per-term
-                value reported to COD on disbursement records.
+                {results.loanPeriodScope === "singleTerm"
+                  ? "Selected payment-period enrolled credits divided by that period's full-time credits, rounded. This percentage reduces the one-term eligibility base once."
+                  : "Counted academic-year enrolled credits divided by academic-year full-time credits, rounded. This reduces the annual Sub/Unsub and Grad PLUS baselines. It is distinct from term-level Enrollment Intensity reported to COD."}
               </InfoTip>
             </div>
             <div className="mt-1 text-2xl font-bold tabular-nums">
               {Math.round(results.sorPctRounded * 100)}%
             </div>
             <div className="text-[11px] opacity-80">
-              {results.enrolledSumAll} / {results.ftSumAll} AY credits
+              {results.enrolledSumAll} / {results.ftSumAll} {results.loanPeriodScope === "singleTerm" ? "selected-term credits" : "AY credits"}
             </div>
           </div>
           <div className="rounded-lg bg-white/10 p-3">
