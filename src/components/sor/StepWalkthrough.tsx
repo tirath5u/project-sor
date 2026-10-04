@@ -37,13 +37,6 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
   const appliedUnsub = typeof appliedStage?.appliedUnsubBaseline === "number" ? appliedStage.appliedUnsubBaseline : results.unsubBaseline;
   const ayPctRoundedPct = Math.round(results.sorPctRounded * 100);
 
-  // Step 3 formula proof - for "equal" model, payout = pool ÷ N eligible terms.
-  const N = results.eligibleTermsCount;
-  const equalSubPer = N > 0 ? Math.floor(results.reducedSub / N) : 0;
-  const equalUnsubPer = N > 0 ? Math.floor(results.reducedUnsub / N) : 0;
-  // Proportional distribution uses effective enrolled credits as weights.
-  const eligibleEnrolledSum = eligible.reduce((s, t) => s + t.effectiveCredits, 0);
-
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
       <div className="mb-4 flex items-center justify-between">
@@ -149,53 +142,15 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
         <StepHeader
           n={3}
           title={results.loanPeriodScope === "singleTerm" ? "Selected Payment-Period Payout" : "Per-term Share of the Annual Limit"}
-          tip={results.loanPeriodScope === "singleTerm" ? "The selected term receives its already-reduced one-term amount. Equal and Proportional allocation do not apply." : "Equal = annual ÷ N eligible terms. Proportional = weighted by each term's effective enrolled credits (not FT credits). Equal is the regulatory default."}
+          tip={results.loanPeriodScope === "singleTerm" ? "The selected term receives its already-reduced one-term amount. Equal and Proportional allocation do not apply." : "Equal uses active term shares with balance forward. Proportional weights eligible terms by effective enrolled credits. The displayed shares include eligibility and rounding effects."}
         />
         <p className="mb-2 text-xs text-muted-foreground">
           {results.loanPeriodScope === "singleTerm"
             ? "The selected payment period receives the reduced amount from Step 2. No second SOR percentage or distribution model is applied."
             : results.effectiveDistributionModel === "equal"
-            ? `Equal model: pool ÷ N eligible terms. Whole-dollar residual follows the displayed term allocation.`
-            : `Proportional model: each term's share = pool × (term effective enrolled credits ÷ Σ remaining eligible enrolled credits). The Department workbook labels say "FT credits" but the formulas weight by enrolled credits; this engine follows the formulas.`}
+            ? "Equal model: the reduced annual amount is allocated across active terms. An ineligible term receives no disbursement, and its share can move to an eligible term."
+            : "Proportional model: eligible term shares are weighted by effective enrolled credits. The shown dollar shares include rounding and any paid-history locks."}
         </p>
-        {N > 0 && results.loanPeriodScope !== "singleTerm" ? (
-          <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {results.effectiveDistributionModel === "equal" ? (
-              <>
-                <Eq>
-                  <div className="text-muted-foreground">Sub payout per term:</div>
-                  {fmtCurrency(results.reducedSub)} ÷ {N} ={" "}
-                  <span className="font-semibold text-primary">{fmtCurrency(equalSubPer)}</span>
-                  {results.reducedSub % N !== 0 ? (
-                    <span className="text-muted-foreground">
-                      {" "}
-                      ({results.noReduction ? "first" : "last"} eligible term absorbs +{fmtCurrency(results.reducedSub - equalSubPer * N)})
-                    </span>
-                  ) : null}
-                </Eq>
-                <Eq>
-                  <div className="text-muted-foreground">Unsub payout per term:</div>
-                  {fmtCurrency(results.reducedUnsub)} ÷ {N} ={" "}
-                  <span className="font-semibold text-primary">{fmtCurrency(equalUnsubPer)}</span>
-                  {results.reducedUnsub % N !== 0 ? (
-                    <span className="text-muted-foreground">
-                      {" "}
-                      ({results.noReduction ? "first" : "last"} eligible term absorbs +{fmtCurrency(results.reducedUnsub - equalUnsubPer * N)})
-                    </span>
-                  ) : null}
-                </Eq>
-              </>
-            ) : (
-              eligible.map((t) => (
-                <Eq key={t.key}>
-                  <div className="text-muted-foreground">{t.label} Sub share:</div>
-                  {fmtCurrency(results.reducedSub)} × ({t.effectiveCredits} ÷ {eligibleEnrolledSum})
-                  = <span className="font-semibold text-primary">{fmtCurrency(t.shareSub)}</span>
-                </Eq>
-              ))
-            )}
-          </div>
-        ) : null}
         {eligible.length > 0 ? (
           <p className="mb-2 text-xs text-foreground">
             Resulting split:{" "}
@@ -238,13 +193,13 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
       <section className="pt-4">
         <StepHeader
           n={4}
-          title={results.loanPeriodScope === "singleTerm" ? "Final Selected-Term Disbursement" : "Per-term Enrollment % × Share = Disbursement"}
-          tip={results.loanPeriodScope === "singleTerm" ? "The selected term's enrollment percentage was applied once in Step 2. This step shows the final payout after any applicable term cap." : "Step 5 caps each share by min(term %, 100%). Excess + lapsed credits forward (balance-forward) to remaining eligible terms with headroom."}
+          title={results.loanPeriodScope === "singleTerm" ? "Final Selected-Term Disbursement" : "Term Allocation and Final Disbursement"}
+          tip={results.loanPeriodScope === "singleTerm" ? "The selected term's enrollment percentage was applied once in Step 2. This step shows the final payout after any applicable term cap." : "The term percentage is informational here. Allocation, paid-history locks, and term caps determine the displayed final amount."}
         />
         <p className="mb-2 text-xs text-muted-foreground">
           {results.loanPeriodScope === "singleTerm"
             ? "The selected term's enrolled credits determine the SOR percentage in Step 2. The resulting reduced amount is not multiplied by that percentage again."
-            : "Term enrollment % = enrolled ÷ term full-time credits (can exceed 100%). Disbursement = share × min(term %, 100%); any overflow or lapsed share carries forward to remaining eligible terms with headroom."}
+            : "Term enrollment percentage is shown for context. It is not multiplied into the reduced annual amount a second time. The final amount reflects the allocated share, paid history, and any term cap."}
         </p>
         {enabled.length > 0 ? (
           <ul className="mb-3 space-y-1 rounded-lg bg-muted/40 px-3 py-2 text-[11px] leading-snug text-foreground">
@@ -260,7 +215,6 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
                 );
               }
               const pctRaw = Math.round(t.termPct * 100);
-              const pctCapped = Math.min(100, pctRaw);
               if (results.loanPeriodScope === "singleTerm") {
                 return (
                   <li key={t.key}>
@@ -275,14 +229,13 @@ export function StepWalkthrough({ inputs, results }: { inputs: SORInputs; result
               return (
                 <li key={t.key}>
                   <span className="font-semibold text-foreground">{t.label}:</span>{" "}
-                  {t.effectiveCredits} ÷ {t.ftCredits} = {pctRaw}% ({pctCapped}% used). Sub{" "}
-                  {fmtCurrency(t.shareSub)} × {pctCapped}% ={" "}
-                  <span className="font-semibold">{fmtCurrency(t.calcSub)}</span>
+                  {t.effectiveCredits} ÷ {t.ftCredits} = {pctRaw}% (term status). Sub share{" "}
+                  {fmtCurrency(t.shareSub)}; calculated {fmtCurrency(t.calcSub)}
                   {t.coaCapSub > 0 && t.calcSub > t.coaCapSub
                     ? ` → COA-capped to ${fmtCurrency(t.finalSub)}`
                     : ""}
                   {t.shareUnsub > 0 || t.calcUnsub > 0
-                    ? `; Unsub ${fmtCurrency(t.shareUnsub)} × ${pctCapped}% = ${fmtCurrency(t.calcUnsub)}${t.coaCapUnsub > 0 && t.calcUnsub > t.coaCapUnsub ? ` → ${fmtCurrency(t.finalUnsub)}` : ""}`
+                    ? `; Unsub share ${fmtCurrency(t.shareUnsub)}; calculated ${fmtCurrency(t.calcUnsub)}${t.coaCapUnsub > 0 && t.calcUnsub > t.coaCapUnsub ? ` → ${fmtCurrency(t.finalUnsub)}` : ""}`
                     : ""}
                   . Final:{" "}
                   <span className="font-semibold text-primary">

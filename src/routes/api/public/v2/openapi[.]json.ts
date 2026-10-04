@@ -10,8 +10,11 @@ import {
 } from "@/lib/sor.version";
 
 const AWARD_YEARS = ["2025-26", "2026-27"];
+const TERM_KEYS = ["term1", "term2", "term3", "term4", "summer1", "summer2", "winter1", "winter2"];
 
 const termProperties = {
+  key: { type: "string", enum: TERM_KEYS },
+  label: { type: "string", minLength: 1, maxLength: 64 },
   enabled: { type: "boolean" },
   ftCredits: { type: "number", minimum: 0, maximum: 60 },
   enrolledCredits: { type: "number", minimum: 0, maximum: 60 },
@@ -21,8 +24,17 @@ const termProperties = {
   paidUnsub: { type: ["number", "null"], minimum: 0 },
   refundSub: { type: ["number", "null"], minimum: 0 },
   refundUnsub: { type: ["number", "null"], minimum: 0 },
+  coaCapSub: { type: "number", minimum: 0 },
+  coaCapUnsub: { type: "number", minimum: 0 },
   paidGradPlus: { type: ["number", "null"], minimum: 0 },
   refundGradPlus: { type: ["number", "null"], minimum: 0 },
+  coaCapGradPlus: { type: "number", minimum: 0 },
+};
+const termSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["key", "label", "enabled", "ftCredits", "enrolledCredits", "disbursed", "actualCredits", "paidSub", "paidUnsub", "refundSub", "refundUnsub", "coaCapSub", "coaCapUnsub"],
+  properties: termProperties,
 };
 
 const childTermsSchema = {
@@ -58,7 +70,7 @@ const childTermsSchema = {
   },
 };
 
-const spec = {
+export const spec = {
   openapi: "3.1.0",
   info: {
     title: "Project SOR V56 API",
@@ -113,7 +125,13 @@ const spec = {
           },
           "400": { description: "Malformed request" },
           "415": { description: "Content-Type must be application/json" },
-          "422": { description: "Schema validation failed or required facts are missing; response includes follow-up questions." },
+          "422": {
+            description: "Schema validation failed or required facts are missing.",
+            content: { "application/json": { schema: { oneOf: [
+              { $ref: "#/components/schemas/NeedsInputResponse" },
+              { type: "object", additionalProperties: true, required: ["error"] },
+            ] } } },
+          },
           "429": { description: "Rate limited" },
         },
       },
@@ -279,23 +297,40 @@ const spec = {
         additionalProperties: false,
         required: [
           "awardYear",
+          "viewMode",
+          "calType",
           "programLevel",
+          "summerPosition",
           "gradeLevel",
           "dependency",
+          "parentPlusDenied",
           "loanPeriodScope",
           "ayType",
           "numStandardTerms",
+          "includeSummer1",
+          "includeSummer2",
+          "includeWinter1",
+          "includeWinter2",
           "ayFtCredits",
+          "overrideLimits",
           "annualNeed",
+          "subStatutory",
+          "unsubStatutory",
+          "distributionModel",
+          "applySubUnsubShift",
+          "applyDoubleReduction",
+          "countLthtInAyPct",
           "coa",
           "otherAid",
           "terms",
         ],
         properties: {
+          viewMode: { type: "string", enum: ["plan", "disbursement"] },
           awardYear: { type: "string", enum: AWARD_YEARS },
           programLevel: { type: "string", enum: ["undergraduate", "graduate"] },
           gradeLevel: { type: "string", enum: ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", "g9", "g10", "g11", "g12", "g13"] },
           dependency: { type: "string", enum: ["dependent", "independent"] },
+          summerPosition: { type: "string", enum: ["none", "trailer", "header"] },
           parentPlusDenied: {
             type: "boolean",
             description: "V1 compatibility field. Prefer parentPlusEligibilityBasis in V2.",
@@ -316,6 +351,10 @@ const spec = {
               "Caller-supplied Parent PLUS aggregate usage. The service does not derive NSLDS aggregate room.",
           },
           loanLimitException: { type: "boolean" },
+          loanLimitExceptionEvidence: { type: "object", additionalProperties: true, description: "Self-reported student facts for review only; not an authoritative exception flag." },
+          programContinuity: { type: "object", additionalProperties: true, description: "Self-reported program continuity facts for review only." },
+          professionalClassification: { type: "object", additionalProperties: true, description: "Self-reported professional classification facts for review only." },
+          studentDisclosureAcknowledged: { type: "boolean" },
           loanPeriodScope: { type: "string", enum: ["annualMultiTerm", "singleTerm"] },
           singleTermPaymentPeriod: { type: "string", enum: ["term1", "term2", "term3", "term4", "summer1", "summer2", "winter1", "winter2"], description: "Required for a single-term loan; the academic-year term count remains unchanged." },
           calType: { type: "integer", enum: [1, 2, 3, 4] },
@@ -323,7 +362,12 @@ const spec = {
           coaScope: { type: "string", enum: ["academicYear", "singleTerm"] },
           ayType: { type: "string", enum: ["SAY", "BBAY1", "BBAY2"] },
           numStandardTerms: { type: "integer", minimum: 1, maximum: 4 },
+          includeSummer1: { type: "boolean" },
+          includeSummer2: { type: "boolean" },
+          includeWinter1: { type: "boolean" },
+          includeWinter2: { type: "boolean" },
           ayFtCredits: { type: "number", minimum: 0 },
+          overrideLimits: { type: "boolean" },
           ayDenominatorOverride: {
             type: ["number", "null"],
             minimum: 0,
@@ -331,11 +375,17 @@ const spec = {
               "Positive verified override replaces the derived AY denominator. Zero retains the derived path and emits a review warning.",
           },
           traditionalProrationApplies: { type: "boolean", description: "V1 compatibility field." },
+          ayDenominatorVerified: { type: "boolean", description: "Legacy verification indicator. Prefer ayDenominatorOverride for a numeric school-verified value." },
           traditionalProrationStatus: {
             type: "string",
             enum: ["notApplied", "shortProgram", "remainingPeriodShorterThanAcademicYear"],
           },
           annualNeed: { type: "number", minimum: 0 },
+          subStatutory: { type: "number", minimum: 0 },
+          unsubStatutory: { type: "number", minimum: 0 },
+          applySubUnsubShift: { type: "boolean" },
+          applyDoubleReduction: { type: "boolean", const: false, description: "SOR is applied once." },
+          countLthtInAyPct: { type: "boolean", const: true, description: "Title IV-countable LTHT credits remain in the annual numerator." },
           coa: { type: "number", minimum: 0 },
           otherAid: { type: "number", minimum: 0 },
           requestedGradPlus: { type: "number", minimum: 0 },
@@ -360,11 +410,36 @@ const spec = {
           distributionModel: { type: "string", enum: ["equal", "proportional"] },
           terms: {
             type: "object",
-            additionalProperties: { type: "object", properties: termProperties },
+            additionalProperties: false,
+            required: TERM_KEYS,
+            properties: Object.fromEntries(TERM_KEYS.map((key) => [key, termSchema])),
           },
           childTerms: childTermsSchema,
           feeSubUnsubPercent: { type: "number", default: 1.057 },
           feeGradPlusPercent: { type: "number", default: 4.228 },
+        },
+      },
+      NeedsInputResponse: {
+        type: "object",
+        additionalProperties: true,
+        required: ["status", "canCalculate", "missingInputs", "nextQuestions"],
+        properties: {
+          status: { type: "string", const: "needs_input" },
+          canCalculate: { type: "boolean", const: false },
+          missingInputs: {
+            type: "array",
+            items: {
+              type: "object",
+              required: ["field", "label", "reason", "question"],
+              properties: {
+                field: { type: "string" },
+                label: { type: "string" },
+                reason: { type: "string" },
+                question: { type: "string" },
+              },
+            },
+          },
+          nextQuestions: { type: "array", items: { type: "string" } },
         },
       },
       CalculateResponse: {

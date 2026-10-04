@@ -1,0 +1,37 @@
+[
+  {
+    "id": "two-term-full-time",
+    "workbook": {},
+    "input": {},
+    "terms": {},
+    "expected": { "sorPercent": 100, "sub": 3500, "unsub": 2000, "termSub": [1750, 1750], "termUnsub": [1000, 1000] }
+  },
+  {
+    "id": "annual-four-eleven",
+    "workbook": { "B34": 4, "C34": 11 },
+    "input": {},
+    "terms": { "term1": { "enrolledCredits": 4 }, "term2": { "enrolledCredits": 11 } },
+    "expected": { "sorPercent": 63, "sub": 2205, "unsub": 1260, "termSub": [0, 2205], "termUnsub": [0, 1260] }
+  },
+  {
+    "id": "single-term-spring-nine",
+    "workbook": { "B9": "Single-term", "J9": "Term 2", "C34": 9 },
+    "input": { "loanPeriodScope": "singleTerm", "singleTermPaymentPeriod": "term2" },
+    "terms": { "term2": { "enrolledCredits": 9 } },
+    "expected": { "sorPercent": 75, "sub": 1313, "unsub": 750, "termSub": [0, 1313], "termUnsub": [0, 750] }
+  },
+  {
+    "id": "faq17c-paid-fall-six",
+    "workbook": { "B34": 6, "C34": 12, "B50": 1750, "B55": 1000 },
+    "input": { "viewMode": "disbursement" },
+    "terms": { "term1": { "disbursed": true, "actualCredits": 6, "paidSub": 1750, "paidUnsub": 1000 } },
+    "expected": { "sorPercent": 75, "sub": 2625, "unsub": 1500, "termSub": [1750, 875], "termUnsub": [1000, 500] }
+  },
+  {
+    "id": "single-term-half-dollar",
+    "workbook": { "B9": "Single-term", "J9": "Term 2", "C32": 15, "C34": 8.5 },
+    "input": { "loanPeriodScope": "singleTerm", "singleTermPaymentPeriod": "term2" },
+    "terms": { "term2": { "ftCredits": 15, "enrolledCredits": 8.5 } },
+    "expected": { "sorPercent": 57, "sub": 998, "unsub": 570, "termSub": [0, 998], "termUnsub": [0, 570] }
+  }
+]

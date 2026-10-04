@@ -106,8 +106,8 @@ const InputSchema = {
   overrideLimits: z.boolean().optional(),
   distributionModel: z.enum(["equal", "proportional"]).optional(),
   applySubUnsubShift: z.boolean().optional(),
-  applyDoubleReduction: z.boolean().optional(),
-  countLthtInAyPct: z.boolean().optional(),
+  applyDoubleReduction: z.literal(false).optional(),
+  countLthtInAyPct: z.literal(true).optional(),
   viewMode: z.enum(["plan", "disbursement"]).optional(),
   terms: z.record(TermKeyEnum, TermPatchSchema).optional(),
   childTerms: ChildTermsSchema.optional(),
@@ -152,6 +152,12 @@ const InputSchema = {
 const RequiredField = z.object(InputSchema).passthrough();
 
 const requiredFields: Array<{ field: string; label: string; reason: string; question: string }> = [
+  {
+    field: "calendarCategory",
+    label: "Program calendar",
+    reason: "Standard term, nonstandard term, nonterm, clock hour, and subscription programs have different SOR applicability.",
+    question: "Is the program standard term, substantially equal nonstandard terms of at least nine weeks, another nonstandard calendar, nonterm credit hour, clock hour, or subscription based?",
+  },
   {
     field: "awardYear",
     label: "Award Year",
@@ -380,6 +386,11 @@ export default defineTool({
       ...(calculationInput as Partial<SORInputs>),
       terms: { ...base.terms },
     };
+    if (input.calendarCategory && input.calType === undefined) {
+      merged.calType = input.calendarCategory === "standardTerm" ? 1
+        : input.calendarCategory === "nonstandardEqualNineWeeks" || input.calendarCategory === "nonstandardNeedsReview" ? 3
+        : 4;
+    }
     if (input.terms) {
       for (const [key, termPatch] of Object.entries(input.terms as Record<string, unknown>)) {
         const term = merged.terms[key as TermKey];

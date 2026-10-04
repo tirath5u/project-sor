@@ -1,7 +1,8 @@
 import { sourceFingerprint } from "./source-fingerprint.mjs";
+import parityFixtures from "../fixtures/v57-audit-parity.json";
 
 const baseUrl = (process.argv[2] ?? "http://127.0.0.1:5175").replace(/\/$/, "");
-const expectedRelease = "sor-v57-1.4.0-2026-10-02";
+const expectedRelease = "sor-v57-1.4.1-2026-10-05";
 const expectedFingerprint = sourceFingerprint();
 (globalThis as Record<string, unknown>).__SOR_SOURCE_FINGERPRINT__ = expectedFingerprint;
 const { defaultInputs } = await import("../src/lib/sor.ts");
@@ -93,7 +94,7 @@ try {
   receipts.parentPlus = { status: exhausted.status, additionalUnsubBase: exhausted.body.data?.additionalUnsubBase };
 
   const init = await mcp("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "v57-deployment-check", version: "1" } });
-  check(init.serverInfo?.version === "0.8.0", "MCP server version differs");
+  check(init.serverInfo?.version === "0.8.1", "MCP server version differs");
   const listed = await mcp("tools/list");
   const tools = listed.tools as Array<{ name: string; annotations?: Record<string, boolean> }>;
   check(tools.length === 5, "MCP public tool count differs");
@@ -103,6 +104,77 @@ try {
   check(called.structuredContent?.data?.reducedSub === 1313, "MCP selected spring Sub differs from REST");
   check(called.structuredContent?.meta?.sourceFingerprint === expectedFingerprint, "MCP source fingerprint differs");
   receipts.mcp = { version: init.serverInfo?.version, tools: tools.map((tool) => tool.name), springSub: called.structuredContent?.data?.reducedSub };
+
+  const parityReceipts: Array<Record<string, unknown>> = [];
+  for (const fixture of parityFixtures) {
+    const input = defaultInputs();
+    input.numStandardTerms = 2;
+    input.terms.term3.enabled = false;
+    input.ayFtCredits = 0;
+    input.gradeLevel = "g1";
+    input.dependency = "dependent";
+    input.annualNeed = 10000;
+    input.coa = 30000;
+    input.otherAid = 0;
+    Object.assign(input, fixture.input);
+    for (const [key, values] of Object.entries(fixture.terms)) {
+      Object.assign(input.terms[key as keyof typeof input.terms], values);
+    }
+    for (const version of ["v1", "v2"] as const) {
+      const response = await json(`/api/public/${version}/calculate`, {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
+      });
+      check(response.status === 200, `${fixture.id} ${version} did not calculate`);
+      if (response.status !== 200) continue;
+      const data = response.body.data;
+      const ordered = ["term1", "term2"].map((key) => data.termResults?.find((term: { key: string }) => term.key === key));
+      const vector = {
+        sorPercent: Math.round(data.sorPctRounded * 100), sub: data.reducedSub, unsub: data.reducedUnsub,
+        termSub: ordered.map((term) => term?.finalSub ?? 0),
+        termUnsub: ordered.map((term) => term?.finalUnsub ?? 0),
+      };
+      check(JSON.stringify(vector) === JSON.stringify(fixture.expected), `${fixture.id} ${version} ordered oracle differs`);
+      if (version === "v2") check(response.body.contract?.authoritative === true, `${fixture.id} v2 not authoritative`);
+      parityReceipts.push({ id: fixture.id, surface: version, status: response.status, vector });
+    }
+    const response = await mcp("tools/call", { name: "calculate_sor", arguments: { ...input, detailLevel: "detailed" } });
+    const data = response.structuredContent?.data;
+    const ordered = ["term1", "term2"].map((key) => data?.termResults?.find((term: { key: string }) => term.key === key));
+    const vector = {
+      sorPercent: Math.round(data?.sorPctRounded * 100), sub: data?.reducedSub, unsub: data?.reducedUnsub,
+      termSub: ordered.map((term) => term?.finalSub ?? 0),
+      termUnsub: ordered.map((term) => term?.finalUnsub ?? 0),
+    };
+    check(JSON.stringify(vector) === JSON.stringify(fixture.expected), `${fixture.id} MCP ordered oracle differs`);
+    check(response.structuredContent?.contract?.authoritative === true, `${fixture.id} MCP not authoritative`);
+    parityReceipts.push({ id: fixture.id, surface: "mcp", status: response.structuredContent?.status, vector });
+  }
+  receipts.parity = parityReceipts;
+
+  const openapi = await json("/api/public/v2/openapi.json");
+  check(openapi.status === 200, "V2 OpenAPI is unavailable");
+  if (openapi.status === 200) {
+    const schema = openapi.body.components?.schemas?.CalculateInput;
+    const source = defaultInputs() as unknown as Record<string, unknown>;
+    const terms = Object.fromEntries(Object.entries(source.terms as Record<string, Record<string, unknown>>)
+      .map(([key, term]) => [key, Object.fromEntries((schema.properties.terms.properties[key].required as string[])
+        .map((field) => [field, term[field]]))]));
+    const documented = Object.fromEntries((schema.required as string[])
+      .map((field) => [field, field === "terms" ? terms : source[field]]));
+    const response = await calculate(documented);
+    check(response.status === 200, "OpenAPI-required-only request was rejected");
+    receipts.openapiRequiredOnly = { status: response.status };
+  }
+
+  const incompleteCalendar = defaultInputs();
+  incompleteCalendar.calType = 4;
+  delete incompleteCalendar.calendarCategory;
+  for (const version of ["v1", "v2"] as const) {
+    const response = await json(`/api/public/${version}/calculate`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(incompleteCalendar),
+    });
+    check(response.status === 422 && response.body.status === "needs_input", `${version} accepted an unresolved calendar`);
+  }
 } catch (error) {
   failures.push(error instanceof Error ? error.message : String(error));
 }

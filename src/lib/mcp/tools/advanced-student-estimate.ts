@@ -50,17 +50,28 @@ export default defineTool({
       const result = { status: "needs_input", canCalculate: false, missingInputs: run.normalized.missingRequiredInputs, nextQuestions: run.normalized.missingRequiredInputs.map((item) => item.question) };
       return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result as Record<string, unknown> };
     }
+    const singleTerm = parsed.data.input.loanPeriodScope === "singleTerm";
+    const estimates = singleTerm
+      ? {
+          estimatedLoanPeriodSub: run.data.reducedSub,
+          estimatedLoanPeriodUnsub: run.data.reducedUnsub,
+          estimatedLoanPeriodGradPlus: run.data.reducedGradPlus,
+          estimatedLoanPeriodTotal: run.data.reducedSub + run.data.reducedUnsub + run.data.reducedGradPlus,
+        }
+      : {
+          estimatedAnnualSub: run.data.reducedSub,
+          estimatedAnnualUnsub: run.data.reducedUnsub,
+          estimatedAnnualGradPlus: run.data.reducedGradPlus,
+          estimatedAnnualTotal: run.data.reducedSub + run.data.reducedUnsub + run.data.reducedGradPlus,
+        };
     const result = {
       status: run.status,
       audience: "student-advanced",
       canUseForSchoolReview: run.authoritative,
       estimate: {
         sorPercent: run.data.sorPctRounded,
-        estimatedAnnualSub: run.data.reducedSub,
-        estimatedAnnualUnsub: run.data.reducedUnsub,
-        estimatedAnnualGradPlus: run.data.reducedGradPlus,
-        estimatedAnnualTotal:
-          run.data.reducedSub + run.data.reducedUnsub + run.data.reducedGradPlus,
+        amountScope: singleTerm ? "singleTermLoanPeriod" : "annualMultiTerm",
+        ...estimates,
         grossBasis: true,
       },
       data: parsed.data.resultDetail === "detailed" ? run.data : undefined,

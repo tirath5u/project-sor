@@ -59,6 +59,27 @@ function safe(text: string): string {
     .replace(/[✗✘]/g, "[ ]");
 }
 
+export function pdfAllocationLines(results: SORResults) {
+  const eligibleTerms = results.termResults.filter((term) => term.eligible);
+  const enabledTerms = results.termResults.filter((term) => term.enabled);
+  const subShares = eligibleTerms.map((term) => `${term.label} ${fmtCurrency(term.shareSub)}`).join(", ") || "n/a";
+  const unsubShares = eligibleTerms.map((term) => `${term.label} ${fmtCurrency(term.shareUnsub)}`).join(", ") || "n/a";
+  const step3 = results.loanPeriodScope === "singleTerm"
+    ? `Step 3 - The selected payment period receives the amount reduced in Step 2. No Equal or Proportional distribution and no second SOR percentage apply. Sub ${subShares}. Unsub ${unsubShares}.`
+    : `Step 3 - ${results.effectiveDistributionModel === "equal" ? "Equal" : "Proportional"} allocation of the reduced annual amount. Shares include eligibility, paid-history, and rounding effects. Sub split: ${subShares}. Unsub split: ${unsubShares}.`;
+  const step5 = `Step 5 - The term percentage in Step 4 is informational, not a second multiplier. Final payouts reflect allocated shares, paid history, and applicable term caps. ${enabledTerms
+    .filter((term) => term.eligible)
+    .map((term) => {
+      const sub = `Sub share ${fmtCurrency(term.shareSub)}, calculated ${fmtCurrency(term.calcSub)}${term.coaCapSub > 0 && term.calcSub > term.coaCapSub ? ` -> COA-capped to ${fmtCurrency(term.finalSub)}` : ""}`;
+      const unsub = term.shareUnsub > 0 || term.calcUnsub > 0
+        ? `; Unsub share ${fmtCurrency(term.shareUnsub)}, calculated ${fmtCurrency(term.calcUnsub)}${term.coaCapUnsub > 0 && term.calcUnsub > term.coaCapUnsub ? ` -> ${fmtCurrency(term.finalUnsub)}` : ""}`
+        : "";
+      return `${term.label}: ${sub}${unsub}. Final ${fmtCurrency(term.finalSub)} Sub / ${fmtCurrency(term.finalUnsub)} Unsub.`;
+    })
+    .join(" ")}`;
+  return { step3, step5 };
+}
+
 export function exportSORCaseFile({
   inputs,
   results,
@@ -256,45 +277,12 @@ export function exportSORCaseFile({
 
   // ---------- 6. STEP WALKTHROUGH ----------
   sectionHeading("6. Step walkthrough");
-  const eligibleTerms = results.termResults.filter((t) => t.eligible);
   const enabledTerms = results.termResults.filter((t) => t.enabled);
   const ayPctRoundedPct = Math.round(results.sorPctRounded * 100);
   const appliedStage = results.calculationStages?.find((stage) => stage.id === "ordinary-pre-sor-maximum")?.output;
   const appliedSub = typeof appliedStage?.appliedSubBaseline === "number" ? appliedStage.appliedSubBaseline : results.subBaseline;
   const appliedUnsub = typeof appliedStage?.appliedUnsubBaseline === "number" ? appliedStage.appliedUnsubBaseline : results.unsubBaseline;
-  const shareSubLine = eligibleTerms.map((t) => `${t.label} ${fmtCurrency(t.shareSub)}`).join(", ");
-  const shareUnsubLine = eligibleTerms
-    .map((t) => `${t.label} ${fmtCurrency(t.shareUnsub)}`)
-    .join(", ");
-
-  // Step 3 formula proof - equal vs proportional
-  const N = results.eligibleTermsCount;
-  const equalSubPer = N > 0 ? Math.floor(results.reducedSub / N) : 0;
-  const equalUnsubPer = N > 0 ? Math.floor(results.reducedUnsub / N) : 0;
-  const eligibleCreditSum = eligibleTerms.reduce((s, t) => s + t.effectiveCredits, 0);
-  let step3Formula = "";
-  if (N > 0) {
-    if (results.effectiveDistributionModel === "equal") {
-      const subRem = results.reducedSub - equalSubPer * N;
-      const unsubRem = results.reducedUnsub - equalUnsubPer * N;
-      step3Formula =
-        ` Equal model: Sub ${fmtCurrency(results.reducedSub)} / ${N} = ${fmtCurrency(equalSubPer)} per term` +
-        (subRem !== 0 ? ` (${results.noReduction ? "first" : "last"} eligible term absorbs +${fmtCurrency(subRem)})` : "") +
-        `; Unsub ${fmtCurrency(results.reducedUnsub)} / ${N} = ${fmtCurrency(equalUnsubPer)} per term` +
-        (unsubRem !== 0 ? ` (${results.noReduction ? "first" : "last"} eligible term absorbs +${fmtCurrency(unsubRem)})` : "") +
-        ".";
-    } else {
-      step3Formula =
-        ` Proportional model: each term's share = pool x (term effective enrolled credits / ${eligibleCreditSum} eligible-term effective enrolled credits). ` +
-        eligibleTerms
-          .map(
-            (t) =>
-              `${t.label} Sub = ${fmtCurrency(results.reducedSub)} x (${t.effectiveCredits}/${eligibleCreditSum}) = ${fmtCurrency(t.shareSub)}`,
-          )
-          .join("; ") +
-        ".";
-    }
-  }
+  const allocationLines = pdfAllocationLines(results);
 
   const steps: string[] = [
     `Step 1 - Initial maxima (Combined Limit Shifting Rule): Sub = MIN(Annual Need ${fmtCurrency(
@@ -313,7 +301,7 @@ export function exportSORCaseFile({
     )}; Unsub ${fmtCurrency(appliedUnsub)} x ${ayPctRoundedPct}% = ${fmtCurrency(
       results.reducedUnsub,
     )}.`,
-    `Step 3 - Per-term share via "${results.effectiveDistributionModel}" model across ${results.eligibleTermsCount} eligible term(s).${step3Formula} Resulting Sub split: ${shareSubLine || "n/a"}. Unsub split: ${shareUnsubLine || "n/a"}.`,
+    allocationLines.step3,
     `Step 4 - Term enrollment % (term enrolled / term FT): ${enabledTerms
       .map(
         (t) =>
@@ -322,18 +310,7 @@ export function exportSORCaseFile({
           )}%${t.eligible ? "" : " (ineligible, below half-time)"}`,
       )
       .join("; ")}.`,
-    `Step 5 - Disbursement = share x min(term %, 100%); over/underflow carries forward; finals clamped to per-term COA caps. ${enabledTerms
-      .filter((t) => t.eligible)
-      .map((t) => {
-        const pctCapped = Math.min(100, Math.round(t.termPct * 100));
-        const subPart = `Sub ${fmtCurrency(t.shareSub)} x ${pctCapped}% = ${fmtCurrency(t.calcSub)}${t.coaCapSub > 0 && t.calcSub > t.coaCapSub ? ` -> COA-capped to ${fmtCurrency(t.finalSub)}` : ""}`;
-        const unsubPart =
-          t.shareUnsub > 0 || t.calcUnsub > 0
-            ? `; Unsub ${fmtCurrency(t.shareUnsub)} x ${pctCapped}% = ${fmtCurrency(t.calcUnsub)}${t.coaCapUnsub > 0 && t.calcUnsub > t.coaCapUnsub ? ` -> ${fmtCurrency(t.finalUnsub)}` : ""}`
-            : "";
-        return `${t.label}: ${subPart}${unsubPart}. Final ${fmtCurrency(t.finalSub)} Sub / ${fmtCurrency(t.finalUnsub)} Unsub.`;
-      })
-      .join(" ")}`,
+    allocationLines.step5,
   ];
   steps.forEach((s) => {
     if (y > 720) {

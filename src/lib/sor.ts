@@ -420,8 +420,10 @@ export function defaultInputs(): SORInputs {
   };
 }
 
-const round = (n: number) => Math.round(n);
-const round2 = (n: number) => Math.round(n * 100) / 100;
+// Normalize binary floating-point noise before Excel-compatible half-up rounding.
+export const roundDollarHalfUp = (n: number) => Math.round(Number(n.toPrecision(12)));
+const round = roundDollarHalfUp;
+const round2 = (n: number) => round(n * 100) / 100;
 const netAmount = (paid: number | null, refund: number | null) =>
   Math.max(0, (paid ?? 0) - (refund ?? 0));
 
@@ -536,7 +538,7 @@ function distributeRunningPoolDetailed(
       payout =
         isLast || totalWeight <= 0
           ? remainingPool
-          : Math.round((remainingPool * currentWeight) / totalWeight);
+          : round((remainingPool * currentWeight) / totalWeight);
     } else {
       const isFirst = remainingEligibleIdx[0] === i;
       payout =
@@ -649,7 +651,7 @@ function computeSnapshot(
     return s;
   }, 0);
   const ayPctRaw = ayFtUsed > 0 ? enrolledSum / ayFtUsed : 0;
-  const ayPctRounded = sorApplies ? Math.min(1, Math.round(ayPctRaw * 100) / 100) : 1;
+  const ayPctRounded = sorApplies ? Math.min(1, round(ayPctRaw * 100) / 100) : 1;
   const annualSub = round(initialSub * ayPctRounded);
   const annualUnsub = round(initialUnsub * ayPctRounded);
 
@@ -757,6 +759,9 @@ export function resolveCaps(inp: SORInputs): {
 }
 
 export function calculateSOR(inp: SORInputs): SORResults {
+  if (!inp.countLthtInAyPct || inp.applyDoubleReduction) {
+    throw new Error("Unsupported SOR policy toggle; count LTHT credits and apply one SOR reduction.");
+  }
   const warnings: string[] = [];
   const awardYear: "2025-26" | "2026-27" = inp.awardYear ?? "2026-27";
   const traditionalProrationApplies = inp.traditionalProrationApplies === true;
@@ -873,20 +878,21 @@ export function calculateSOR(inp: SORInputs): SORResults {
   const effectiveCreditsBy = (t: TermInput) =>
     isDisbursementMode && hasHistoricalActivity(t) ? historicalCredits(t) : t.enrolledCredits;
 
-  const plannedEligible = ordered.map((t) => {
+  const currentEligible = ordered.map((t) => {
     const half = t.ftCredits / 2;
-    return t.enabled && half > 0 && t.enrolledCredits >= half;
+    return t.enabled && half > 0 && effectiveCreditsBy(t) >= half;
   });
-  const plannedEnrolledSum = ordered.reduce((sum, t, i) => {
-    if (plannedEligible[i]) return sum + t.enrolledCredits;
-    if (inp.countLthtInAyPct && t.enabled && t.enrolledCredits > 0) return sum + t.enrolledCredits;
+  const currentEnrolledSum = ordered.reduce((sum, t, i) => {
+    const credits = effectiveCreditsBy(t);
+    if (currentEligible[i]) return sum + credits;
+    if (t.enabled && credits > 0) return sum + credits;
     return sum;
   }, 0);
-  const plannedSorPct = sorApplicable
+  const currentSorPct = sorApplicable
     ? Math.min(
         1,
-        Math.round(
-          (plannedEnrolledSum /
+        round(
+          (currentEnrolledSum /
             (loanPeriodScope === "singleTerm" && ordered.length === 1
               ? ordered[0].ftCredits
               : ayFtUsed)) *
@@ -894,7 +900,7 @@ export function calculateSOR(inp: SORInputs): SORResults {
         ) / 100,
       )
     : 1;
-  const currentSorReduction = sorApplicable && plannedSorPct < 1;
+  const currentSorReduction = sorApplicable && currentSorPct < 1;
   const effectiveDistributionModel: DistributionModel =
     loanPeriodScope === "singleTerm" || !currentSorReduction ? "equal" : inp.distributionModel;
   const residualToFirst = !currentSorReduction;
@@ -934,8 +940,8 @@ export function calculateSOR(inp: SORInputs): SORResults {
     if (!inp.applyDoubleReduction || loanPeriodScope === "singleTerm")
       return { snap: first, reduced: false };
     const pct = first.ayPctRounded;
-    const subNeedReduced = Math.min(subNeed, Math.round(subNeed * pct));
-    const unsubNeedReduced = Math.min(unsubNeed, Math.round(unsubNeed * pct));
+    const subNeedReduced = Math.min(subNeed, round(subNeed * pct));
+    const unsubNeedReduced = Math.min(unsubNeed, round(unsubNeed * pct));
     const subBaseline2 = Math.min(caps.sub, subNeedReduced);
     const unsubBaseline2 = Math.max(0, combinedLimit - subBaseline2);
     if (subBaseline2 === subBaseline && unsubBaseline2 === unsubBaselineEff) {
@@ -1226,10 +1232,10 @@ function assemble(args: {
   const subStatBaseline = caps.sub;
   const unsubStatBaseline = caps.unsub;
   const subNeedAdjusted = inp.applyDoubleReduction
-    ? Math.min(subNeed, Math.round(subNeed * pct))
+    ? Math.min(subNeed, round(subNeed * pct))
     : subNeed;
   const unsubNeedAdjusted = inp.applyDoubleReduction
-    ? Math.min(unsubNeed, Math.round(unsubNeed * pct))
+    ? Math.min(unsubNeed, round(unsubNeed * pct))
     : unsubNeed;
   const doubleReductionApplied =
     inp.applyDoubleReduction && (subNeedAdjusted !== subNeed || unsubNeedAdjusted !== unsubNeed);

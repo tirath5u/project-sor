@@ -1129,29 +1129,6 @@ function SORCalculatorPage() {
                   suppresses a second SOR reduction so the two reduction methods do not stack.
                 </InfoTip>
               </Label>
-              <Label className="flex h-8 cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 text-[11px]">
-                <Switch
-                  checked={inputs.applyDoubleReduction}
-                  onCheckedChange={(v) => update({ applyDoubleReduction: v })}
-                />
-                <span>Double-reduction</span>
-                <InfoTip>
-                  Apply both the AY% intensity reduction AND the per-term enrollment-intensity
-                  reduction. Off = single reduction only (most common interpretation).
-                </InfoTip>
-              </Label>
-              <Label className="flex h-8 cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 text-[11px]">
-                <Switch
-                  checked={inputs.countLthtInAyPct}
-                  onCheckedChange={(v) => update({ countLthtInAyPct: v })}
-                />
-                <span>Count LTHT in AY%</span>
-                <InfoTip>
-                  Include below-half-time credits in the academic-year numerator when applicable.
-                  A below-half-time term receives no disbursement, but its credits can affect the
-                  annual limit available in a later eligible term.
-                </InfoTip>
-              </Label>
             </div>
           </div>
         </Section>

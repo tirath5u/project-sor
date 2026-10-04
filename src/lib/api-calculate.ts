@@ -127,6 +127,9 @@ export async function handleCalculateRequest(request: Request, contractVersion: 
     );
   }
 
+  const v1RequiredInputReview = contractVersion === "v1"
+    ? normalizeV2Input(parsed.data as unknown as z.infer<typeof CalculateV2InputSchema>)
+    : null;
   const normalized =
     contractVersion === "v2"
       ? normalizeV2Input(parsed.data as unknown as z.infer<typeof CalculateV2InputSchema>)
@@ -136,7 +139,7 @@ export async function handleCalculateRequest(request: Request, contractVersion: 
           externalChecks: [],
           warnings: [],
           blocked: false,
-          missingRequiredInputs: [],
+          missingRequiredInputs: v1RequiredInputReview?.missingRequiredInputs ?? [],
         };
 
   if (normalized.missingRequiredInputs.length > 0) {

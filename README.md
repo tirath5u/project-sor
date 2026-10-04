@@ -155,11 +155,11 @@ The student route is intentionally narrower than the staff calculator. It covers
 reproduce a calculation against a specific snapshot of the rules. Top-level
 keys: `data` and `meta`. The `meta` object includes:
 
-- `engineVersion` - semantic version of the calculation engine (e.g. `1.4.0`)
+- `engineVersion` - semantic version of the calculation engine (e.g. `1.4.1`)
 - `policyYear` - award year the engine was evaluated against (e.g. `2026-27`)
 - `policySnapshotDate` - ISO date of the policy snapshot used
 - `policyStatus` - `confirmed` or `supported-preliminary`
-- `deploymentMarker` - public deployment identifier; equals `releaseId` (e.g. `sor-v57-1.4.0-2026-10-02`)
+- `deploymentMarker` - public deployment identifier; equals `releaseId` (e.g. `sor-v57-1.4.1-2026-10-05`)
 - `sourceCommit` - `null`; the exact Git SHA is not available to the runtime
 - `sourceCommitStatus` - `not_available_in_lovable_build` (see note below)
 - `sourceFingerprint` - build-time SHA-256 digest of the normalized application source; compare it with `node scripts/source-fingerprint.mjs` on the reviewed checkout
