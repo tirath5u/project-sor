@@ -2,10 +2,10 @@ import { sourceFingerprint } from "./source-fingerprint.mjs";
 import parityFixtures from "../fixtures/v57-audit-parity.json";
 
 const baseUrl = (process.argv[2] ?? "http://127.0.0.1:5175").replace(/\/$/, "");
-const expectedRelease = "sor-v57-1.4.1-2026-10-05";
 const expectedFingerprint = sourceFingerprint();
 (globalThis as Record<string, unknown>).__SOR_SOURCE_FINGERPRINT__ = expectedFingerprint;
 const { defaultInputs } = await import("../src/lib/sor.ts");
+const { RELEASE_ID: expectedRelease, MCP_VERSION: expectedMcpVersion } = await import("../src/lib/sor.version.ts");
 const failures: string[] = [];
 const receipts: Record<string, unknown> = {};
 
@@ -94,7 +94,7 @@ try {
   receipts.parentPlus = { status: exhausted.status, additionalUnsubBase: exhausted.body.data?.additionalUnsubBase };
 
   const init = await mcp("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "v57-deployment-check", version: "1" } });
-  check(init.serverInfo?.version === "0.8.1", "MCP server version differs");
+  check(init.serverInfo?.version === expectedMcpVersion, "MCP server version differs");
   const listed = await mcp("tools/list");
   const tools = listed.tools as Array<{ name: string; annotations?: Record<string, boolean> }>;
   check(tools.length === 5, "MCP public tool count differs");
