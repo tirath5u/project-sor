@@ -55,6 +55,9 @@ jobs:
           CONTRACT_BASE_URL: http://127.0.0.1:4173
         run: bun run contract:openapi
 
+      - name: Replay V57 REST and MCP audit vectors
+        run: bun scripts/verify-v57-deployment.ts http://127.0.0.1:4173
+
       - name: Stop local contract server
         if: always()
         run: |
