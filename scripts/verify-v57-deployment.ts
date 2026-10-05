@@ -105,6 +105,31 @@ try {
   check(called.structuredContent?.meta?.sourceFingerprint === expectedFingerprint, "MCP source fingerprint differs");
   receipts.mcp = { version: init.serverInfo?.version, tools: tools.map((tool) => tool.name), springSub: called.structuredContent?.data?.reducedSub };
 
+  const missingFacts = await mcp("tools/call", { name: "calculate_sor", arguments: {} });
+  check(missingFacts.structuredContent?.status === "needs_input", "MCP missing facts did not ask for input");
+  check(missingFacts.structuredContent?.data === undefined, "MCP missing facts exposed a calculation");
+
+  const heldSplit = defaultInputs();
+  heldSplit.numStandardTerms = 2;
+  heldSplit.ayFtCredits = 24;
+  heldSplit.terms.term3.enabled = false;
+  heldSplit.terms.term1.enrolledCredits = 8;
+  const residual = await mcp("tools/call", { name: "calculate_sor", arguments: heldSplit });
+  check(residual.structuredContent?.status === "review_required", "MCP residual split did not require review");
+  check(residual.structuredContent?.data === undefined, "MCP residual split exposed a payout");
+
+  const subscription = defaultInputs();
+  subscription.calType = 4;
+  subscription.calendarCategory = "subscription";
+  const unsupported = await mcp("tools/call", { name: "calculate_sor", arguments: subscription });
+  check(unsupported.structuredContent?.status === "blocked", "MCP subscription calendar was not blocked");
+  check(unsupported.structuredContent?.data === undefined, "MCP subscription calendar exposed a payout");
+  receipts.mcpSafety = {
+    missingFacts: missingFacts.structuredContent?.status,
+    residual: residual.structuredContent?.status,
+    unsupportedCalendar: unsupported.structuredContent?.status,
+  };
+
   const parityReceipts: Array<Record<string, unknown>> = [];
   for (const fixture of parityFixtures) {
     const input = defaultInputs();
