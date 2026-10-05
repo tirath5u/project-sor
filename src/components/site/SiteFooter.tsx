@@ -49,6 +49,11 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 space-y-2 border-t border-border pt-6 text-xs leading-6 text-muted-foreground">
+          <div className="flex flex-wrap gap-x-5 gap-y-1">
+            <Link to="/support" className="text-primary underline-offset-2 hover:underline">Support</Link>
+            <Link to="/privacy" className="text-primary underline-offset-2 hover:underline">Privacy</Link>
+            <Link to="/terms" className="text-primary underline-offset-2 hover:underline">Terms</Link>
+          </div>
           <p>
             Estimates only. Not an award, approval, or guarantee. Authority is 34 CFR 685.203 and
             current Federal Student Aid guidance; a school must verify every figure.

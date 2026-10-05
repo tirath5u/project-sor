@@ -3,6 +3,8 @@ import { z } from "zod";
 import { CalculateV2InputSchema } from "@/lib/sor-v2-contract";
 import { compareCanonicalRuns, runCanonicalV2 } from "@/lib/phase-b";
 import { ENGINE_VERSION, MCP_VERSION, POLICY_SNAPSHOT_DATE, RELEASE_ID } from "@/lib/sor.version";
+import { publicReviewReasons } from "@/lib/mcp/public-review";
+import type { SORInputs } from "@/lib/sor";
 
 const InputSchema = z
   .object({
@@ -48,6 +50,21 @@ export default defineTool({
     ];
     if (missingInputs.length > 0) {
       const result = { status: "needs_input", canCalculate: false, missingInputs, nextQuestions: missingInputs.map((item) => item.question) };
+      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result as Record<string, unknown> };
+    }
+    const reviewReasons = [
+      ...publicReviewReasons(left.normalized.engineInput as SORInputs, left.data, left.normalized).map((reason) => `Left: ${reason}`),
+      ...publicReviewReasons(right.normalized.engineInput as SORInputs, right.data, right.normalized).map((reason) => `Right: ${reason}`),
+      ...(left.normalized.blocked ? left.normalized.warnings.map((reason) => `Left: ${reason}`) : []),
+      ...(right.normalized.blocked ? right.normalized.warnings.map((reason) => `Right: ${reason}`) : []),
+    ];
+    if (left.normalized.blocked || right.normalized.blocked || reviewReasons.length > 0) {
+      const result = {
+        status: left.normalized.blocked || right.normalized.blocked ? "blocked" : "review_required",
+        canCalculate: false,
+        reviewReasons: [...new Set(reviewReasons)],
+        meta: { engineVersion: ENGINE_VERSION, mcpVersion: MCP_VERSION, releaseId: RELEASE_ID },
+      };
       return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result as Record<string, unknown> };
     }
     const result = {

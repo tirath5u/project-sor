@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "project-sor": {
+      "type": "streamable-http",
+      "url": "https://sor.myproduct.life/mcp"
+    }
+  }
+}

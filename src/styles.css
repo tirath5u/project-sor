@@ -4,11 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * Ellucian-inspired design tokens. Deep purple primary (#4B2E83) with a
- * warm gold accent (#FFB81C). All colors live as oklch tokens so the dark
- * theme override and color-mix utilities continue to work cleanly.
- */
+/* Project SOR color tokens for light and dark themes. */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);

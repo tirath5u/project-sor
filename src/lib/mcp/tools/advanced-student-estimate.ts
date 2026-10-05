@@ -3,6 +3,8 @@ import { z } from "zod";
 import { CalculateV2InputSchema } from "@/lib/sor-v2-contract";
 import { runCanonicalV2 } from "@/lib/phase-b";
 import { ENGINE_VERSION, MCP_VERSION, POLICY_SNAPSHOT_DATE, RELEASE_ID } from "@/lib/sor.version";
+import { publicReviewReasons } from "@/lib/mcp/public-review";
+import type { SORInputs } from "@/lib/sor";
 
 const InputSchema = z
   .object({
@@ -48,6 +50,17 @@ export default defineTool({
     const run = runCanonicalV2(parsed.data.input);
     if (run.normalized.missingRequiredInputs.length > 0) {
       const result = { status: "needs_input", canCalculate: false, missingInputs: run.normalized.missingRequiredInputs, nextQuestions: run.normalized.missingRequiredInputs.map((item) => item.question) };
+      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result as Record<string, unknown> };
+    }
+    const reviewReasons = publicReviewReasons(run.normalized.engineInput as SORInputs, run.data, run.normalized);
+    if (run.normalized.blocked || reviewReasons.length > 0) {
+      const result = {
+        status: run.normalized.blocked ? "blocked" : "review_required",
+        canCalculate: false,
+        reviewReasons: [...new Set([...run.normalized.warnings, ...reviewReasons])],
+        contract: { authoritative: false },
+        meta: { engineVersion: ENGINE_VERSION, mcpVersion: MCP_VERSION, releaseId: RELEASE_ID },
+      };
       return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result as Record<string, unknown> };
     }
     const singleTerm = parsed.data.input.loanPeriodScope === "singleTerm";

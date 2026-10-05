@@ -9,10 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as StudentRouteImport } from './routes/student'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReleasesRouteImport } from './routes/releases'
 import { Route as ReconciliationRouteImport } from './routes/reconciliation'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MigrationRouteImport } from './routes/migration'
 import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as McpGuideRouteImport } from './routes/mcp-guide'
@@ -45,6 +48,16 @@ import { Route as ApiPublicV1HealthRouteImport } from './routes/api/public/v1/he
 import { Route as ApiPublicV1CalculateRouteImport } from './routes/api/public/v1/calculate'
 import { Route as ApiPublicLabExplainRouteImport } from './routes/api/public/lab/explain'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentRoute = StudentRouteImport.update({
   id: '/student',
   path: '/student',
@@ -63,6 +76,11 @@ const ReleasesRoute = ReleasesRouteImport.update({
 const ReconciliationRoute = ReconciliationRouteImport.update({
   id: '/reconciliation',
   path: '/reconciliation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MigrationRoute = MigrationRouteImport.update({
@@ -241,10 +259,13 @@ export interface FileRoutesByFullPath {
   '/mcp-guide': typeof McpGuideRoute
   '/methodology': typeof MethodologyRoute
   '/migration': typeof MigrationRoute
+  '/privacy': typeof PrivacyRoute
   '/reconciliation': typeof ReconciliationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/student': typeof StudentRouteWithChildren
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
@@ -278,9 +299,12 @@ export interface FileRoutesByTo {
   '/mcp-guide': typeof McpGuideRoute
   '/methodology': typeof MethodologyRoute
   '/migration': typeof MigrationRoute
+  '/privacy': typeof PrivacyRoute
   '/reconciliation': typeof ReconciliationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
@@ -315,10 +339,13 @@ export interface FileRoutesById {
   '/mcp-guide': typeof McpGuideRoute
   '/methodology': typeof MethodologyRoute
   '/migration': typeof MigrationRoute
+  '/privacy': typeof PrivacyRoute
   '/reconciliation': typeof ReconciliationRoute
   '/releases': typeof ReleasesRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/student': typeof StudentRouteWithChildren
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/student/advanced': typeof StudentAdvancedRoute
@@ -354,10 +381,13 @@ export interface FileRouteTypes {
     | '/mcp-guide'
     | '/methodology'
     | '/migration'
+    | '/privacy'
     | '/reconciliation'
     | '/releases'
     | '/sitemap.xml'
     | '/student'
+    | '/support'
+    | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
@@ -391,9 +421,12 @@ export interface FileRouteTypes {
     | '/mcp-guide'
     | '/methodology'
     | '/migration'
+    | '/privacy'
     | '/reconciliation'
     | '/releases'
     | '/sitemap.xml'
+    | '/support'
+    | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
@@ -427,10 +460,13 @@ export interface FileRouteTypes {
     | '/mcp-guide'
     | '/methodology'
     | '/migration'
+    | '/privacy'
     | '/reconciliation'
     | '/releases'
     | '/sitemap.xml'
     | '/student'
+    | '/support'
+    | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/student/advanced'
@@ -465,10 +501,13 @@ export interface RootRouteChildren {
   McpGuideRoute: typeof McpGuideRoute
   MethodologyRoute: typeof MethodologyRoute
   MigrationRoute: typeof MigrationRoute
+  PrivacyRoute: typeof PrivacyRoute
   ReconciliationRoute: typeof ReconciliationRoute
   ReleasesRoute: typeof ReleasesRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StudentRoute: typeof StudentRouteWithChildren
+  SupportRoute: typeof SupportRoute
+  TermsRoute: typeof TermsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   WorkSlugRoute: typeof WorkSlugRoute
@@ -492,6 +531,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student': {
       id: '/student'
       path: '/student'
@@ -518,6 +571,13 @@ declare module '@tanstack/react-router' {
       path: '/reconciliation'
       fullPath: '/reconciliation'
       preLoaderRoute: typeof ReconciliationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/migration': {
@@ -765,10 +825,13 @@ const rootRouteChildren: RootRouteChildren = {
   McpGuideRoute: McpGuideRoute,
   MethodologyRoute: MethodologyRoute,
   MigrationRoute: MigrationRoute,
+  PrivacyRoute: PrivacyRoute,
   ReconciliationRoute: ReconciliationRoute,
   ReleasesRoute: ReleasesRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StudentRoute: StudentRouteWithChildren,
+  SupportRoute: SupportRoute,
+  TermsRoute: TermsRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,

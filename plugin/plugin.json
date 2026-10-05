@@ -1,0 +1,38 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "project-sor",
+  "version": "0.1.0",
+  "description": "Source-backed Schedule of Reductions calculations and scenario review through a read-only remote MCP server.",
+  "author": {
+    "name": "Tirath Chhatriwala",
+    "email": "tirath@outlook.com",
+    "url": "https://sor.myproduct.life"
+  },
+  "homepage": "https://sor.myproduct.life",
+  "repository": "https://github.com/tirath5u/project-sor",
+  "license": "MIT",
+  "keywords": ["financial-aid", "direct-loan", "schedule-of-reductions"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Project SOR",
+        "shortDescription": "Review Direct Loan SOR",
+        "longDescription": "Run source-backed Schedule of Reductions calculations for supported Direct Loan scenarios. The plugin asks for missing facts and returns review_required for unresolved cases. Results are estimates, not award or eligibility determinations. Schools must verify loan history, aggregate limits, COD status, and final packaging requirements. Project SOR is independent and is not endorsed by the U.S. Department of Education.",
+        "developerName": "Tirath Chhatriwala",
+        "category": "Productivity",
+        "capabilities": ["Read"],
+        "websiteURL": "https://sor.myproduct.life",
+        "supportURL": "https://sor.myproduct.life/support",
+        "privacyPolicyURL": "https://sor.myproduct.life/privacy",
+        "termsOfServiceURL": "https://sor.myproduct.life/terms",
+        "composerIcon": "./assets/project-sor.svg",
+        "logo": "./assets/project-sor.svg",
+        "defaultPrompt": [
+          "Estimate a supported Schedule of Reductions scenario",
+          "Show the source and calculation steps for an SOR example",
+          "What information is needed before this SOR scenario can be calculated?"
+        ]
+      }
+    }
+  }
+}

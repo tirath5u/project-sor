@@ -24,6 +24,7 @@ import {
   SOURCE_FINGERPRINT,
   DEPLOYMENT_MARKER,
 } from "@/lib/sor.version";
+import { publicReviewReasons } from "@/lib/mcp/public-review";
 
 const TermPatchSchema = z
   .object({
@@ -368,7 +369,6 @@ export default defineTool({
         canCalculate: false,
         missingInputs,
         nextQuestions: missingInputs.slice(0, 3).map((item) => item.question),
-        normalizedInputState: input,
         engineVersion: ENGINE_VERSION,
         mcpVersion: MCP_VERSION,
         releaseId: RELEASE_ID,
@@ -394,8 +394,10 @@ export default defineTool({
     if (input.terms) {
       for (const [key, termPatch] of Object.entries(input.terms as Record<string, unknown>)) {
         const term = merged.terms[key as TermKey];
-        if (term && termPatch && typeof termPatch === "object")
-          merged.terms[key as TermKey] = { ...term, ...(termPatch as Partial<typeof term>) };
+        if (term && termPatch && typeof termPatch === "object") {
+          const { label: _callerLabel, ...safePatch } = termPatch as Partial<typeof term>;
+          merged.terms[key as TermKey] = { ...term, ...safePatch };
+        }
       }
     }
     for (const key of TERM_ORDER) if (!merged.terms[key]) merged.terms[key] = base.terms[key];
@@ -411,7 +413,6 @@ export default defineTool({
           reason: issue.message,
           question: `Please provide a valid value for ${issue.path.join(".")}.`,
         })),
-        normalizedInputState: input,
         engineVersion: ENGINE_VERSION,
         mcpVersion: MCP_VERSION,
         releaseId: RELEASE_ID,
@@ -431,6 +432,11 @@ export default defineTool({
       const data = calculateSORWithChildTerms(
         normalized.engineInput as unknown as SORInputs,
       ) as unknown as Record<string, unknown>;
+      const reviewReasons = publicReviewReasons(
+        normalized.engineInput as SORInputs,
+        data as unknown as import("@/lib/sor").SORResults,
+        normalized,
+      );
       const meta = {
         engineVersion: ENGINE_VERSION,
         mcpVersion: MCP_VERSION,
@@ -447,6 +453,20 @@ export default defineTool({
           "psr-011",
         ],
       };
+      if (normalized.blocked || reviewReasons.length > 0) {
+        const result = {
+          status: normalized.blocked ? "blocked" : "review_required",
+          canCalculate: false,
+          reviewReasons: [...new Set([...normalized.warnings, ...reviewReasons])],
+          nextQuestions: ["Please have the financial aid office review the listed facts before using a dollar amount."],
+          meta,
+          contract: { calculationStatus: normalized.blocked ? "blocked" : "review_required", authoritative: false },
+        };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+          structuredContent: result as Record<string, unknown>,
+        };
+      }
       const authoritative = normalized.externalChecks.length === 0 && !normalized.blocked;
       const result = {
         status: normalized.blocked

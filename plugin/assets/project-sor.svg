@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Project SOR">
+  <rect width="64" height="64" rx="8" fill="#832E47"/>
+  <rect x="6" y="6" width="52" height="52" rx="4" fill="none" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="1"/>
+  <text x="32" y="39" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="22" font-weight="700" text-anchor="middle" letter-spacing="0">SOR</text>
+</svg>

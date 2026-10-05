@@ -17,8 +17,8 @@
 export const ENGINE_VERSION = "1.4.1" as const;
 export const POLICY_YEAR = "2026-27" as const;
 export const POLICY_SNAPSHOT_DATE = "2026-08-20" as const;
-export const MCP_VERSION = "0.8.1" as const;
-export const RELEASE_ID = `sor-v57-${ENGINE_VERSION}-2026-10-05` as const;
+export const MCP_VERSION = "0.8.2" as const;
+export const RELEASE_ID = `sor-v57-${ENGINE_VERSION}-mcp-${MCP_VERSION}-2026-10-05` as const;
 
 export const DEPLOYMENT_MARKER: string = RELEASE_ID;
 
