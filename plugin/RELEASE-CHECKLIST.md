@@ -1,6 +1,6 @@
 # Project SOR plugin release checklist
 
-Status: source-ready draft. The package is not submitted, approved, or published.
+Status: package built and live MCP verified on October 6, 2026. The plugin is not submitted, approved, or published in ChatGPT.
 
 Tirath confirmed on October 6, 2026 that he is authorized to publish the code, visuals, and insight content independently of his employment. The COD case study remains historical and is not part of the plugin listing. This confirmation does not establish third-party rights for any material added later.
 
@@ -24,11 +24,18 @@ Tirath confirmed on October 6, 2026 that he is authorized to publish the code, v
 ## Before public submission
 
 1. Publication rights for the current code, visuals, and insight content were confirmed by the publisher. Recheck rights for any new third-party material before adding it. Keep the historical COD case study outside the plugin listing.
-2. MCP request bodies are not intentionally stored by application code. Accessible Lovable server-log samples showed request metadata and tool-event metadata, not bodies or arguments. The log-view ranges are not deletion commitments. Confirm Lovable and Cloudflare retention before submission.
+2. MCP request bodies are not intentionally stored by application code. Accessible Lovable server-log samples showed request metadata and tool-event metadata, not bodies or arguments. The log-view ranges are not deletion commitments. Obtain provider-confirmed retention/deletion timelines for Lovable, Cloudflare, and the separate lab AI Gateway, and update the privacy page before public submission. OpenAI's plugin guidelines require retention timelines in the privacy policy. Do not substitute a log-view range for a deletion period.
 3. The support, privacy, and terms pages are live at their HTTPS URLs and reachable without the staff password. The privacy page now distinguishes calculator/MCP traffic from the separate lab AI Gateway. The Gateway exposes a 180-day query window for stored fictional lab fixture content, but its deletion period remains unconfirmed.
 4. The package uses a new Project SOR SVG mark in `assets/`; inspect its appearance in the plugin portal before submission.
 5. Run five positive and three negative review cases against the exact production deployment, including `needs_input`, `review_required`, and supported numeric cases. Save request and response receipts without real student data. Confirm health reports engine 1.4.1 and MCP 0.8.2 before using the receipts for review.
 6. Verify live MCP `tools/list` annotations, schemas, and tool descriptions; compare the deployment marker with the reviewed source build.
-7. Prepare a reviewer-accessible demo recording, verify domain control and developer identity in the OpenAI portal, then submit for review. Approval is separate from publication.
+7. Record the ChatGPT walkthrough using `plugin/DEMO-RUNBOOK.md`, host it at a reviewer-accessible HTTPS URL, and add that URL to the review metadata. A direct MCP replay is not a substitute for a ChatGPT test.
+8. Verify domain control using the exact token and path supplied by the OpenAI portal. Tirath's individual developer identity was reported as in review on October 6, 2026. Upload and submit only under Tirath's verified account after that review completes. The browser profile observed during preparation was a different user's profile, so no portal action was taken there. Approval is separate from publication.
+
+## Current artifact and evidence
+
+- Local package: `dist/project-sor-plugin-0.1.0.zip` (ignored build output). SHA-256: `41D9B06829EFFF30AF5C961D9668DB51AA0883131259B59DB0CAC3E5DD266C62`.
+- Production deployment verifier passed October 6, 2026 at release `sor-v57-1.4.1-mcp-0.8.2-2026-10-05`, fingerprint `4f811e2e18a7b3185272d807a79e711c69b95ec988898b38e114b1f20456f3ca`. It checked five public tools, annotations, numerical parity, and held responses.
+- `plugin/REVIEW-CASES.md` contains draft cases, not completed ChatGPT receipts.
 
 Publisher draft: Tirath Chhatriwala, tirath@outlook.com. Project SOR is independent and does not claim Department, Anthology, or Ellucian endorsement.
