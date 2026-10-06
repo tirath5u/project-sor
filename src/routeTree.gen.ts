@@ -9,113 +9,48 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as ApiDocsRouteImport } from './routes/api-docs'
-import { Route as CompareRouteImport } from './routes/compare'
-import { Route as LifecycleRouteImport } from './routes/lifecycle'
-import { Route as McpRouteImport } from './routes/mcp'
-import { Route as McpGuideRouteImport } from './routes/mcp-guide'
-import { Route as MethodologyRouteImport } from './routes/methodology'
-import { Route as MigrationRouteImport } from './routes/migration'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as ReconciliationRouteImport } from './routes/reconciliation'
-import { Route as ReleasesRouteImport } from './routes/releases'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as StudentRouteImport } from './routes/student'
-import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
-import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
-import { Route as StudentIndexRouteImport } from './routes/student/index'
-import { Route as StudentAdvancedRouteImport } from './routes/student/advanced'
-import { Route as StudentLoanLimitExceptionRouteImport } from './routes/student/loan-limit-exception'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as StudentRouteImport } from './routes/student'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ReleasesRouteImport } from './routes/releases'
+import { Route as ReconciliationRouteImport } from './routes/reconciliation'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as MigrationRouteImport } from './routes/migration'
+import { Route as MethodologyRouteImport } from './routes/methodology'
+import { Route as McpGuideRouteImport } from './routes/mcp-guide'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as LifecycleRouteImport } from './routes/lifecycle'
+import { Route as CompareRouteImport } from './routes/compare'
+import { Route as ApiDocsRouteImport } from './routes/api-docs'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkIndexRouteImport } from './routes/work.index'
+import { Route as StudentIndexRouteImport } from './routes/student/index'
 import { Route as WorkSlugRouteImport } from './routes/work.$slug'
+import { Route as StudentLoanLimitExceptionRouteImport } from './routes/student/loan-limit-exception'
+import { Route as StudentAdvancedRouteImport } from './routes/student/advanced'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
-import { Route as ApiPublicLabExplainRouteImport } from './routes/api/public/lab/explain'
-import { Route as ApiPublicV1CalculateRouteImport } from './routes/api/public/v1/calculate'
-import { Route as ApiPublicV1HealthRouteImport } from './routes/api/public/v1/health'
-import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
-import { Route as ApiPublicV1ScenariosRouteImport } from './routes/api/public/v1/scenarios'
-import { Route as ApiPublicV2CalculateRouteImport } from './routes/api/public/v2/calculate'
-import { Route as ApiPublicV2CompareRouteImport } from './routes/api/public/v2/compare'
-import { Route as ApiPublicV2HealthRouteImport } from './routes/api/public/v2/health'
-import { Route as ApiPublicV2LoanLimitExceptionRouteImport } from './routes/api/public/v2/loan-limit-exception'
-import { Route as ApiPublicV2MigrationCompareRouteImport } from './routes/api/public/v2/migration-compare'
-import { Route as ApiPublicV2OpenapiDotjsonRouteImport } from './routes/api/public/v2/openapi[.]json'
-import { Route as ApiPublicV2ScenariosRouteImport } from './routes/api/public/v2/scenarios'
-import { Route as ApiPublicV2StudentAdvancedRouteImport } from './routes/api/public/v2/student-advanced'
 import { Route as ApiPublicV2StudentEstimateRouteImport } from './routes/api/public/v2/student-estimate'
+import { Route as ApiPublicV2StudentAdvancedRouteImport } from './routes/api/public/v2/student-advanced'
+import { Route as ApiPublicV2ScenariosRouteImport } from './routes/api/public/v2/scenarios'
+import { Route as ApiPublicV2OpenapiDotjsonRouteImport } from './routes/api/public/v2/openapi[.]json'
+import { Route as ApiPublicV2MigrationCompareRouteImport } from './routes/api/public/v2/migration-compare'
+import { Route as ApiPublicV2LoanLimitExceptionRouteImport } from './routes/api/public/v2/loan-limit-exception'
+import { Route as ApiPublicV2HealthRouteImport } from './routes/api/public/v2/health'
+import { Route as ApiPublicV2CompareRouteImport } from './routes/api/public/v2/compare'
+import { Route as ApiPublicV2CalculateRouteImport } from './routes/api/public/v2/calculate'
+import { Route as ApiPublicV1ScenariosRouteImport } from './routes/api/public/v1/scenarios'
+import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
+import { Route as ApiPublicV1HealthRouteImport } from './routes/api/public/v1/health'
+import { Route as ApiPublicV1CalculateRouteImport } from './routes/api/public/v1/calculate'
+import { Route as ApiPublicLabExplainRouteImport } from './routes/api/public/lab/explain'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiDocsRoute = ApiDocsRouteImport.update({
-  id: '/api-docs',
-  path: '/api-docs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompareRoute = CompareRouteImport.update({
-  id: '/compare',
-  path: '/compare',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LifecycleRoute = LifecycleRouteImport.update({
-  id: '/lifecycle',
-  path: '/lifecycle',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpGuideRoute = McpGuideRouteImport.update({
-  id: '/mcp-guide',
-  path: '/mcp-guide',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MethodologyRoute = MethodologyRouteImport.update({
-  id: '/methodology',
-  path: '/methodology',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MigrationRoute = MigrationRouteImport.update({
-  id: '/migration',
-  path: '/migration',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReconciliationRoute = ReconciliationRouteImport.update({
-  id: '/reconciliation',
-  path: '/reconciliation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReleasesRoute = ReleasesRouteImport.update({
-  id: '/releases',
-  path: '/releases',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StudentRoute = StudentRouteImport.update({
-  id: '/student',
-  path: '/student',
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -123,32 +58,90 @@ const SupportRoute = SupportRouteImport.update({
   path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReleasesRoute = ReleasesRouteImport.update({
+  id: '/releases',
+  path: '/releases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReconciliationRoute = ReconciliationRouteImport.update({
+  id: '/reconciliation',
+  path: '/reconciliation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MigrationRoute = MigrationRouteImport.update({
+  id: '/migration',
+  path: '/migration',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MethodologyRoute = MethodologyRouteImport.update({
+  id: '/methodology',
+  path: '/methodology',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpGuideRoute = McpGuideRouteImport.update({
+  id: '/mcp-guide',
+  path: '/mcp-guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LifecycleRoute = LifecycleRouteImport.update({
+  id: '/lifecycle',
+  path: '/lifecycle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareRoute = CompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDocsRoute = ApiDocsRouteImport.update({
+  id: '/api-docs',
+  path: '/api-docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkIndexRoute = WorkIndexRouteImport.update({
+  id: '/work/',
+  path: '/work/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentIndexRoute = StudentIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => StudentRoute,
 } as any)
-const StudentAdvancedRoute = StudentAdvancedRouteImport.update({
-  id: '/advanced',
-  path: '/advanced',
-  getParentRoute: () => StudentRoute,
+const WorkSlugRoute = WorkSlugRouteImport.update({
+  id: '/work/$slug',
+  path: '/work/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const StudentLoanLimitExceptionRoute =
   StudentLoanLimitExceptionRouteImport.update({
@@ -156,90 +149,27 @@ const StudentLoanLimitExceptionRoute =
     path: '/loan-limit-exception',
     getParentRoute: () => StudentRoute,
   } as any)
-const WorkIndexRoute = WorkIndexRouteImport.update({
-  id: '/work/',
-  path: '/work/',
-  getParentRoute: () => rootRouteImport,
+const StudentAdvancedRoute = StudentAdvancedRouteImport.update({
+  id: '/advanced',
+  path: '/advanced',
+  getParentRoute: () => StudentRoute,
 } as any)
-const WorkSlugRoute = WorkSlugRouteImport.update({
-  id: '/work/$slug',
-  path: '/work/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
     id: '/.mcp/invoke-tool/$tool',
     path: '/.mcp/invoke-tool/$tool',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicLabExplainRoute = ApiPublicLabExplainRouteImport.update({
-  id: '/api/public/lab/explain',
-  path: '/api/public/lab/explain',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV1CalculateRoute = ApiPublicV1CalculateRouteImport.update({
-  id: '/api/public/v1/calculate',
-  path: '/api/public/v1/calculate',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV1HealthRoute = ApiPublicV1HealthRouteImport.update({
-  id: '/api/public/v1/health',
-  path: '/api/public/v1/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV1OpenapiDotjsonRoute =
-  ApiPublicV1OpenapiDotjsonRouteImport.update({
-    id: '/api/public/v1/openapi.json',
-    path: '/api/public/v1/openapi.json',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicV1ScenariosRoute = ApiPublicV1ScenariosRouteImport.update({
-  id: '/api/public/v1/scenarios',
-  path: '/api/public/v1/scenarios',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV2CalculateRoute = ApiPublicV2CalculateRouteImport.update({
-  id: '/api/public/v2/calculate',
-  path: '/api/public/v2/calculate',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV2CompareRoute = ApiPublicV2CompareRouteImport.update({
-  id: '/api/public/v2/compare',
-  path: '/api/public/v2/compare',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV2HealthRoute = ApiPublicV2HealthRouteImport.update({
-  id: '/api/public/v2/health',
-  path: '/api/public/v2/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV2LoanLimitExceptionRoute =
-  ApiPublicV2LoanLimitExceptionRouteImport.update({
-    id: '/api/public/v2/loan-limit-exception',
-    path: '/api/public/v2/loan-limit-exception',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicV2MigrationCompareRoute =
-  ApiPublicV2MigrationCompareRouteImport.update({
-    id: '/api/public/v2/migration-compare',
-    path: '/api/public/v2/migration-compare',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicV2OpenapiDotjsonRoute =
-  ApiPublicV2OpenapiDotjsonRouteImport.update({
-    id: '/api/public/v2/openapi.json',
-    path: '/api/public/v2/openapi.json',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicV2ScenariosRoute = ApiPublicV2ScenariosRouteImport.update({
-  id: '/api/public/v2/scenarios',
-  path: '/api/public/v2/scenarios',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV2StudentAdvancedRoute =
-  ApiPublicV2StudentAdvancedRouteImport.update({
-    id: '/api/public/v2/student-advanced',
-    path: '/api/public/v2/student-advanced',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicV2StudentEstimateRoute =
@@ -248,6 +178,76 @@ const ApiPublicV2StudentEstimateRoute =
     path: '/api/public/v2/student-estimate',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV2StudentAdvancedRoute =
+  ApiPublicV2StudentAdvancedRouteImport.update({
+    id: '/api/public/v2/student-advanced',
+    path: '/api/public/v2/student-advanced',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV2ScenariosRoute = ApiPublicV2ScenariosRouteImport.update({
+  id: '/api/public/v2/scenarios',
+  path: '/api/public/v2/scenarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV2OpenapiDotjsonRoute =
+  ApiPublicV2OpenapiDotjsonRouteImport.update({
+    id: '/api/public/v2/openapi.json',
+    path: '/api/public/v2/openapi.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV2MigrationCompareRoute =
+  ApiPublicV2MigrationCompareRouteImport.update({
+    id: '/api/public/v2/migration-compare',
+    path: '/api/public/v2/migration-compare',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV2LoanLimitExceptionRoute =
+  ApiPublicV2LoanLimitExceptionRouteImport.update({
+    id: '/api/public/v2/loan-limit-exception',
+    path: '/api/public/v2/loan-limit-exception',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV2HealthRoute = ApiPublicV2HealthRouteImport.update({
+  id: '/api/public/v2/health',
+  path: '/api/public/v2/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV2CompareRoute = ApiPublicV2CompareRouteImport.update({
+  id: '/api/public/v2/compare',
+  path: '/api/public/v2/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV2CalculateRoute = ApiPublicV2CalculateRouteImport.update({
+  id: '/api/public/v2/calculate',
+  path: '/api/public/v2/calculate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1ScenariosRoute = ApiPublicV1ScenariosRouteImport.update({
+  id: '/api/public/v1/scenarios',
+  path: '/api/public/v1/scenarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1OpenapiDotjsonRoute =
+  ApiPublicV1OpenapiDotjsonRouteImport.update({
+    id: '/api/public/v1/openapi.json',
+    path: '/api/public/v1/openapi.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV1HealthRoute = ApiPublicV1HealthRouteImport.update({
+  id: '/api/public/v1/health',
+  path: '/api/public/v1/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1CalculateRoute = ApiPublicV1CalculateRouteImport.update({
+  id: '/api/public/v1/calculate',
+  path: '/api/public/v1/calculate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLabExplainRoute = ApiPublicLabExplainRouteImport.update({
+  id: '/api/public/lab/explain',
+  path: '/api/public/lab/explain',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -531,102 +531,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api-docs': {
-      id: '/api-docs'
-      path: '/api-docs'
-      fullPath: '/api-docs'
-      preLoaderRoute: typeof ApiDocsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/compare': {
-      id: '/compare'
-      path: '/compare'
-      fullPath: '/compare'
-      preLoaderRoute: typeof CompareRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lifecycle': {
-      id: '/lifecycle'
-      path: '/lifecycle'
-      fullPath: '/lifecycle'
-      preLoaderRoute: typeof LifecycleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp-guide': {
-      id: '/mcp-guide'
-      path: '/mcp-guide'
-      fullPath: '/mcp-guide'
-      preLoaderRoute: typeof McpGuideRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/methodology': {
-      id: '/methodology'
-      path: '/methodology'
-      fullPath: '/methodology'
-      preLoaderRoute: typeof MethodologyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/migration': {
-      id: '/migration'
-      path: '/migration'
-      fullPath: '/migration'
-      preLoaderRoute: typeof MigrationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reconciliation': {
-      id: '/reconciliation'
-      path: '/reconciliation'
-      fullPath: '/reconciliation'
-      preLoaderRoute: typeof ReconciliationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/releases': {
-      id: '/releases'
-      path: '/releases'
-      fullPath: '/releases'
-      preLoaderRoute: typeof ReleasesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/student': {
-      id: '/student'
-      path: '/student'
-      fullPath: '/student'
-      preLoaderRoute: typeof StudentRouteImport
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -636,25 +545,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.mcp/list-tools': {
-      id: '/.mcp/list-tools'
-      path: '/.mcp/list-tools'
-      fullPath: '/.mcp/list-tools'
-      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+    '/releases': {
+      id: '/releases'
+      path: '/releases'
+      fullPath: '/releases'
+      preLoaderRoute: typeof ReleasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reconciliation': {
+      id: '/reconciliation'
+      path: '/reconciliation'
+      fullPath: '/reconciliation'
+      preLoaderRoute: typeof ReconciliationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/migration': {
+      id: '/migration'
+      path: '/migration'
+      fullPath: '/migration'
+      preLoaderRoute: typeof MigrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/methodology': {
+      id: '/methodology'
+      path: '/methodology'
+      fullPath: '/methodology'
+      preLoaderRoute: typeof MethodologyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp-guide': {
+      id: '/mcp-guide'
+      path: '/mcp-guide'
+      fullPath: '/mcp-guide'
+      preLoaderRoute: typeof McpGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lifecycle': {
+      id: '/lifecycle'
+      path: '/lifecycle'
+      fullPath: '/lifecycle'
+      preLoaderRoute: typeof LifecycleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api-docs': {
+      id: '/api-docs'
+      path: '/api-docs'
+      fullPath: '/api-docs'
+      preLoaderRoute: typeof ApiDocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/work/': {
+      id: '/work/'
+      path: '/work'
+      fullPath: '/work/'
+      preLoaderRoute: typeof WorkIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/student/': {
@@ -664,12 +657,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentIndexRouteImport
       parentRoute: typeof StudentRoute
     }
-    '/student/advanced': {
-      id: '/student/advanced'
-      path: '/advanced'
-      fullPath: '/student/advanced'
-      preLoaderRoute: typeof StudentAdvancedRouteImport
-      parentRoute: typeof StudentRoute
+    '/work/$slug': {
+      id: '/work/$slug'
+      path: '/work/$slug'
+      fullPath: '/work/$slug'
+      preLoaderRoute: typeof WorkSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/student/loan-limit-exception': {
       id: '/student/loan-limit-exception'
@@ -678,18 +671,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentLoanLimitExceptionRouteImport
       parentRoute: typeof StudentRoute
     }
-    '/work/': {
-      id: '/work/'
-      path: '/work'
-      fullPath: '/work/'
-      preLoaderRoute: typeof WorkIndexRouteImport
+    '/student/advanced': {
+      id: '/student/advanced'
+      path: '/advanced'
+      fullPath: '/student/advanced'
+      preLoaderRoute: typeof StudentAdvancedRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/work/$slug': {
-      id: '/work/$slug'
-      path: '/work/$slug'
-      fullPath: '/work/$slug'
-      preLoaderRoute: typeof WorkSlugRouteImport
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/invoke-tool/$tool': {
@@ -699,88 +699,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/lab/explain': {
-      id: '/api/public/lab/explain'
-      path: '/api/public/lab/explain'
-      fullPath: '/api/public/lab/explain'
-      preLoaderRoute: typeof ApiPublicLabExplainRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/calculate': {
-      id: '/api/public/v1/calculate'
-      path: '/api/public/v1/calculate'
-      fullPath: '/api/public/v1/calculate'
-      preLoaderRoute: typeof ApiPublicV1CalculateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/health': {
-      id: '/api/public/v1/health'
-      path: '/api/public/v1/health'
-      fullPath: '/api/public/v1/health'
-      preLoaderRoute: typeof ApiPublicV1HealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/openapi.json': {
-      id: '/api/public/v1/openapi.json'
-      path: '/api/public/v1/openapi.json'
-      fullPath: '/api/public/v1/openapi.json'
-      preLoaderRoute: typeof ApiPublicV1OpenapiDotjsonRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/scenarios': {
-      id: '/api/public/v1/scenarios'
-      path: '/api/public/v1/scenarios'
-      fullPath: '/api/public/v1/scenarios'
-      preLoaderRoute: typeof ApiPublicV1ScenariosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v2/calculate': {
-      id: '/api/public/v2/calculate'
-      path: '/api/public/v2/calculate'
-      fullPath: '/api/public/v2/calculate'
-      preLoaderRoute: typeof ApiPublicV2CalculateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v2/compare': {
-      id: '/api/public/v2/compare'
-      path: '/api/public/v2/compare'
-      fullPath: '/api/public/v2/compare'
-      preLoaderRoute: typeof ApiPublicV2CompareRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v2/health': {
-      id: '/api/public/v2/health'
-      path: '/api/public/v2/health'
-      fullPath: '/api/public/v2/health'
-      preLoaderRoute: typeof ApiPublicV2HealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v2/loan-limit-exception': {
-      id: '/api/public/v2/loan-limit-exception'
-      path: '/api/public/v2/loan-limit-exception'
-      fullPath: '/api/public/v2/loan-limit-exception'
-      preLoaderRoute: typeof ApiPublicV2LoanLimitExceptionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v2/migration-compare': {
-      id: '/api/public/v2/migration-compare'
-      path: '/api/public/v2/migration-compare'
-      fullPath: '/api/public/v2/migration-compare'
-      preLoaderRoute: typeof ApiPublicV2MigrationCompareRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v2/openapi.json': {
-      id: '/api/public/v2/openapi.json'
-      path: '/api/public/v2/openapi.json'
-      fullPath: '/api/public/v2/openapi.json'
-      preLoaderRoute: typeof ApiPublicV2OpenapiDotjsonRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v2/scenarios': {
-      id: '/api/public/v2/scenarios'
-      path: '/api/public/v2/scenarios'
-      fullPath: '/api/public/v2/scenarios'
-      preLoaderRoute: typeof ApiPublicV2ScenariosRouteImport
+    '/api/public/v2/student-estimate': {
+      id: '/api/public/v2/student-estimate'
+      path: '/api/public/v2/student-estimate'
+      fullPath: '/api/public/v2/student-estimate'
+      preLoaderRoute: typeof ApiPublicV2StudentEstimateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/v2/student-advanced': {
@@ -790,11 +713,88 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV2StudentAdvancedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/v2/student-estimate': {
-      id: '/api/public/v2/student-estimate'
-      path: '/api/public/v2/student-estimate'
-      fullPath: '/api/public/v2/student-estimate'
-      preLoaderRoute: typeof ApiPublicV2StudentEstimateRouteImport
+    '/api/public/v2/scenarios': {
+      id: '/api/public/v2/scenarios'
+      path: '/api/public/v2/scenarios'
+      fullPath: '/api/public/v2/scenarios'
+      preLoaderRoute: typeof ApiPublicV2ScenariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v2/openapi.json': {
+      id: '/api/public/v2/openapi.json'
+      path: '/api/public/v2/openapi.json'
+      fullPath: '/api/public/v2/openapi.json'
+      preLoaderRoute: typeof ApiPublicV2OpenapiDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v2/migration-compare': {
+      id: '/api/public/v2/migration-compare'
+      path: '/api/public/v2/migration-compare'
+      fullPath: '/api/public/v2/migration-compare'
+      preLoaderRoute: typeof ApiPublicV2MigrationCompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v2/loan-limit-exception': {
+      id: '/api/public/v2/loan-limit-exception'
+      path: '/api/public/v2/loan-limit-exception'
+      fullPath: '/api/public/v2/loan-limit-exception'
+      preLoaderRoute: typeof ApiPublicV2LoanLimitExceptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v2/health': {
+      id: '/api/public/v2/health'
+      path: '/api/public/v2/health'
+      fullPath: '/api/public/v2/health'
+      preLoaderRoute: typeof ApiPublicV2HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v2/compare': {
+      id: '/api/public/v2/compare'
+      path: '/api/public/v2/compare'
+      fullPath: '/api/public/v2/compare'
+      preLoaderRoute: typeof ApiPublicV2CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v2/calculate': {
+      id: '/api/public/v2/calculate'
+      path: '/api/public/v2/calculate'
+      fullPath: '/api/public/v2/calculate'
+      preLoaderRoute: typeof ApiPublicV2CalculateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/scenarios': {
+      id: '/api/public/v1/scenarios'
+      path: '/api/public/v1/scenarios'
+      fullPath: '/api/public/v1/scenarios'
+      preLoaderRoute: typeof ApiPublicV1ScenariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/openapi.json': {
+      id: '/api/public/v1/openapi.json'
+      path: '/api/public/v1/openapi.json'
+      fullPath: '/api/public/v1/openapi.json'
+      preLoaderRoute: typeof ApiPublicV1OpenapiDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/health': {
+      id: '/api/public/v1/health'
+      path: '/api/public/v1/health'
+      fullPath: '/api/public/v1/health'
+      preLoaderRoute: typeof ApiPublicV1HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/calculate': {
+      id: '/api/public/v1/calculate'
+      path: '/api/public/v1/calculate'
+      fullPath: '/api/public/v1/calculate'
+      preLoaderRoute: typeof ApiPublicV1CalculateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/lab/explain': {
+      id: '/api/public/lab/explain'
+      path: '/api/public/lab/explain'
+      fullPath: '/api/public/lab/explain'
+      preLoaderRoute: typeof ApiPublicLabExplainRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
