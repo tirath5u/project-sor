@@ -30,7 +30,7 @@ Tirath confirmed on October 6, 2026 that he is authorized to publish the code, v
 5. Run five positive and three negative review cases against the exact production deployment, including `needs_input`, `review_required`, and supported numeric cases. Save request and response receipts without real student data. Confirm health reports engine 1.4.1 and MCP 0.8.2 before using the receipts for review.
 6. Verify live MCP `tools/list` annotations, schemas, and tool descriptions; compare the deployment marker with the reviewed source build.
 7. Record the ChatGPT walkthrough using `plugin/DEMO-RUNBOOK.md`, host it at a reviewer-accessible HTTPS URL, and add that URL to the review metadata. A direct MCP replay is not a substitute for a ChatGPT test.
-8. Verify domain control using the exact token and path supplied by the OpenAI portal. Tirath's individual developer identity was reported as in review on October 6, 2026. Upload and submit only under Tirath's verified account after that review completes. The browser profile observed during preparation was a different user's profile, so no portal action was taken there. Approval is separate from publication.
+8. Verify domain control using the exact token and path supplied by the OpenAI portal. On October 7, 2026, OpenAI Platform showed the individual identity approved and the upload dialog selected `TIRATH ATUL CHHATRIWALA`. The ZIP has not been uploaded: automated file selection in Edge was blocked by the extension's file-URL permission. Tirath can select the ZIP manually in the open upload dialog without changing that permission. Confirm the intended ChatGPT testing account separately. Approval is separate from publication.
 
 ## Current artifact and evidence
 
