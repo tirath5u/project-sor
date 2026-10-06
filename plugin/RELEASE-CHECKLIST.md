@@ -24,10 +24,10 @@ Tirath confirmed on October 6, 2026 that he is authorized to publish the code, v
 ## Before public submission
 
 1. Publication rights for the current code, visuals, and insight content were confirmed by the publisher. Recheck rights for any new third-party material before adding it. Keep the historical COD case study outside the plugin listing.
-2. Verify where MCP requests and provider logs are retained. Remove or update any unsupported no-retention claim. Minimize response identifiers and raw input echoes.
-3. The support, privacy, and terms pages are implemented in the site source. Publish them, verify all three HTTPS pages are reachable without the staff password, then verify the hosting account's actual logging retention and update the privacy page before submission.
+2. MCP request bodies are not intentionally stored by application code. Accessible Lovable server-log samples showed request metadata and tool-event metadata, not bodies or arguments. The log-view ranges are not deletion commitments. Confirm Lovable and Cloudflare retention before submission.
+3. The support, privacy, and terms pages are live at their HTTPS URLs and reachable without the staff password. The privacy page now distinguishes calculator/MCP traffic from the separate lab AI Gateway. The Gateway exposes a 180-day query window for stored fictional lab fixture content, but its deletion period remains unconfirmed.
 4. The package uses a new Project SOR SVG mark in `assets/`; inspect its appearance in the plugin portal before submission.
-5. Run five positive and three negative review cases against the exact production deployment, including `needs_input`, `review_required`, and supported numeric cases. Save request and response receipts without real student data. Do not use the October 6 production build for this gate: its health endpoint reports engine 1.4.0 and MCP 0.8.0, not the reviewed 1.4.1 and 0.8.2.
+5. Run five positive and three negative review cases against the exact production deployment, including `needs_input`, `review_required`, and supported numeric cases. Save request and response receipts without real student data. Confirm health reports engine 1.4.1 and MCP 0.8.2 before using the receipts for review.
 6. Verify live MCP `tools/list` annotations, schemas, and tool descriptions; compare the deployment marker with the reviewed source build.
 7. Prepare a reviewer-accessible demo recording, verify domain control and developer identity in the OpenAI portal, then submit for review. Approval is separate from publication.
 

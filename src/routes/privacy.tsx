@@ -47,10 +47,19 @@ function PrivacyPage() {
             that point; there is no guaranteed deletion time if the lab receives no later requests.
           </p>
           <p className="mt-3 text-muted-foreground">
-            The hosting and security providers may process connection metadata, including IP address, request
-            time, URL, and browser details. The active production logging settings and their retention period
-            are being verified. This page will be updated with that period before a public plugin submission.
-            Do not use Project SOR for identifiable student records in the meantime.
+            The calculator API and MCP tools do not call the AI Gateway. The reconciliation lab does. Its browser
+            request contains only a scenario ID; the server sends prewritten fictional scenario facts, computed
+            figures, and retrieved fictional passages to the Gateway. In the project logs reviewed, a Gateway
+            request body containing that fixture content was retrievable in redacted or truncated form. A
+            project-level Gateway query reached back 180 days, but that does not establish when data is deleted.
+          </p>
+          <p className="mt-3 text-muted-foreground">
+            Accessible server-log samples showed request time, method, URL, status, and MCP tool-event metadata,
+            not calculation bodies or tool arguments. Lovable's log viewer offers relative ranges up to five
+            days and an absolute date range; these viewing controls do not establish a deletion period.
+            Hosting and security providers may also
+            process connection metadata, including IP address and browser details. Their actual retention
+            periods have not been confirmed. Do not use Project SOR for identifiable student records.
           </p>
         </section>
         <section>
