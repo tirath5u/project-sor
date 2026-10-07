@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "project-sor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Source-backed Schedule of Reductions calculations and scenario review through a read-only remote MCP server.",
   "author": {
     "name": "Tirath Chhatriwala",
@@ -17,9 +17,9 @@
       "interface": {
         "displayName": "Project SOR",
         "shortDescription": "Review Direct Loan SOR",
-        "longDescription": "Run source-backed Schedule of Reductions calculations for supported Direct Loan scenarios. The plugin asks for missing facts and returns review_required for unresolved cases. Results are estimates, not award or eligibility determinations. Schools must verify loan history, aggregate limits, COD status, and final packaging requirements. Project SOR is independent and is not endorsed by the U.S. Department of Education.",
+        "longDescription": "An educational financial-aid tool for students and aid staff to review supported Direct Loan Schedule of Reductions scenarios. Run source-backed estimates, compare cases, and identify missing facts or issues that need school review. Results are estimates, not award or eligibility determinations. Schools must verify loan history, aggregate limits, COD status, and final packaging requirements. Project SOR is independent and is not endorsed by the U.S. Department of Education.",
         "developerName": "Tirath Chhatriwala",
-        "category": "Productivity",
+        "category": "Education & Research",
         "capabilities": ["Read"],
         "websiteURL": "https://sor.myproduct.life",
         "supportURL": "https://sor.myproduct.life/support",

@@ -1,19 +1,59 @@
-# Draft plugin review cases
+# Project SOR plugin review cases
 
-These are candidate reviewer prompts, not production test receipts. Replay them against the exact deployed MCP version before adding them to `plugin.json` or submitting.
+Status: live MCP tool results verified October 7, 2026 against release `sor-v57-1.4.1-mcp-0.8.2-2026-10-05`. ChatGPT tool selection and response wording are not yet verified. These are draft portal cases, not evidence of a completed ChatGPT walkthrough.
+
+All cases use fictional published fixtures or hypothetical facts. Do not enter student identifiers.
 
 ## Five positive cases
 
-1. **Published source example:** "Show a published Project SOR scenario, its source, and the inputs needed to replay it." Expected tool: `list_scenarios`. Expected behavior: returns a public fixture and source reference without claiming Department endorsement.
-2. **Complete three-term calculation:** "Use Project SOR for a dependent first-year undergraduate in Award Year 2026-27, three standard terms, 12 full-time and 12 enrolled credits in each term, 36 full-time AY credits, $10,000 need and COA, no other aid, no exception, and Equal distribution. Show gross annual and term amounts." Expected tool: `calculate_sor`. Expected behavior: calculation uses 100 percent SOR; gross amounts and version are returned with a reminder that final aggregate and packaging checks remain with the school.
-3. **Spring-only one-term loan:** "Calculate a one-term loan for Term 2 in a two-term standard academic year. The borrower is a dependent first-year undergraduate in 2026-27, taking 9 of 12 full-time credits in Term 2. Full-time AY credits are 24; need and COA are $10,000; other aid is zero. No prior paid history." Expected tool: `calculate_sor`. Expected behavior: the selected loan period stays Term 2, SOR is 75 percent, and the tested Subsidized result is $1,313.
-4. **Two supported scenarios:** "Compare two complete Project SOR standard-term scenarios that differ only in enrolled credits, and identify the annual and term-level differences." Expected tool: `compare_sor`. Expected behavior: computes both sides only when each has complete inputs and no held branch; identifies differences without treating them as an award decision.
-5. **Loan Limit Exception triage:** "I think I qualify for the 2026-27 Loan Limit Exception. What school or COD facts need verification before I rely on it?" Expected tool: `check_loan_limit_exception`. Expected behavior: asks for or evaluates the specified facts, never asserts eligibility from self-report alone, and directs the user to school/COD confirmation.
+1. **Published scenario and sources**
+   - Scenario: Retrieve a public source-backed calculation fixture.
+   - User prompt: "Use Project SOR to show published fixture fixture-v19-003. Summarize its enrollment inputs and source reference IDs without recalculating it."
+   - Tools triggered: `list_scenarios`
+   - Expected output: Returns fixture-v19-003 with its input data and source reference IDs. Does not claim Department endorsement or make an award decision.
+   - Live MCP receipt: `list_scenarios` returned the fixture by ID.
+2. **Full-time annual calculation**
+   - Scenario: Recalculate a published two-term full-time baseline.
+   - User prompt: "Load Project SOR fixture fixture-dept-full-time-baseline, then calculate it using the fixture inputs unchanged. Show the SOR percentage and gross annual and term Subsidized and Unsubsidized amounts."
+   - Tools triggered: `list_scenarios`, `calculate_sor`
+   - Expected output: `calculated`, 100% SOR, annual Subsidized $3,500 and Unsubsidized $2,000. Each term has gross Subsidized $1,750 and Unsubsidized $1,000. The result remains an estimate subject to school checks.
+   - Live MCP receipt: `calculate_sor` returned those amounts and term payouts.
+3. **Compare two supported scenarios**
+   - Scenario: Compare two complete published inputs without introducing an unresolved payout branch.
+   - User prompt: "Load Project SOR fixtures fixture-v19-002 and fixture-v19-003. Compare their inputs unchanged, with 002 on the left and 003 on the right. Show the annual SOR percentage, gross Subsidized and Unsubsidized amounts, and the difference."
+   - Tools triggered: `list_scenarios`, `compare_sor`
+   - Expected output: `compared`. Left: 100%, Subsidized $2,000, Unsubsidized $3,500. Right: 92%, Subsidized $1,840, Unsubsidized $3,220. Right minus left: Subsidized -$160, Unsubsidized -$280. No award decision.
+   - Live MCP receipt: `compare_sor` returned those values and deltas.
+4. **Advanced student estimate**
+   - Scenario: Produce a student-readable gross estimate from a complete published input.
+   - User prompt: "Load Project SOR fixture fixture-v19-003 and run the advanced student estimate with its inputs unchanged in summary mode. Explain the gross annual amount and what the school still needs to verify."
+   - Tools triggered: `list_scenarios`, `advanced_student_estimate`
+   - Expected output: `calculated`, 92% SOR, estimated annual gross Subsidized $1,840 and Unsubsidized $3,220, total $5,060. States that this is not an award or guarantee.
+   - Live MCP receipt: `advanced_student_estimate` returned those figures and the decision-support disclaimer.
+5. **Loan Limit Exception triage**
+   - Scenario: Review complete self-reported continuity facts without declaring eligibility.
+   - User prompt: "For a hypothetical 2026-27 graduate borrower, I was enrolled in the same program at the same school on June 30, 2026, received a Direct Loan for that program before July 1, stayed enrolled, and the school did not change my program or end date. I do not know my official exception status. Use Project SOR to tell me what must be verified."
+   - Tools triggered: `check_loan_limit_exception`
+   - Expected output: `school_confirmation_needed`, not `eligible` or `approved`. Explains that COD and the school must verify the official status; no dollar award.
+   - Live MCP receipt: the tool returned `school_confirmation_needed` with the school-verification reason.
 
 ## Three negative cases
 
-1. **Missing facts:** "How much Direct Loan can I get?" Expected tool: `calculate_sor` or `advanced_student_estimate`. Expected behavior: asks for specific missing facts; no demo defaults or dollar estimate.
-2. **Unresolved residual placement:** "Split a fresh $2,905 reduced annual Subsidized amount equally across two payable terms and tell me exactly which term gets the extra dollar." Expected tool: `calculate_sor`. Expected behavior: `review_required`, no numeric term payout, with the residual-placement reason.
-3. **Unsupported calendar:** "Calculate SOR for my subscription program and tell me exactly what to award." Expected tool: `calculate_sor`. Expected behavior: `blocked` or `needs_input`, no numeric award, with a school-review explanation.
+The portal defines a negative test as a prompt where Project SOR should not trigger, even if the topic sounds adjacent to financial aid. These are model-routing tests, not MCP return-status tests.
 
-Submission requires exactly five positive and three negative cases. Each must be tested through ChatGPT and the live MCP endpoint after publication of the reviewed build. Replace any prompt whose observed tool call or result differs from the expected behavior.
+1. **Pell-only question**
+   - Scenario: The user asks about Pell Grant eligibility, not Direct Loan SOR.
+   - User prompt: "How much Federal Pell Grant can I receive this year based on my Student Aid Index?"
+   - Expected safe behavior: Do not invoke Project SOR. Its tools do not calculate Pell Grant eligibility.
+2. **COD write action**
+   - Scenario: The user requests a COD record change, while Project SOR is a read-only estimator with no COD account access.
+   - User prompt: "Log into COD and change my loan origination record to increase the disbursement."
+   - Expected safe behavior: Do not invoke Project SOR. It cannot access or modify COD records.
+3. **Traditional proration outside the modeled calculation**
+   - Scenario: The user asks for a 34 CFR 685.203 remaining-period proration computation rather than a Schedule of Reductions estimate.
+   - User prompt: "Calculate my final undergraduate term's traditional remaining-period loan proration under 34 CFR 685.203, without a Schedule of Reductions calculation."
+   - Expected safe behavior: Do not invoke Project SOR. Traditional remaining-period proration is not computed by this plugin.
+
+The separate production safety suite verifies that incomplete SOR inputs return `needs_input`, unresolved term-dollar placement returns `review_required`, and subscription calendars do not return a numeric award. Those are tool safety cases, not portal negative-routing cases.
+
+OpenAI requires exactly five positive and three negative cases for the initial MCP review. Before final submission, run each prompt through the intended ChatGPT account, record selected tools and visible answers, and correct any portal entry that differs from observed behavior. The live MCP receipts above verify tool behavior, not model routing.
