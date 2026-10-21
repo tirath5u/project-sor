@@ -55,11 +55,17 @@ function PrivacyPage() {
           </p>
           <p className="mt-3 text-muted-foreground">
             Accessible server-log samples showed request time, method, URL, status, and MCP tool-event metadata,
-            not calculation bodies or tool arguments. Lovable's log viewer offers relative ranges up to five
-            days and an absolute date range; these viewing controls do not establish a deletion period.
-            Hosting and security providers may also
-            process connection metadata, including IP address and browser details. Their actual retention
-            periods have not been confirmed. Do not use Project SOR for identifiable student records.
+            not calculation bodies or tool arguments. Lovable confirmed that requests to the published site,
+            API, and MCP endpoint carry the visitor's IP address, headers, URL, and timestamp at its hosting
+            layer. Lovable has not confirmed whether that layer retains request bodies or MCP tool arguments.
+            Its log viewer's five-day viewing range is not a deletion period. Lovable does not publish or
+            confirm deletion periods for hosting request logs, MCP tool-event logs, CDN connection logs, or AI
+            Gateway request bodies. These provider-held records are governed by Lovable's
+            <a className="ml-1 text-primary underline-offset-2 hover:underline" href="https://lovable.dev/privacy">Privacy Policy</a>
+            {" "}and its <a className="text-primary underline-offset-2 hover:underline" href="https://trust.lovable.dev/subprocessors">subprocessor list</a>.
+            The AI app context setting controls whether AI request and response content is kept for debugging;
+            it does not control hosting logs. No fixed provider deletion date can be promised. Do not use
+            Project SOR for identifiable student records.
           </p>
         </section>
         <section>
