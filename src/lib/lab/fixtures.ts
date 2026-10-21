@@ -48,6 +48,13 @@ export interface LabScenario {
   };
 }
 
+/**
+ * Everything the runtime may read from a scenario: what retrieval queries and
+ * what the prompt builder sends to the model. The answer key is excluded by
+ * type so it cannot reach either.
+ */
+export type LabScenarioInput = Omit<LabScenario, "expected">;
+
 export type LabFindingKind =
   | "match"
   | "amount_mismatch"
