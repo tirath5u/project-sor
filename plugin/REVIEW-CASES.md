@@ -1,6 +1,6 @@
 # Project SOR plugin review cases
 
-Status: live MCP tool results verified October 7, 2026 against release `sor-v57-1.4.1-mcp-0.8.2-2026-10-05`. An eight-case ChatGPT walkthrough was recorded October 22, 2026, including the negative routing cases. The draft portal still needs the 0.1.3 ZIP import and review of its saved case prompts.
+Status: live MCP tool results verified October 7, 2026 against release `sor-v57-1.4.1-mcp-0.8.2-2026-10-05`. An eight-case ChatGPT walkthrough was recorded October 22, 2026, including the negative routing cases. The 0.1.3 portal draft contains five complete positive cases and three complete negative cases; its COD and proration prompts match this file.
 
 All cases use fictional published fixtures or hypothetical facts. Do not enter student identifiers.
 
