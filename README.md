@@ -97,7 +97,7 @@ Always validate against the current COD Technical Reference Volume 2 and the mos
 - **V56 child/module allocation:** an optional child ledger allocates each already-calculated parent-term gross payout by child credits or equally across active credited child terms. Zero-credit children receive $0, paid child gross remains locked, and child allocation never runs a second SOR calculation.
 - **Gross and net display:** eligibility remains gross. Net display uses configurable FY27 Direct Loan fee percentages, defaulting to 1.057% for Subsidized/Unsubsidized and 4.228% for Grad PLUS, with fee truncation to cents.
 - **Case-file PDF export** of inputs, calculated baselines, per-term disbursements, and the 6-step walkthrough.
-- **7 canonical fixtures** drawn from ED-published scenarios, each tagged with regulatory citations and a source-status label.
+- **14 published fixtures** with source references and a source-status label. Some are directional regression cases rather than Department-certified dollar examples.
 
 ---
 
@@ -199,7 +199,7 @@ bun install
 bun test
 ```
 
-The current suite includes 160 passing tests (12 test files, verified 2026-09-27) across the shared engine, parity fixtures, schema validation, numeric coercion edges, child/module allocation, single-term Grad PLUS sizing, traditional-proration suppression, and Phase B comparison safety. CI runs the same suite on every push and pull request.
+The test suite covers the shared engine, parity fixtures, schema validation, numeric coercion edges, child/module allocation, single-term Grad PLUS sizing, traditional-proration suppression, and comparison safety. CI runs it on every push and pull request.
 
 Suite-by-suite results, including what they do and do not prove, are in [docs/evaluation-results.md](docs/evaluation-results.md).
 
@@ -222,7 +222,7 @@ A second verification path is executable contract testing: CI pulls the document
 
 1. Pick a scenario from the left rail or start blank. Fixtures are grouped by case type.
 2. Adjust inputs: grade level, dependency, annual need, term count, full-time vs. enrolled credits per term, optional summer or winter terms.
-3. Read the 6-step walkthrough on the right. Every number on screen has a citation back to the input that produced it.
+3. Read the calculation walkthrough on the right. Check the input and source context for each result.
 4. Switch to Disbursement view to enter Paid Sub / Paid Unsub per term and watch the engine re-anchor the remaining pool.
 5. Export the PDF for audit, sprint review, or a vendor conversation.
 
@@ -234,7 +234,7 @@ A second verification path is executable contract testing: CI pulls the document
 2. **Annual financial need** is split into Sub-eligible and Unsub-eligible buckets.
 3. **Award-year enrollment intensity** is computed from per-term enrolled vs. full-time credits, weighted by term length.
 4. **Reduced annual amounts** equal the lesser of the statutory cap or the need bucket, multiplied by the enrollment-intensity percentage.
-5. **Per-term disbursements** spread the reduced annual across active terms, with a rounding pass that pushes any cent residual into the last eligible term so the sum is exact.
+5. **Per-term disbursements** spread the reduced annual across active terms. Whole-dollar residual placement depends on the calculation path and paid history; the term sum is reconciled to the annual amount.
 
 ---
 
@@ -244,7 +244,7 @@ A second verification path is executable contract testing: CI pulls the document
 - **Blank is not zero.** A `Paid Unsub` field that has not been entered is _pending_, not _committed zero_. The engine only redistributes Unsub forward after the user explicitly enters or confirms 0.
 - **Enrollment intensity is award-year-level**, not term-level. A student going 12/6/12 is not "full-time, half-time, full-time." They are at one weighted AY percentage.
 - **Combined limit is the ceiling.** Unsub baseline equals `max(0, combinedLimit - subBaseline)`. Override mode does not let you exceed the lookup combined limit unless you intentionally override that cap too.
-- **Round to dollar at the term level**, not the annual level. Per-term values are integer dollars; the rounding residual lands in the last eligible term.
+- **Round to dollar at the term level**, not the annual level. Per-term values are integer dollars. When no current SOR reduction applies, the equal model places the residual in the first eligible term; other paths may place it in the last eligible term.
 - **Mid-cycle disbursement requires history.** Once any term is marked Disbursed, the engine treats that term's Paid amounts as locked and only adjusts future terms.
 - **Grad/Prof has no Sub.** Sub baseline is forced to 0 for graduate and professional grade levels regardless of override.
 - **Aggregate and lifetime checks come first.** For graduate, professional, Grad PLUS, Parent PLUS, or lifetime-limit-sensitive scenarios, apply NSLDS remaining limits before using this SOR engine. If Unsub plus requested Grad PLUS exceeds the lifetime ceiling, source guidance says reduce Grad PLUS first, then Unsub.
@@ -282,7 +282,7 @@ Accepted challenges become fixtures first, code changes second. Issues are triag
 
 ## MCP and agent use
 
-The project exposes a read-only remote MCP server at `/mcp` when the deployment has MCP routes enabled. Public tools are `list_scenarios`, `calculate_sor`, `compare_sor`, `advanced_student_estimate`, and `check_loan_limit_exception`. ChatGPT custom MCP apps require workspace support and administrator approval; this is not automatically available to every ChatGPT user or plan. Claude and other MCP clients have their own connection and approval requirements.
+The project exposes a read-only remote MCP server at `/mcp` when the deployment has MCP routes enabled. Public tools are `list_scenarios`, `calculate_sor`, `compare_sor`, `advanced_student_estimate`, and `check_loan_limit_exception`. The public [Schedule of Reductions (SOR) ChatGPT plugin](https://chatgpt.com/plugins/plugin_asdk_app_6ac5658b32908191b846907bb1ef577d) can be installed from its listing when available to your account. Open the listing, select **Install plugin**, then ask for a supported Direct Loan SOR estimate. Claude and other MCP clients have their own connection and approval requirements.
 
 MCP responses include engine and policy metadata so an agent can report which calculator snapshot produced the result. Agents should not present results as Department-approved and should distinguish gross eligibility from net posting amounts and from external COD, NSLDS, aggregate, lifetime, proration, and packaging checks.
 

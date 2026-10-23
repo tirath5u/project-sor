@@ -5,9 +5,9 @@ import { ENGINE_VERSION, POLICY_YEAR, RELEASE_ID } from "@/lib/sor.version";
 
 export default defineTool({
   name: "list_scenarios",
-  title: "List canonical SOR scenarios",
+  title: "List published SOR scenarios",
   description:
-    "Return public source-backed SOR fixtures with inputs, expected outputs, and citations. Use this to discover valid input shapes and verify calculation behavior.",
+    "Return public SOR fixtures with inputs, expected outputs, source references, sourceStatus, and assertionLevel. Directional or preliminary fixtures are regression examples, not Department-certified dollar oracles. Use them to discover input shapes and compare supported behavior.",
   inputSchema: {
     id: z
       .string()

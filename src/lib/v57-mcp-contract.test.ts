@@ -91,6 +91,22 @@ describe("V57 MCP calculation contract", () => {
     expect(result.normalizedInputState).toBeUndefined();
   });
 
+  it("rejects identifying fields before returning a calculation", async () => {
+    const result = await call({ ...defaultInputs(), studentId: "fictional-id", studentName: "Fictional Student" });
+    expect(result.status).toBe("needs_input");
+    expect(result.canCalculate).toBe(false);
+    expect(result.data).toBeUndefined();
+    expect(JSON.stringify(result)).not.toContain("fictional-id");
+    expect(JSON.stringify(result)).not.toContain("Fictional Student");
+  });
+
+  it("rejects an explicit zero AY denominator", async () => {
+    const result = await call({ ...defaultInputs(), ayFtCredits: 0 });
+    expect(result.status).toBe("needs_input");
+    expect(result.canCalculate).toBe(false);
+    expect(result.data).toBeUndefined();
+  });
+
   it("does not echo a caller-provided free-text term label", async () => {
     const input = defaultInputs();
     input.terms.term1.label = "private student label";

@@ -5,16 +5,12 @@
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
-import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 import { sourceFingerprint } from "./scripts/source-fingerprint.mjs";
 
 export default defineConfig({
   vite: {
     define: { __SOR_SOURCE_FINGERPRINT__: JSON.stringify(sourceFingerprint()) },
   },
-  // @lovable.dev/mcp-js 0.24.0 has a Windows-only path separator check that
-  // rejects an otherwise valid generated route tree. The routes are committed
-  // and remain available for local verification; Lovable's Linux build keeps
-  // the generator enabled.
-  plugins: process.platform === "win32" ? [] : [mcpPlugin()],
+  // The MCP routes are committed and owned here so raw input can be checked
+  // before the SDK strips unknown tool arguments.
 });

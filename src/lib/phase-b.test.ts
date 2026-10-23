@@ -32,4 +32,11 @@ describe("Phase B canonical comparison", () => {
     expect(run.normalized.externalChecks.length).toBeGreaterThan(0);
     expect(run.data.reducedSub).toEqual(expect.any(Number));
   });
+
+  it("serializes a whole-percent comparison without binary float noise", () => {
+    const run = runCanonicalV2(validInput());
+    const left = { ...run, data: { ...run.data, sorPctRounded: 0.92 } };
+    const right = { ...run, data: { ...run.data, sorPctRounded: 0.84 } };
+    expect(compareCanonicalRuns(left, right).fields.sorPctRounded.delta).toBe(-0.08);
+  });
 });

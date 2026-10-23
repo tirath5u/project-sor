@@ -85,7 +85,9 @@ export function compareCanonicalRuns(left: CanonicalV2Run, right: CanonicalV2Run
         {
           left: leftValue,
           right: rightValue,
-          delta: leftValue === null || rightValue === null ? null : rightValue - leftValue,
+          delta: leftValue === null || rightValue === null
+            ? null
+            : Number((rightValue - leftValue).toFixed(2)),
         },
       ];
     }),

@@ -143,7 +143,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
   },
   {
     id: "fixture-v19-003",
-    description: "Three terms, near-full enrollment 9/12/12 - AY% = 92, annual Sub $1,840.",
+    description: "Fall 9, Spring 12, Summer 1 12; Term 3 disabled - AY% = 92, annual Sub $1,840.",
     sourceRefs: ["psr-001"],
     input: build(
       {

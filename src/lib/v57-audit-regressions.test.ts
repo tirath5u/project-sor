@@ -11,7 +11,7 @@ function base() {
   const input = defaultInputs();
   input.numStandardTerms = 2;
   input.terms.term3.enabled = false;
-  input.ayFtCredits = 0;
+  input.ayFtCredits = 24;
   input.gradeLevel = "g1";
   input.dependency = "dependent";
   input.annualNeed = 10000;
@@ -35,6 +35,14 @@ async function toolCall(tool: unknown, input: unknown) {
 }
 
 describe("V57 independent-audit regressions", () => {
+  it("rejects an explicitly zero AY denominator on both public REST versions", async () => {
+    for (const version of ["v1", "v2"] as const) {
+      const response = await rest({ ...base(), ayFtCredits: 0 }, version);
+      expect(response.status).toBe(422);
+      expect(response.body.data).toBeUndefined();
+    }
+  });
+
   it.each(parityFixtures)("shares the ordered $id oracle across engine, REST v1/v2, and MCP", async (fixture) => {
     const input = base();
     Object.assign(input, fixture.input);
@@ -92,6 +100,7 @@ describe("V57 independent-audit regressions", () => {
 
   it("rounds the annual half-dollar case to 998 without choosing the open residual policy", () => {
     const input = base();
+    input.ayFtCredits = 36;
     input.numStandardTerms = 3;
     input.terms.term3.enabled = true;
     input.terms.term2.enrolledCredits = 8.5;
@@ -111,6 +120,7 @@ describe("V57 independent-audit regressions", () => {
 
   it("uses actual paid-term credits to select the effective distribution model", () => {
     const input = base();
+    input.ayFtCredits = 36;
     input.numStandardTerms = 3;
     input.terms.term3.enabled = true;
     input.viewMode = "disbursement";
