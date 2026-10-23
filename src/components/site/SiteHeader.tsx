@@ -83,7 +83,7 @@ export function SiteHeader() {
             Engine v{ENGINE_VERSION} · {POLICY_YEAR}
           </Link>
           <a
-            href="https://github.com/tirathc/project-sor/issues/new?template=scenario-challenge.yml"
+            href="https://github.com/tirath5u/project-sor/issues/new?template=scenario-challenge.yml"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted lg:inline-flex"

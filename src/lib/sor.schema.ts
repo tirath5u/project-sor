@@ -140,7 +140,10 @@ export const CalculateInputSchema = z
     includeSummer2: z.boolean(),
     includeWinter1: z.boolean(),
     includeWinter2: z.boolean(),
-    ayFtCredits: strictNumber({ min: 0, max: 200 }),
+    ayFtCredits: strictNumber({ min: 0, max: 200 }).refine(
+      (credits) => credits > 0,
+      "Academic-year full-time credits must be greater than zero.",
+    ),
     gradeLevel: z.enum([
       "g0",
       "g1",

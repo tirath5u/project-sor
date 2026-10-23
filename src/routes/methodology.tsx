@@ -148,7 +148,7 @@ function MethodologyPage() {
               Version history
             </Link>
             <a
-              href="https://github.com/tirathc/project-sor/issues/new?template=scenario-challenge.yml"
+              href="https://github.com/tirath5u/project-sor/issues/new?template=scenario-challenge.yml"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-lg border border-border px-4 py-2 transition-colors hover:bg-muted"

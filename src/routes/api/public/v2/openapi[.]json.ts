@@ -366,7 +366,7 @@ export const spec = {
           includeSummer2: { type: "boolean" },
           includeWinter1: { type: "boolean" },
           includeWinter2: { type: "boolean" },
-          ayFtCredits: { type: "number", minimum: 0 },
+          ayFtCredits: { type: "number", exclusiveMinimum: 0 },
           overrideLimits: { type: "boolean" },
           ayDenominatorOverride: {
             type: ["number", "null"],

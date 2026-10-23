@@ -97,7 +97,7 @@ const InputSchema = {
   includeSummer2: z.boolean().optional(),
   includeWinter1: z.boolean().optional(),
   includeWinter2: z.boolean().optional(),
-  ayFtCredits: z.number().min(0).max(200).optional(),
+  ayFtCredits: z.number().positive().max(200).optional(),
   annualNeed: z.number().min(0).optional(),
   subStatutory: z.number().min(0).optional(),
   unsubStatutory: z.number().min(0).optional(),
@@ -150,7 +150,7 @@ const InputSchema = {
   detailLevel: z.enum(["compact", "detailed"]).optional(),
 };
 
-const RequiredField = z.object(InputSchema).passthrough();
+const RequiredField = z.object(InputSchema).strict();
 
 const requiredFields: Array<{ field: string; label: string; reason: string; question: string }> = [
   {
@@ -332,33 +332,22 @@ export default defineTool({
     const input = rawInput as Record<string, unknown>;
     const parse = RequiredField.safeParse(input);
     if (!parse.success) {
-      return {
-        content: [
+      const result = {
+        status: "needs_input",
+        canCalculate: false,
+        missingInputs: [
           {
-            type: "text",
-            text: JSON.stringify(
-              {
-                status: "needs_input",
-                canCalculate: false,
-                missingInputs: [
-                  {
-                    field: "request",
-                    label: "Calculation request",
-                    reason: "The request contains invalid fields.",
-                    question: "Please correct the highlighted inputs and try again.",
-                  },
-                ],
-                validationIssues: parse.error.issues,
-              },
-              null,
-              2,
-            ),
+            field: "request",
+            label: "Calculation request",
+            reason: "The request contains invalid or unsupported fields.",
+            question: "Remove identifying or unsupported fields and correct the highlighted values before trying again.",
           },
         ],
-        structuredContent: { status: "needs_input", canCalculate: false } as Record<
-          string,
-          unknown
-        >,
+        validationIssues: parse.error.issues,
+      };
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        structuredContent: result as Record<string, unknown>,
       };
     }
 

@@ -48,8 +48,8 @@ function McpGuidePage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Button asChild>
-              <a href="https://sor.myproduct.life/mcp" target="_blank" rel="noreferrer">
-                Open MCP endpoint <ExternalLink className="h-4 w-4" />
+              <a href="https://chatgpt.com/plugins/plugin_asdk_app_6ac5658b32908191b846907bb1ef577d" target="_blank" rel="noreferrer">
+                Install in ChatGPT <ExternalLink className="h-4 w-4" />
               </a>
             </Button>
             <Button asChild variant="outline">
@@ -59,6 +59,9 @@ function McpGuidePage() {
             </Button>
           </div>
         </section>
+        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+          In ChatGPT, open the plugin listing, select Install plugin, and ask for a supported Direct Loan Schedule of Reductions estimate. For other MCP clients, connect to <code>https://sor.myproduct.life/mcp</code>. Availability and connection steps depend on the client and account.
+        </p>
         <section className="grid gap-4 md:grid-cols-3">
           {["Connect the endpoint", "Describe the scenario", "Review the result"].map(
             (title, index) => (
