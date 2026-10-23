@@ -1,0 +1,10 @@
+{
+  "reviewedSourceFingerprint": "2fee1b7bc7dbd59ee401115838627bf22b76955a560b5860e573468f7afe25f5",
+  "releaseId": "sor-v57-1.4.2-mcp-0.8.4-2026-10-24",
+  "engineVersion": "1.4.2",
+  "mcpVersion": "0.8.4",
+  "pluginPackageVersion": "0.1.3",
+  "outcome": "compatible_backend_only",
+  "reviewedAt": "2026-10-24",
+  "reason": "Build provenance changes only. The public MCP URL, five tool names, input schemas, listing text, and packaged assets remain unchanged. Production replay and hosted-tool scan are required after publish."
+}

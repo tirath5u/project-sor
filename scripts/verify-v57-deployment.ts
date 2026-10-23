@@ -1,9 +1,13 @@
 import { sourceFingerprint } from "./source-fingerprint.mjs";
+import { buildSourceCommit } from "./build-source-commit.mjs";
 import parityFixtures from "../fixtures/v57-audit-parity.json";
 
 const baseUrl = (process.argv[2] ?? "http://127.0.0.1:5175").replace(/\/$/, "");
 const expectedFingerprint = sourceFingerprint();
 (globalThis as Record<string, unknown>).__SOR_SOURCE_FINGERPRINT__ = expectedFingerprint;
+const localProvenance = buildSourceCommit();
+(globalThis as Record<string, unknown>).__SOR_SOURCE_COMMIT__ = localProvenance.commit;
+(globalThis as Record<string, unknown>).__SOR_SOURCE_COMMIT_STATUS__ = localProvenance.status;
 const { defaultInputs } = await import("../src/lib/sor.ts");
 const { RELEASE_ID: expectedRelease, MCP_VERSION: expectedMcpVersion } = await import("../src/lib/sor.version.ts");
 const failures: string[] = [];
@@ -53,10 +57,22 @@ try {
     check(response.status === 200, `${version} health did not return 200`);
     check(response.body.releaseId === expectedRelease, `${version} release ID differs`);
     check(response.body.sourceFingerprint === expectedFingerprint, `${version} source fingerprint differs`);
+    check(
+      response.body.sourceCommit === null || /^[0-9a-f]{40}$/.test(response.body.sourceCommit),
+      `${version} source commit is not a full Git SHA or null`,
+    );
+    check(
+      response.body.sourceCommit === null
+        ? ["not_available_in_lovable_build", "uncommitted_source"].includes(response.body.sourceCommitStatus)
+        : ["build_git_checkout", "build_environment"].includes(response.body.sourceCommitStatus),
+      `${version} source commit status contradicts its value`,
+    );
     receipts[`${version}Health`] = {
       status: response.status,
       releaseId: response.body.releaseId,
       sourceFingerprint: response.body.sourceFingerprint,
+      sourceCommit: response.body.sourceCommit,
+      sourceCommitStatus: response.body.sourceCommitStatus,
     };
   }
 

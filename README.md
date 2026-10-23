@@ -159,9 +159,9 @@ keys: `data` and `meta`. The `meta` object includes:
 - `policyYear` - award year the engine was evaluated against (e.g. `2026-27`)
 - `policySnapshotDate` - ISO date of the policy snapshot used
 - `policyStatus` - `confirmed` or `supported-preliminary`
-- `deploymentMarker` - public deployment identifier; equals `releaseId` (e.g. `sor-v57-1.4.1-mcp-0.8.2-2026-10-05`)
-- `sourceCommit` - `null`; the exact Git SHA is not available to the runtime
-- `sourceCommitStatus` - `not_available_in_lovable_build` (see note below)
+- `deploymentMarker` - public deployment identifier; equals `releaseId`
+- `sourceCommit` - full build-checkout Git SHA when available, otherwise `null`
+- `sourceCommitStatus` - `build_git_checkout`, `build_environment`, `uncommitted_source`, or `not_available_in_lovable_build`
 - `sourceFingerprint` - build-time SHA-256 digest of the normalized application source; compare it with `node scripts/source-fingerprint.mjs` on the reviewed checkout
 - `sourceSet` - identifiers in the public source register (e.g. `["psr-001", "psr-009", "psr-011"]`)
 - `citations` - regulatory citations applicable to the result (may be empty)
@@ -169,13 +169,14 @@ keys: `data` and `meta`. The `meta` object includes:
 - `requestId` - correlation ID; also returned in the `X-Request-Id` response header
 
 > **Deployment marker note.** Cite `deploymentMarker` / `releaseId` when
-> referencing a deployed build. `sourceCommit` is always `null` with
-> `sourceCommitStatus: "not_available_in_lovable_build"`, because the hosted
-> build path does not expose the Git SHA to the runtime and we deliberately do
-> not fetch GitHub per request or trust client-supplied headers. Exact SHA
-> tracking can be added later via a CI-managed deploy or a supported runtime
-> binding. The separate `sourceFingerprint` is generated during the Lovable
-> build and can be checked against a reviewed checkout without a build secret.
+> referencing a deployed build. The build reads its own Git checkout SHA, then
+> trusted CI commit variables. It does not use a manually pinned secret, fetch
+> GitHub per request, or trust client headers. If Lovable exposes neither a Git
+> checkout nor trusted commit metadata, or the source checkout is modified,
+> `sourceCommit` remains `null`. The
+> `sourceFingerprint` is independently generated during the build and can be
+> checked against a reviewed checkout without a build secret. A SHA alone does
+> not prove deployment parity; verify the fingerprint as well.
 
 **Error contract:** uniform `{ error: { code, message, details? } }` envelope. Status codes are RFC-correct: 400 for malformed JSON, 415 for wrong content type, 422 for valid JSON that fails schema, 429 for rate limit, 405 for wrong method, 413 for oversized body.
 
