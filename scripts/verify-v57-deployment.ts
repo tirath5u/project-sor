@@ -36,10 +36,12 @@ async function mcp(method: string, params: Record<string, unknown> = {}) {
   });
   const text = await response.text();
   const data = text.split("\n").find((line) => line.startsWith("data: "));
-  if (!data) throw new Error(`MCP ${method} returned no data event: ${response.status}`);
+  if (!data && !response.headers.get("content-type")?.includes("application/json")) {
+    throw new Error(`MCP ${method} returned no JSON response: ${response.status}`);
+  }
   // MCP response shape is validated by the assertions below.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return JSON.parse(data.slice(6)).result as Record<string, any>;
+  return JSON.parse(data ? data.slice(6) : text).result as Record<string, any>;
 }
 
 try {
@@ -135,7 +137,7 @@ try {
     const input = defaultInputs();
     input.numStandardTerms = 2;
     input.terms.term3.enabled = false;
-    input.ayFtCredits = 0;
+    input.ayFtCredits = 24;
     input.gradeLevel = "g1";
     input.dependency = "dependent";
     input.annualNeed = 10000;
@@ -175,6 +177,28 @@ try {
     parityReceipts.push({ id: fixture.id, surface: "mcp", status: response.structuredContent?.status, vector });
   }
   receipts.parity = parityReceipts;
+
+  const zeroDenominator = { ...defaultInputs(), ayFtCredits: 0 };
+  for (const version of ["v1", "v2"] as const) {
+    const response = await json(`/api/public/${version}/calculate`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(zeroDenominator),
+    });
+    check(response.status === 422, `${version} accepted a zero AY denominator`);
+  }
+  const zeroMcp = await mcp("tools/call", { name: "calculate_sor", arguments: zeroDenominator });
+  check(zeroMcp.isError === true && JSON.stringify(zeroMcp.content).includes("ayFtCredits"), "MCP accepted a zero AY denominator");
+  check(zeroMcp.structuredContent?.data === undefined, "MCP calculated with a zero AY denominator");
+  receipts.zeroDenominator = { rest: "422 expected", mcpRejected: zeroMcp.isError === true };
+
+  const identifyingInput = { ...defaultInputs(), studentId: "fictional-id" };
+  const identifyingMcp = await mcp("tools/call", { name: "calculate_sor", arguments: identifyingInput });
+  check(identifyingMcp.isError === true, "MCP accepted an identifying field");
+  check(!JSON.stringify(identifyingMcp).includes("fictional-id"), "MCP echoed an identifier value");
+  const identifyingRest = await fetch(`${baseUrl}/.mcp/invoke-tool/calculate_sor`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(identifyingInput),
+  });
+  check(identifyingRest.status === 400, "Direct MCP invocation accepted an identifying field");
+  receipts.identifyingField = { mcpRejected: identifyingMcp.isError === true, directInvokeStatus: identifyingRest.status };
 
   const openapi = await json("/api/public/v2/openapi.json");
   check(openapi.status === 200, "V2 OpenAPI is unavailable");
