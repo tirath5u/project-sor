@@ -115,6 +115,52 @@ function McpGuidePage() {
           </div>
         </section>
 
+        <section aria-labelledby="demo-heading" className="space-y-6 border-t border-border pt-10">
+          <div className="max-w-3xl space-y-2">
+            <h2 id="demo-heading" className="text-2xl font-semibold">See it in use</h2>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Short, silent recordings using public example scenarios. Results are estimates, not
+              financial aid awards.
+            </p>
+          </div>
+          <div className="grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,240px)]">
+            <div className="min-w-0 space-y-2">
+              <h3 className="text-base font-semibold">ChatGPT walkthrough</h3>
+              <video
+                controls
+                preload="none"
+                playsInline
+                poster="/sor-chatgpt-desktop-poster.jpg"
+                aria-label="Schedule of Reductions ChatGPT calculation, comparison, and review walkthrough"
+                className="w-full rounded-md border border-border bg-black"
+              >
+                <source src="/sor-chatgpt-desktop-demo.mp4" type="video/mp4" />
+                Your browser does not support this video.
+              </video>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Calculation, scenario comparison, and a case that needs more information.
+              </p>
+            </div>
+            <div className="min-w-0 space-y-2">
+              <h3 className="text-base font-semibold">Mobile guide preview</h3>
+              <video
+                controls
+                preload="none"
+                playsInline
+                poster="/sor-chatgpt-mobile-poster.jpg"
+                aria-label="Mobile view of the Schedule of Reductions ChatGPT guide"
+                className="mx-auto w-full max-w-60 rounded-md border border-border bg-black"
+              >
+                <source src="/sor-chatgpt-mobile-guide-preview.mp4" type="video/mp4" />
+                Your browser does not support this video.
+              </video>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Mobile website navigation and install guide, not a ChatGPT app recording.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section className="max-w-3xl space-y-4 border-t border-border pt-10">
           <p className="text-sm font-medium text-primary">Remote MCP</p>
           <h2 className="text-2xl font-semibold sm:text-3xl">Other MCP clients</h2>

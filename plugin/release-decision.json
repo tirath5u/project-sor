@@ -1,10 +1,10 @@
 {
-  "reviewedSourceFingerprint": "ade6c3cd54267de4f81d03ec50344776cc4b4faf71f5455e853fed70fa84fb47",
+  "reviewedSourceFingerprint": "ca9d0dae6dc123189e11223c78cb2d414af12c510887622892c756efecf03073",
   "releaseId": "sor-v57-1.4.2-mcp-0.8.5-2026-10-26",
   "engineVersion": "1.4.2",
   "mcpVersion": "0.8.5",
   "pluginPackageVersion": "0.1.3",
   "outcome": "compatible_backend_only",
-  "reviewedAt": "2026-10-26",
-  "reason": "Public graduate Grad PLUS fixture inputs now identify the borrower as graduate, removing an inconsistent program-level warning. The calculation engine, MCP URL, five tool names, input schemas, approved listing text, and packaged assets remain unchanged. Replay fixtures 006 and 007 after publish."
+  "reviewedAt": "2026-10-27",
+  "reason": "The public ChatGPT guide now includes short desktop and mobile preview videos. The calculation engine, MCP URL, five tool names, input schemas, approved listing text, and packaged plugin assets remain unchanged. The existing published plugin continues to use the remote MCP server."
 }
