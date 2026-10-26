@@ -16,6 +16,15 @@ export const Route = createFileRoute("/releases")({
 
 const releases = [
   {
+    version: "V57 online update",
+    date: "2026-10-26",
+    title: "ChatGPT access and public scenario correction",
+    items: [
+      "Made the public ChatGPT plugin easier to find from the calculator, student estimate, and navigation.",
+      "Corrected the program level in two published Grad PLUS examples without changing their calculated amounts or the calculation engine.",
+    ],
+  },
+  {
     version: "V57",
     date: "2026-10-02",
     title: "Single-term payment period and eligibility review controls",

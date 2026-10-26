@@ -34,6 +34,9 @@ jobs:
       - name: Run tests (parity + unit)
         run: bunx vitest run
 
+      - name: Check ChatGPT plugin release decision
+        run: bun scripts/check-plugin-release.ts
+
       - name: Start local contract server
         run: |
           bun run dev --host 127.0.0.1 --port 4173 > /tmp/project-sor-dev.log 2>&1 &

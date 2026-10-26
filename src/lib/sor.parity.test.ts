@@ -54,6 +54,17 @@ describe("SOR parity fixtures", () => {
       expect(parsed.success, `${fx.id} schema-valid`).toBe(true);
     }
   });
+
+  it("published graduate Grad PLUS scenarios have a consistent program level", () => {
+    for (const id of ["fixture-v19-006", "fixture-v19-007"]) {
+      const fixture = PARITY_FIXTURES.find((candidate) => candidate.id === id);
+      expect(fixture, `${id} exists`).toBeDefined();
+      expect(fixture!.input.programLevel).toBe("graduate");
+      expect(calculateSOR(fixture!.input).warnings).not.toContain(
+        "Grade Level is graduate/professional but Program Level is Undergraduate - review.",
+      );
+    }
+  });
 });
 
 describe("strictNumber - no silent coercion", () => {

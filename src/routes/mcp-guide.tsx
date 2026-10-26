@@ -1,14 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Bot, CheckCircle2, ExternalLink, Server } from "lucide-react";
+import { ArrowRight, CheckCircle2, ExternalLink, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const CHATGPT_LISTING =
+  "https://chatgpt.com/plugins/plugin_asdk_app_6ac5658b32908191b846907bb1ef577d";
 
 export const Route = createFileRoute("/mcp-guide")({
   head: () => ({
     meta: [
-      { title: "Ask an AI Agent (MCP) - Project SOR" },
+      { title: "Use SOR in ChatGPT or an MCP client - Project SOR" },
       {
         name: "description",
-        content: "Connect an MCP client to the source-backed Project SOR calculation engine.",
+        content:
+          "Use the Schedule of Reductions calculator in ChatGPT, or connect another MCP client to the public calculation engine.",
       },
     ],
   }),
@@ -18,27 +22,102 @@ export const Route = createFileRoute("/mcp-guide")({
 function McpGuidePage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/70">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <Link to="/" className="flex items-center gap-2 text-sm font-semibold">
-            <Bot className="h-4 w-4 text-primary" /> Project SOR
-          </Link>
-          <div className="flex gap-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/">Calculator</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/api-docs">API docs</Link>
+      <div className="mx-auto max-w-5xl space-y-12 px-4 py-10 sm:px-6">
+        <section id="chatgpt" aria-labelledby="chatgpt-heading" className="space-y-8">
+          <div className="max-w-3xl space-y-4">
+            <p className="text-sm font-medium text-primary">ChatGPT plugin</p>
+            <h1 id="chatgpt-heading" className="text-3xl font-semibold sm:text-4xl">
+              Use Schedule of Reductions (SOR) in ChatGPT
+            </h1>
+            <p className="text-base leading-7 text-muted-foreground">
+              Use Schedule of Reductions (SOR) in ChatGPT to explore supported Direct Loan reduction
+              scenarios, see the calculation steps, and learn which facts are still needed.
+              Estimates are not awards. Your school must verify final eligibility.
+            </p>
+            <Button asChild>
+              <a href={CHATGPT_LISTING} target="_blank" rel="noreferrer">
+                Install in ChatGPT <ExternalLink className="h-4 w-4" />
+              </a>
             </Button>
           </div>
-        </div>
-      </header>
-      <div className="mx-auto max-w-5xl space-y-8 px-4 py-10 sm:px-6">
-        <section className="max-w-3xl space-y-4">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-start">
+            <div>
+              <h2 className="text-lg font-semibold">Get started</h2>
+              <ol className="mt-4 space-y-5">
+                <li className="flex gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    1
+                  </span>
+                  <p className="text-sm leading-6">
+                    <strong>Open the listing.</strong> Select Install in ChatGPT above, then select
+                    Install plugin on the ChatGPT page. You may need to sign in.
+                  </p>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    2
+                  </span>
+                  <p className="text-sm leading-6">
+                    <strong>Ask about a scenario.</strong> Start a new chat and describe the loan
+                    period, grade level, and credits per term. For example: "Use Schedule of
+                    Reductions (SOR) to estimate my Direct Loan limits. I am a dependent first-year
+                    student taking 6 credits in fall and 9 in spring."
+                  </p>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    3
+                  </span>
+                  <p className="text-sm leading-6">
+                    <strong>Review the answer.</strong> Check the calculation steps, answer any
+                    follow-up questions, and confirm the result with your financial aid office.
+                  </p>
+                </li>
+              </ol>
+              <p className="mt-6 text-sm leading-6 text-muted-foreground">
+                Independently developed. Not endorsed by the U.S. Department of Education. The
+                plugin uses the same public calculation engine as this site and does not change
+                school records. Availability depends on your ChatGPT account.
+              </p>
+              <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                <Link to="/methodology" className="text-primary underline-offset-2 hover:underline">
+                  Methodology
+                </Link>
+                <Link to="/privacy" className="text-primary underline-offset-2 hover:underline">
+                  Privacy
+                </Link>
+                <Link to="/support" className="text-primary underline-offset-2 hover:underline">
+                  Support
+                </Link>
+              </p>
+            </div>
+            <figure className="min-w-0">
+              <a
+                href="/chatgpt-plugin-listing.png"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Open a larger image of the Schedule of Reductions ChatGPT listing"
+              >
+                <img
+                  src="/chatgpt-plugin-listing.png"
+                  alt="ChatGPT listing for Schedule of Reductions (SOR), with an Install plugin button and example questions about estimates, sources, and missing information."
+                  width={780}
+                  height={486}
+                  loading="lazy"
+                  className="w-full rounded-lg border border-border"
+                />
+              </a>
+              <figcaption className="mt-2 text-xs leading-5 text-muted-foreground">
+                The public ChatGPT listing, captured October 24, 2026. Select the image to enlarge
+                it.
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section className="max-w-3xl space-y-4 border-t border-border pt-10">
           <p className="text-sm font-medium text-primary">Remote MCP</p>
-          <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">
-            Ask an AI client to use Project SOR
-          </h1>
+          <h2 className="text-2xl font-semibold sm:text-3xl">Other MCP clients</h2>
           <p className="text-base leading-7 text-muted-foreground">
             Project SOR is a source-backed Schedule of Reductions calculation engine available
             through Excel, the web, a REST API, and a remote MCP server. The same tested engine
@@ -46,22 +125,16 @@ function McpGuidePage() {
             intake and scenario comparison. Historical V55 versus V56 migration review remains
             available on the website, not as a public MCP tool.
           </p>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild>
-              <a href="https://chatgpt.com/plugins/plugin_asdk_app_6ac5658b32908191b846907bb1ef577d" target="_blank" rel="noreferrer">
-                Install in ChatGPT <ExternalLink className="h-4 w-4" />
-              </a>
-            </Button>
-            <Button asChild variant="outline">
-              <a href="https://github.com/tirath5u/project-sor" target="_blank" rel="noreferrer">
-                View source <ExternalLink className="h-4 w-4" />
-              </a>
-            </Button>
-          </div>
+          <Button asChild variant="outline">
+            <a href="https://github.com/tirath5u/project-sor" target="_blank" rel="noreferrer">
+              View source <ExternalLink className="h-4 w-4" />
+            </a>
+          </Button>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Connect to <code>https://sor.myproduct.life/mcp</code>. Availability and connection
+            steps depend on the client and account.
+          </p>
         </section>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-          In ChatGPT, open the plugin listing, select Install plugin, and ask for a supported Direct Loan Schedule of Reductions estimate. For other MCP clients, connect to <code>https://sor.myproduct.life/mcp</code>. Availability and connection steps depend on the client and account.
-        </p>
         <section className="grid gap-4 md:grid-cols-3">
           {["Connect the endpoint", "Describe the scenario", "Review the result"].map(
             (title, index) => (
@@ -77,7 +150,7 @@ function McpGuidePage() {
                     ? "Add https://sor.myproduct.life/mcp as a remote MCP server in a client that supports custom MCP connections."
                     : index === 1
                       ? "Include award year, program level, grade level, dependency, loan-period scope, academic-year structure, credits, need, COA, other aid, and paid history when relevant."
-                      : "The server returns gross eligibility, net display amounts, calculation stages, warnings, modeled checks, external checks, release metadata, and public citations. Phase B also supports compare_sor for two complete cases and advanced_student_estimate for institution-specific projections."}
+                      : "The server returns gross eligibility, net display amounts, calculation stages, warnings, modeled checks, external checks, release metadata, and public citations. It also supports compare_sor for two complete cases and advanced_student_estimate for institution-specific projections."}
                 </p>
               </div>
             ),

@@ -916,11 +916,15 @@ describe("SOR engine - LTHT warnings", () => {
 describe("deployment markers", () => {
   it("uses releaseId as the authoritative deployment marker", () => {
     expect(DEPLOYMENT_MARKER).toBe(RELEASE_ID);
-    expect(RELEASE_ID).toBe("sor-v57-1.4.2-mcp-0.8.3-2026-10-23");
+    expect(RELEASE_ID).toBe("sor-v57-1.4.2-mcp-0.8.5-2026-10-26");
   });
 
-  it("reports sourceCommit as null with an explanatory status, never local-dev", () => {
-    expect(SOURCE_COMMIT).toBeNull();
-    expect(SOURCE_COMMIT_STATUS).toBe("not_available_in_lovable_build");
+  it("reports a build SHA or an honest unavailable status", () => {
+    if (SOURCE_COMMIT === null) {
+      expect(["not_available_in_lovable_build", "uncommitted_source"]).toContain(SOURCE_COMMIT_STATUS);
+    } else {
+      expect(SOURCE_COMMIT).toMatch(/^[0-9a-f]{40}$/);
+      expect(["build_git_checkout", "build_environment"]).toContain(SOURCE_COMMIT_STATUS);
+    }
   });
 });

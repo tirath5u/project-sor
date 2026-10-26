@@ -9,22 +9,22 @@
  *   last reviewed against the engine.
  * - DEPLOYMENT_MARKER: authoritative public deployment identifier. Equals
  *   RELEASE_ID. This is the value consumers should cite.
- * - SOURCE_COMMIT: always null. Exact Git SHA is not available to the runtime
- *   in the hosted build path; we do not fetch GitHub per request and do not
- *   trust client headers. SOURCE_COMMIT_STATUS explains why.
+ * - SOURCE_COMMIT: build checkout SHA when available, otherwise null. Never
+ *   inferred from a request header or the current remote branch.
  */
 
 export const ENGINE_VERSION = "1.4.2" as const;
 export const POLICY_YEAR = "2026-27" as const;
 export const POLICY_SNAPSHOT_DATE = "2026-08-20" as const;
-export const MCP_VERSION = "0.8.3" as const;
-export const RELEASE_ID = `sor-v57-${ENGINE_VERSION}-mcp-${MCP_VERSION}-2026-10-23` as const;
+export const MCP_VERSION = "0.8.5" as const;
+export const RELEASE_ID = `sor-v57-${ENGINE_VERSION}-mcp-${MCP_VERSION}-2026-10-26` as const;
 
 export const DEPLOYMENT_MARKER: string = RELEASE_ID;
 
-export const SOURCE_COMMIT: string | null = null;
-
-export const SOURCE_COMMIT_STATUS = "not_available_in_lovable_build" as const;
+declare const __SOR_SOURCE_COMMIT__: string | null;
+declare const __SOR_SOURCE_COMMIT_STATUS__: string;
+export const SOURCE_COMMIT: string | null = __SOR_SOURCE_COMMIT__;
+export const SOURCE_COMMIT_STATUS: string = __SOR_SOURCE_COMMIT_STATUS__;
 
 declare const __SOR_SOURCE_FINGERPRINT__: string;
 export const SOURCE_FINGERPRINT: string = __SOR_SOURCE_FINGERPRINT__;

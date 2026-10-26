@@ -98,13 +98,13 @@ These are documented gaps, not bugs. Do **not** page anyone for them.
 - **No alerting.** There is no Sentry, no PagerDuty, no email-on-error. The
   earliest signal of a problem is a user message or a failing CI smoke run.
   Acceptable for a free public reference API; revisit before commercial use.
-- **`sourceCommit` is `null` in Lovable builds** (`sourceCommitStatus:
-  not_available_in_lovable_build`). Use `releaseId` plus `sourceFingerprint`
-  to identify the reviewed source build. Bump `RELEASE_ID` with each release,
-  and check the fingerprint against the reviewed checkout before claiming parity.
-- **Worker logs are short-lived.** Cloudflare retains roughly the last hour
-  of Worker invocation logs. Do post-mortems quickly or capture
-  reproductions yourself.
+- **`sourceCommit` may be `null` in Lovable builds.** The build attempts to read
+  its checkout SHA or trusted CI metadata. Use `releaseId` plus
+  `sourceFingerprint` to identify the reviewed source build, even when a SHA
+  is present. Bump `RELEASE_ID` with each release and compare the fingerprint
+  with the reviewed checkout before claiming parity.
+- **Worker log retention is not confirmed.** The log viewer's available range
+  is not a deletion commitment. Capture incident reproductions promptly.
 
 ## 6. Reporting a security issue
 
