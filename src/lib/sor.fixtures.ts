@@ -224,6 +224,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
     input: build(
       {
         gradeLevel: "g8",
+        programLevel: "graduate",
         dependency: "independent",
         loanLimitException: true,
         numStandardTerms: 2,
@@ -254,6 +255,7 @@ export const PARITY_FIXTURES: ParityFixture[] = [
     input: build(
       {
         gradeLevel: "g8",
+        programLevel: "graduate",
         dependency: "independent",
         loanLimitException: true,
         numStandardTerms: 2,

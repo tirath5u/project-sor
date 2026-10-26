@@ -19,8 +19,7 @@ export type NavGroup = {
 export const NAV_GROUPS: NavGroup[] = [
   {
     label: "SOR Calculators",
-    caption:
-      "Direct Loan Schedule of Reductions under the One Big Beautiful Bill Act, 2026-27",
+    caption: "Direct Loan Schedule of Reductions under the One Big Beautiful Bill Act, 2026-27",
     items: [
       {
         to: "/",
@@ -31,6 +30,11 @@ export const NAV_GROUPS: NavGroup[] = [
         to: "/student",
         label: "Student SOR estimate",
         blurb: "Fast Fall and Spring loan limit estimate for students",
+      },
+      {
+        to: "/mcp-guide",
+        label: "SOR in ChatGPT",
+        blurb: "Ask about supported scenarios in a ChatGPT chat",
       },
       {
         to: "/student/advanced",

@@ -1,10 +1,10 @@
 {
-  "reviewedSourceFingerprint": "2fee1b7bc7dbd59ee401115838627bf22b76955a560b5860e573468f7afe25f5",
-  "releaseId": "sor-v57-1.4.2-mcp-0.8.4-2026-10-24",
+  "reviewedSourceFingerprint": "ade6c3cd54267de4f81d03ec50344776cc4b4faf71f5455e853fed70fa84fb47",
+  "releaseId": "sor-v57-1.4.2-mcp-0.8.5-2026-10-26",
   "engineVersion": "1.4.2",
-  "mcpVersion": "0.8.4",
+  "mcpVersion": "0.8.5",
   "pluginPackageVersion": "0.1.3",
   "outcome": "compatible_backend_only",
-  "reviewedAt": "2026-10-24",
-  "reason": "Build provenance changes only. The public MCP URL, five tool names, input schemas, listing text, and packaged assets remain unchanged. Production replay and hosted-tool scan are required after publish."
+  "reviewedAt": "2026-10-26",
+  "reason": "Public graduate Grad PLUS fixture inputs now identify the borrower as graduate, removing an inconsistent program-level warning. The calculation engine, MCP URL, five tool names, input schemas, approved listing text, and packaged assets remain unchanged. Replay fixtures 006 and 007 after publish."
 }

@@ -916,7 +916,7 @@ describe("SOR engine - LTHT warnings", () => {
 describe("deployment markers", () => {
   it("uses releaseId as the authoritative deployment marker", () => {
     expect(DEPLOYMENT_MARKER).toBe(RELEASE_ID);
-    expect(RELEASE_ID).toBe("sor-v57-1.4.2-mcp-0.8.4-2026-10-24");
+    expect(RELEASE_ID).toBe("sor-v57-1.4.2-mcp-0.8.5-2026-10-26");
   });
 
   it("reports a build SHA or an honest unavailable status", () => {

@@ -126,7 +126,12 @@ function OverrideCapsBlock({
   inputs: SORInputs;
   update: (patch: Partial<SORInputs>) => void;
 }) {
-  const lim = lookupLimits(inputs.gradeLevel, inputs.dependency, qualifyingParentPlusDenial(inputs), inputs.loanLimitException !== false);
+  const lim = lookupLimits(
+    inputs.gradeLevel,
+    inputs.dependency,
+    qualifyingParentPlusDenial(inputs),
+    inputs.loanLimitException !== false,
+  );
   const drift = inputs.subStatutory !== lim.sub || inputs.unsubStatutory !== lim.unsub;
   return (
     <>
@@ -194,7 +199,12 @@ function SORCalculatorPage() {
     // resolves caps internally, but this keeps the displayed Sub/Unsub
     // statutory inputs honest.
     if (!built.overrideLimits) {
-      const lim = lookupLimits(built.gradeLevel, built.dependency, qualifyingParentPlusDenial(built), built.loanLimitException !== false);
+      const lim = lookupLimits(
+        built.gradeLevel,
+        built.dependency,
+        qualifyingParentPlusDenial(built),
+        built.loanLimitException !== false,
+      );
       built.subStatutory = lim.sub;
       built.unsubStatutory = lim.unsub;
     }
@@ -236,12 +246,25 @@ function SORCalculatorPage() {
   // Auto-populate Sub/Unsub statutory caps from grade lookup unless overridden
   React.useEffect(() => {
     if (inputs.overrideLimits) return;
-    const lim = lookupLimits(inputs.gradeLevel, inputs.dependency, qualifyingParentPlusDenial(inputs), inputs.loanLimitException !== false);
+    const lim = lookupLimits(
+      inputs.gradeLevel,
+      inputs.dependency,
+      qualifyingParentPlusDenial(inputs),
+      inputs.loanLimitException !== false,
+    );
     setInputs((p) => {
       if (p.subStatutory === lim.sub && p.unsubStatutory === lim.unsub) return p;
       return { ...p, subStatutory: lim.sub, unsubStatutory: lim.unsub };
     });
-  }, [inputs.gradeLevel, inputs.dependency, inputs.parentPlusDenied, inputs.parentPlusAggregateUsed, inputs.awardYear, inputs.loanLimitException, inputs.overrideLimits]);
+  }, [
+    inputs.gradeLevel,
+    inputs.dependency,
+    inputs.parentPlusDenied,
+    inputs.parentPlusAggregateUsed,
+    inputs.awardYear,
+    inputs.loanLimitException,
+    inputs.overrideLimits,
+  ]);
 
   // If the user toggles Award Year and the current Grade Level is no longer
   // valid for that AY (e.g. picked Graduate while on 2025-26), snap to the
@@ -262,30 +285,49 @@ function SORCalculatorPage() {
     return false;
   });
   const reviewMessages: string[] = [];
-  if (inputs.loanPeriodScope === "singleTerm"
-    && (!inputs.singleTermPaymentPeriod || !activeTermKeys.includes(inputs.singleTermPaymentPeriod))) {
+  if (
+    inputs.loanPeriodScope === "singleTerm" &&
+    (!inputs.singleTermPaymentPeriod || !activeTermKeys.includes(inputs.singleTermPaymentPeriod))
+  ) {
     reviewMessages.push("Select an enabled single-term payment period.");
   }
-  if (inputs.parentPlusDenied && inputs.dependency === "dependent"
-    && !isGradOrProf(inputs.gradeLevel) && inputs.awardYear === "2026-27"
-    && !inputs.loanLimitException && inputs.parentPlusAggregateUsed == null) {
+  if (
+    inputs.parentPlusDenied &&
+    inputs.dependency === "dependent" &&
+    !isGradOrProf(inputs.gradeLevel) &&
+    inputs.awardYear === "2026-27" &&
+    !inputs.loanLimitException &&
+    inputs.parentPlusAggregateUsed == null
+  ) {
     reviewMessages.push("Enter verified Parent PLUS aggregate usage.");
   }
   if (inputs.viewMode === "disbursement") {
     for (const key of activeTermKeys) {
       const term = inputs.terms[key];
-      if ((term.disbursed || (term.paidSub ?? 0) > 0 || (term.paidUnsub ?? 0) > 0
-        || (term.paidGradPlus ?? 0) > 0) && term.actualCredits == null) {
+      if (
+        (term.disbursed ||
+          (term.paidSub ?? 0) > 0 ||
+          (term.paidUnsub ?? 0) > 0 ||
+          (term.paidGradPlus ?? 0) > 0) &&
+        term.actualCredits == null
+      ) {
         reviewMessages.push(`Enter actual credits for paid ${TERM_LABELS[key]}.`);
       }
     }
   }
-  if (inputs.calType > 2 && (!inputs.calendarCategory || inputs.calendarCategory === "standardTerm"
-    || inputs.calendarCategory === "nonstandardNeedsReview" || inputs.calendarCategory === "subscription")) {
+  if (
+    inputs.calType > 2 &&
+    (!inputs.calendarCategory ||
+      inputs.calendarCategory === "standardTerm" ||
+      inputs.calendarCategory === "nonstandardNeedsReview" ||
+      inputs.calendarCategory === "subscription")
+  ) {
     reviewMessages.push("Confirm the program calendar category before using this result.");
   }
   if (inputs.calendarCategory === "nontermCreditHour" || inputs.calendarCategory === "clockHour") {
-    reviewMessages.push("SOR does not apply to this nonterm or clock-hour calendar. Do not use this result as an award amount.");
+    reviewMessages.push(
+      "SOR does not apply to this nonterm or clock-hour calendar. Do not use this result as an award amount.",
+    );
   }
 
   const scenarioGroups = Array.from(new Set(SCENARIOS.map((s) => s.group)));
@@ -500,13 +542,17 @@ function SORCalculatorPage() {
                 <div className="flex items-center gap-1.5">
                   <Label className="text-xs font-medium">Single-term payment period *</Label>
                   <InfoTip>
-                    Select the one term covered by this loan. Keep the academic-year term count above
-                    at the school's actual academic-year structure.
+                    Select the one term covered by this loan. Keep the academic-year term count
+                    above at the school's actual academic-year structure.
                   </InfoTip>
                 </div>
                 <Select
                   value={inputs.singleTermPaymentPeriod ?? "notSelected"}
-                  onValueChange={(v) => update({ singleTermPaymentPeriod: v === "notSelected" ? undefined : v as TermKey })}
+                  onValueChange={(v) =>
+                    update({
+                      singleTermPaymentPeriod: v === "notSelected" ? undefined : (v as TermKey),
+                    })
+                  }
                 >
                   <SelectTrigger className="h-9 rounded-lg border-primary/50 bg-primary/5">
                     <SelectValue />
@@ -514,12 +560,16 @@ function SORCalculatorPage() {
                   <SelectContent>
                     <SelectItem value="notSelected">Select payment period</SelectItem>
                     {activeTermKeys.map((key) => (
-                      <SelectItem key={key} value={key}>{TERM_LABELS[key]}</SelectItem>
+                      <SelectItem key={key} value={key}>
+                        {TERM_LABELS[key]}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {!inputs.singleTermPaymentPeriod ? (
-                  <p className="text-xs text-warning-foreground">Choose the payment period before using the result.</p>
+                  <p className="text-xs text-warning-foreground">
+                    Choose the payment period before using the result.
+                  </p>
                 ) : null}
               </div>
             ) : null}
@@ -699,17 +749,33 @@ function SORCalculatorPage() {
               <div className="flex items-center gap-1.5">
                 <Label className="text-xs font-medium">Calendar</Label>
                 <InfoTip>
-                  Select the actual program calendar. Substantially equal nonstandard terms need
-                  at least nine weeks for this SOR lane. Nonterm and clock-hour programs do not
-                  use this SOR calculation. Unresolved or subscription calendars require review.
+                  Select the actual program calendar. Substantially equal nonstandard terms need at
+                  least nine weeks for this SOR lane. Nonterm and clock-hour programs do not use
+                  this SOR calculation. Unresolved or subscription calendars require review.
                 </InfoTip>
               </div>
               <Select
-                value={inputs.calType <= 2 ? (inputs.calType === 1 ? "standardTermSay" : "standardTermBbay") : inputs.calendarCategory ?? "nonstandardNeedsReview"}
-                onValueChange={(v) => update({
-                  calendarCategory: (v.startsWith("standardTerm") ? "standardTerm" : v) as SORInputs["calendarCategory"],
-                  calType: (v === "standardTermSay" ? 1 : v === "standardTermBbay" ? 2 : v.startsWith("nonstandard") ? 3 : 4) as CalType,
-                })}
+                value={
+                  inputs.calType <= 2
+                    ? inputs.calType === 1
+                      ? "standardTermSay"
+                      : "standardTermBbay"
+                    : (inputs.calendarCategory ?? "nonstandardNeedsReview")
+                }
+                onValueChange={(v) =>
+                  update({
+                    calendarCategory: (v.startsWith("standardTerm")
+                      ? "standardTerm"
+                      : v) as SORInputs["calendarCategory"],
+                    calType: (v === "standardTermSay"
+                      ? 1
+                      : v === "standardTermBbay"
+                        ? 2
+                        : v.startsWith("nonstandard")
+                          ? 3
+                          : 4) as CalType,
+                  })
+                }
               >
                 <SelectTrigger className="h-9 rounded-lg">
                   <SelectValue />
@@ -717,8 +783,12 @@ function SORCalculatorPage() {
                 <SelectContent>
                   <SelectItem value="standardTermSay">Standard term, SAY</SelectItem>
                   <SelectItem value="standardTermBbay">Standard term, BBAY</SelectItem>
-                  <SelectItem value="nonstandardEqualNineWeeks">Nonstandard term, equal and at least nine weeks</SelectItem>
-                  <SelectItem value="nonstandardNeedsReview">Other nonstandard term, review required</SelectItem>
+                  <SelectItem value="nonstandardEqualNineWeeks">
+                    Nonstandard term, equal and at least nine weeks
+                  </SelectItem>
+                  <SelectItem value="nonstandardNeedsReview">
+                    Other nonstandard term, review required
+                  </SelectItem>
                   <SelectItem value="nontermCreditHour">Nonterm credit-hour</SelectItem>
                   <SelectItem value="clockHour">Clock-hour</SelectItem>
                   <SelectItem value="subscription">Subscription, review required</SelectItem>
@@ -804,14 +874,20 @@ function SORCalculatorPage() {
                 was denied a PLUS loan.
               </InfoTip>
             </Label>
-            {inputs.parentPlusDenied && inputs.dependency === "dependent" && !gradLocked
-              && inputs.awardYear === "2026-27" && !inputs.loanLimitException ? (
+            {inputs.parentPlusDenied &&
+            inputs.dependency === "dependent" &&
+            !gradLocked &&
+            inputs.awardYear === "2026-27" &&
+            !inputs.loanLimitException ? (
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <Label className="text-xs font-medium">Parent PLUS aggregate already used *</Label>
+                  <Label className="text-xs font-medium">
+                    Parent PLUS aggregate already used *
+                  </Label>
                   <InfoTip>
                     Enter the amount already borrowed against the parent's $65,000 aggregate limit.
-                    Additional dependent Unsub eligibility is unavailable once that limit is reached.
+                    Additional dependent Unsub eligibility is unavailable once that limit is
+                    reached.
                   </InfoTip>
                 </div>
                 <CompactNumNullable
@@ -1319,7 +1395,7 @@ function CompactNumNullable({
       className={`h-8 rounded-md border bg-background px-1.5 text-right text-[11px] tabular-nums focus:outline-none focus:ring-2 focus:ring-ring ${
         isPending ? "border-dashed border-border/60 text-muted-foreground/70" : "border-border"
       } ${wide ? "w-20" : "w-14"}`}
-      title={isPending ? pendingHint ?? "Not entered - bucket is not anchored" : undefined}
+      title={isPending ? (pendingHint ?? "Not entered - bucket is not anchored") : undefined}
     />
   );
 }
@@ -1405,9 +1481,10 @@ function StartHereStrip() {
 function ProductVoiceStrip() {
   const proof = [
     { label: "Built in public", to: "/work" as const },
-    { label: "Source-backed methodology", to: "/methodology" as const },
-    { label: `Versioned releases · v${ENGINE_VERSION}`, to: "/releases" as const },
+    { label: "Sources & methods", to: "/methodology" as const },
+    { label: "Releases", to: "/releases" as const },
     { label: "Open API & MCP", to: "/api-docs" as const },
+    { label: "Use in ChatGPT", to: "/mcp-guide" as const },
   ];
 
   return (
